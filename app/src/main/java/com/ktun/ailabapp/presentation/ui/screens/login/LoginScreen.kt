@@ -28,16 +28,27 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.tooling.preview.Preview
 import com.ktun.ailabapp.R
+
+
+// LoginScreen fonksiyonundan ÖNCE tanımla
+private val sfProFontFamily = FontFamily(
+    Font(R.font.sfpro_regular, FontWeight.Normal),
+    Font(R.font.sfpro_medium, FontWeight.Medium),
+    Font(R.font.sfpro_bold, FontWeight.Bold)
+)
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 
 fun LoginScreen(
-    onLoginSuccess: () -> Unit = {},
-    viewModel: LoginViewModel = viewModel()
+    viewModel: LoginViewModel = viewModel(),
+    onLoginSuccess: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
 
     Column(modifier = Modifier.fillMaxSize()) {
         // ÜST KISIM - Gradient + Logo
@@ -82,7 +93,8 @@ fun LoginScreen(
             Text(
                 text = "Ai Lab'e Hoşgeldin",
                 fontSize = 24.sp,
-                fontWeight = FontWeight.Medium,
+                fontWeight = FontWeight.Bold,
+                fontFamily = sfProFontFamily,
                 color = Color(0xFF07137F)
             )
 
@@ -90,6 +102,8 @@ fun LoginScreen(
                 text = "Hesabına giriş yap",
                 fontSize = 14.sp,
                 color = Color.Gray,
+                fontWeight = FontWeight.Medium,
+                fontFamily = sfProFontFamily,
                 modifier = Modifier.padding(top = 4.dp)
             )
 
@@ -156,14 +170,16 @@ fun LoginScreen(
                         onCheckedChange = { viewModel.toggleRememberMe() },
                         colors = CheckboxDefaults.colors(checkedColor = Color(0xFF07137F))
                     )
-                    Text("Beni hatırla", fontSize = 14.sp)
+                    Text("Beni hatırla", fontSize = 14.sp , fontWeight = FontWeight.Medium, fontFamily = sfProFontFamily)
                 }
 
                 TextButton(onClick = { }) {
                     Text(
                         "Şifreni mi unuttun?",
                         color = Color(0xFF07137F),
-                        fontSize = 14.sp
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        fontFamily = sfProFontFamily
                     )
                 }
             }
@@ -172,7 +188,11 @@ fun LoginScreen(
 
             // Login Button - ViewModel'e bağlı
             Button(
-                onClick = viewModel::login,
+                onClick = {
+                    viewModel.login(
+                        onSuccess = onLoginSuccess
+                    )
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -192,6 +212,7 @@ fun LoginScreen(
                         "Giriş Yap",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Medium,
+                        fontFamily = sfProFontFamily,
                         color = Color.White
                     )
                 }
@@ -210,11 +231,36 @@ fun LoginScreen(
             Spacer(modifier = Modifier.weight(1f))
 
             Text(
-                text = "Yapay Zeka ve Veri Bilimi Laboratuvarı, D14",
+                text = "Yapay Zeka ve Veri Bilimi Laboratuvarı, D114",
                 fontSize = 12.sp,
                 color = Color(0xFF757575),
+                fontWeight = FontWeight.Medium,
+                fontFamily = sfProFontFamily,
                 textAlign = TextAlign.Center
             )
         }
     }
+}
+
+@Preview(showBackground = true, name = "Login Ekranı")
+@Composable
+fun LoginScreenPreview() {
+    LoginScreen(
+        onLoginSuccess = {},
+        viewModel = viewModel()
+    )
+}
+
+@Preview(
+    showBackground = true,
+    name = "Login - Telefon Görünümü",
+    showSystemUi = true,
+    device = "spec:width=411dp,height=891dp"
+)
+@Composable
+fun LoginScreenFullPreview() {
+    LoginScreen(
+        onLoginSuccess = {},
+        viewModel = viewModel()
+    )
 }

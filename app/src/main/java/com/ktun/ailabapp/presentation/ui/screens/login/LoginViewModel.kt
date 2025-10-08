@@ -36,7 +36,7 @@ class LoginViewModel : ViewModel() {
         )
     }
 
-    fun login() {
+    fun login(onSuccess: () -> Unit) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
 
@@ -47,10 +47,11 @@ class LoginViewModel : ViewModel() {
 
             result.onSuccess {
                 _uiState.value = _uiState.value.copy(isLoading = false)
-                // Login başarılı - navigation yapılacak
+                onSuccess() // Başarılı olunca callback çağır
             }.onFailure { throwable ->
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
+                    isLoggedIn = true,
                     errorMessage = throwable.message
                 )
             }
