@@ -1,6 +1,7 @@
 package com.ktun.ailabapp.presentation.ui.screens.projects
 
 import androidx.lifecycle.ViewModel
+import com.ktun.ailabapp.R
 import com.ktun.ailabapp.data.model.Project
 import com.ktun.ailabapp.data.model.ProjectsUiState
 import com.ktun.ailabapp.data.model.ProjectStatus
@@ -28,7 +29,7 @@ class ProjectsViewModel : ViewModel() {
                 id = "1",
                 title = "Ai Lab - Demirağ",
                 description = "TEKNOFEST Savaşan İHA Yarışması",
-                logoLetter = "A",
+                logoResId = R.drawable.teknofest_logo,
                 progress = 0.65f,
                 status = ProjectStatus.IN_PROGRESS,
                 category = "TEKNOFEST",
@@ -38,7 +39,7 @@ class ProjectsViewModel : ViewModel() {
                 id = "2",
                 title = "Tübitak 2209-A",
                 description = "Sürü İHA'lar ile Orman Yangınlarına Müdehale Projesi",
-                logoLetter = "T",
+                logoResId = R.drawable.tubitak_logo,
                 progress = 0.85f,
                 status = ProjectStatus.TESTING,
                 category = "TÜBİTAK",
@@ -48,7 +49,7 @@ class ProjectsViewModel : ViewModel() {
                 id = "3",
                 title = "Ai Lab - Yalkın",
                 description = "TEKNOFEST Sürü İHA Yarışması",
-                logoLetter = "A",
+                logoResId = R.drawable.teknofest_logo,
                 progress = 0.45f,
                 status = ProjectStatus.IN_PROGRESS,
                 category = "TEKNOFEST",
