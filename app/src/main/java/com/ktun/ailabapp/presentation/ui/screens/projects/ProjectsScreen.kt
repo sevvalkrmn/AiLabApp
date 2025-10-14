@@ -2,6 +2,7 @@ package com.ktun.ailabapp.presentation.ui.screens.projects
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -20,7 +21,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.ktun.ailabapp.R
 import com.ktun.ailabapp.presentation.ui.components.BottomNavigationBar
 
 @Composable
@@ -28,7 +28,8 @@ fun ProjectsScreen(
     viewModel: ProjectsViewModel = viewModel(),
     onNavigateToHome: () -> Unit = {},
     onNavigateToChat: () -> Unit = {},
-    onNavigateToProfile: () -> Unit = {}
+    onNavigateToProfile: () -> Unit = {},
+    onNavigateToProjectDetail: (String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -119,7 +120,10 @@ fun ProjectsScreen(
                                 title = project.title,
                                 description = project.description,
                                 logoResId = project.logoResId,
-                                logoLetter = project.logoLetter
+                                logoLetter = project.logoLetter,
+                                onClick = {  // ← BUNU EKLEYİN
+                                    onNavigateToProjectDetail(project.id)
+                                }
                             )
                         }
                     }
@@ -134,10 +138,13 @@ fun ProjectCard(
     title: String,
     description: String,
     logoResId: Int? = null,
-    logoLetter: String = "A"
+    logoLetter: String = "A",
+    onClick: () -> Unit
 ) {
     Column(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
     ) {
         Row(
             modifier = Modifier

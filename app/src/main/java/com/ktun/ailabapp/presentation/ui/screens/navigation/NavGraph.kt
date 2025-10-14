@@ -14,14 +14,21 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.ktun.ailabapp.presentation.ui.screens.home.HomeScreen
-import com.ktun.ailabapp.presentation.ui.screens.login.LoginScreen  // ← BUNU EKLEYİN
+import com.ktun.ailabapp.presentation.ui.screens.login.LoginScreen
 import com.ktun.ailabapp.presentation.ui.screens.projects.ProjectsScreen
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import com.ktun.ailabapp.presentation.ui.screens.projects.ProjectDetailScreen
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.createSavedStateHandle
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun NavGraph(navController: NavHostController) {
     NavHost(
         navController = navController,
-        startDestination = Screen.Login.route  // ← BURAYI DEĞİŞTİRİN (Home yerine Login)
+        startDestination = Screen.Login.route
     ) {
         // Login Screen
         composable(route = Screen.Login.route) {
@@ -34,6 +41,7 @@ fun NavGraph(navController: NavHostController) {
             )
         }
 
+        // Home Screen
         composable(route = Screen.Home.route) {
             HomeScreen(
                 onNavigateToProjects = {
@@ -48,12 +56,51 @@ fun NavGraph(navController: NavHostController) {
             )
         }
 
+        // Projects Screen
         composable(route = Screen.Projects.route) {
             ProjectsScreen(
                 onNavigateToHome = {
                     navController.navigate(Screen.Home.route) {
+                        popUpTo(navController.graph.startDestinationId) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
+                onNavigateToChat = {
+                    navController.navigate(Screen.Chat.route)
+                },
+                onNavigateToProfile = {
+                    navController.navigate(Screen.Profile.route)
+                },
+                onNavigateToProjectDetail = { projectId ->
+                    navController.navigate(Screen.ProjectDetail.createRoute(projectId))
+                }
+            )
+        }
+
+        // ProjectDetail Screen
+        composable(
+            route = Screen.ProjectDetail.route,
+            arguments = listOf(
+                navArgument("projectId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val projectId = backStackEntry.arguments?.getString("projectId") ?: ""
+
+            ProjectDetailScreen(
+                projectId = projectId,
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToHome = {
+                    navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Home.route) { inclusive = true }
                     }
+                },
+                onNavigateToProjects = {
+                    navController.popBackStack()
                 },
                 onNavigateToChat = {
                     navController.navigate(Screen.Chat.route)
