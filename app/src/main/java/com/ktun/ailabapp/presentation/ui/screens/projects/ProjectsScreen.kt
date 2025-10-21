@@ -16,12 +16,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ktun.ailabapp.presentation.ui.components.BottomNavigationBar
+import com.ktun.ailabapp.presentation.ui.components.DebugButton
+import com.ktun.ailabapp.presentation.ui.components.FeedbackDialog
+import com.ktun.ailabapp.presentation.ui.components.sendFeedbackEmail
 
 @Composable
 fun ProjectsScreen(
@@ -32,16 +36,37 @@ fun ProjectsScreen(
     onNavigateToProjectDetail: (String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+
+    // Dialog state
+    var showFeedbackDialog by remember { mutableStateOf(false) }
+
+    // Feedback Dialog
+    if (showFeedbackDialog) {
+        FeedbackDialog(
+            onDismiss = { showFeedbackDialog = false },
+            onSubmit = { feedback ->
+                // TODO: Feedback'i gönder (email, API, Firebase)
+                println("📝 Feedback: $feedback")
+
+                // Başarılı mesajı göster (opsiyonel)
+                // Toast veya Snackbar
+
+                showFeedbackDialog = false
+            }
+        )
+    }
 
     Scaffold(
-        bottomBar = { BottomNavigationBar(
-            selectedItem = 1,
-            onHomeClick = onNavigateToHome,
-            onProjectsClick = { },
-            onChatClick = onNavigateToChat,
-            onProfileClick = onNavigateToProfile
-
-        ) },
+        bottomBar = {
+            BottomNavigationBar(
+                selectedItem = 1,
+                onHomeClick = onNavigateToHome,
+                onProjectsClick = { },
+                onChatClick = onNavigateToChat,
+                onProfileClick = onNavigateToProfile
+            )
+        },
         containerColor = Color(0xFF071372),
         contentWindowInsets = WindowInsets(0.dp)
     ) { paddingValues ->
@@ -58,38 +83,23 @@ fun ProjectsScreen(
                     .padding(16.dp)
             ) {
                 // Header
-                Row(
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 20.dp),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
+                        .padding(vertical = 20.dp)
                 ) {
-                    Spacer(modifier = Modifier.weight(1f))
-
                     Text(
                         text = "Projelerim",
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = Color.White,
+                        modifier = Modifier.align(Alignment.Center)
                     )
 
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    IconButton(
-                        onClick = { },
-                        modifier = Modifier
-                            .size(44.dp)
-                            .clip(CircleShape)
-                            .background(Color.White)
-                    ) {
-                        Icon(
-                            Icons.Default.Notifications,
-                            contentDescription = "Notifications",
-                            tint = Color(0xFF071372),
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
+                    DebugButton(
+                        onClick = {showFeedbackDialog = true},
+                        modifier = Modifier.align(Alignment.CenterEnd)
+                    )
                 }
             }
 
@@ -121,7 +131,7 @@ fun ProjectsScreen(
                                 description = project.description,
                                 logoResId = project.logoResId,
                                 logoLetter = project.logoLetter,
-                                onClick = {  // ← BUNU EKLEYİN
+                                onClick = {
                                     onNavigateToProjectDetail(project.id)
                                 }
                             )
@@ -208,4 +218,3 @@ fun ProjectCard(
         )
     }
 }
-

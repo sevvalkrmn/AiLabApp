@@ -1,4 +1,4 @@
-package com.ktun.ailabapp.presentation.ui.screens.announcements
+package com.ktun.ailabapp.presentation.ui.screens.announcement
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -28,6 +29,9 @@ import com.ktun.ailabapp.data.model.Announcement
 import com.ktun.ailabapp.data.model.AnnouncementFilter
 import com.ktun.ailabapp.data.model.AnnouncementType
 import com.ktun.ailabapp.presentation.ui.components.BottomNavigationBar
+import com.ktun.ailabapp.presentation.ui.components.DebugButton
+import com.ktun.ailabapp.presentation.ui.components.FeedbackDialog
+import com.ktun.ailabapp.presentation.ui.components.sendFeedbackEmail
 
 @Composable
 fun AnnouncementScreen(
@@ -38,7 +42,30 @@ fun AnnouncementScreen(
     onNavigateToProfile: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val filteredAnnouncements = viewModel.getFilteredAnnouncements()
+    val context = LocalContext.current
+
+    // Dialog state
+    var showFeedbackDialog by remember { mutableStateOf(false) }
+
+    // Feedback Dialog
+    if (showFeedbackDialog) {
+        FeedbackDialog(
+            onDismiss = { showFeedbackDialog = false },
+            onSubmit = { feedback ->
+                // TODO: Feedback'i gönder (email, API, Firebase)
+                println("📝 Feedback: $feedback")
+
+                // Başarılı mesajı göster (opsiyonel)
+                // Toast veya Snackbar
+
+                showFeedbackDialog = false
+            }
+        )
+    }
+
+    val filteredAnnouncements = remember(uiState.selectedFilter, uiState.announcements) {
+        viewModel.getFilteredAnnouncements()
+    }
 
     var selectedAnnouncement by remember { mutableStateOf<Announcement?>(null) }
 
@@ -78,32 +105,24 @@ fun AnnouncementScreen(
                     .background(Color(0xFF071372))
                     .padding(16.dp)
             ) {
-                // Başlık ve bildirim ikonu
-                Row(
+                // Başlık ve debug butonu
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 20.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                        .padding(vertical = 20.dp)
                 ) {
                     Text(
                         text = "Duyurular",
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = Color.White,
+                        modifier = Modifier.align(Alignment.Center)
                     )
 
-                    IconButton(
-                        onClick = { /* Bildirim ayarları */ },
-                        modifier = Modifier.size(44.dp)
-                    ) {
-                        Icon(
-                            Icons.Default.Notifications,
-                            contentDescription = "Bildirimler",
-                            tint = Color.White,
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
+                    DebugButton(
+                        onClick = {showFeedbackDialog = true},
+                        modifier = Modifier.align(Alignment.CenterEnd)
+                    )
                 }
             }
 
@@ -207,7 +226,7 @@ fun AnnouncementCard(
         ),
         shape = RoundedCornerShape(16.dp),
         border = if (!announcement.isRead)
-            BorderStroke(2.dp, Color(0xFF071372).copy(alpha = 0.2f))
+            BorderStroke(0.5.dp, Color(0xFF071372))
         else
             null
     ) {

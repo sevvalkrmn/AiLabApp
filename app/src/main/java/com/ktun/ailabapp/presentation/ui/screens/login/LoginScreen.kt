@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.tooling.preview.Preview
 import com.ktun.ailabapp.R
+import androidx.compose.foundation.BorderStroke
 
 
 // LoginScreen fonksiyonundan ÖNCE tanımla
@@ -45,7 +46,8 @@ private val sfProFontFamily = FontFamily(
 
 fun LoginScreen(
     viewModel: LoginViewModel = viewModel(),
-    onLoginSuccess: () -> Unit = {}
+    onLoginSuccess: () -> Unit = {},
+    onNavigateToRegister: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -72,7 +74,7 @@ fun LoginScreen(
                     painter = painterResource(id = R.drawable.ailablogo),
                     contentDescription = "AI Lab Logo",
                     modifier = Modifier
-                        .size(140.dp)
+                        .size(200.dp)
                         .padding(16.dp),
                     colorFilter = ColorFilter.tint(Color.White)
                 )
@@ -216,6 +218,29 @@ fun LoginScreen(
                         color = Color.White
                     )
                 }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Kaydol Butonu - YENİ EKLEME
+            OutlinedButton(
+                onClick = onNavigateToRegister,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = Color(0xFF07137F)
+                ),
+                border = BorderStroke(2.dp, Color(0xFF07137F)),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text(
+                    text = "Hesabın yok mu? Kaydol!",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    fontFamily = sfProFontFamily,
+                    color = Color(0xFF07137F)
+                )
             }
 
             // Error Message
