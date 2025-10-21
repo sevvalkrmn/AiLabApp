@@ -13,12 +13,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ktun.ailabapp.presentation.ui.components.BottomNavigationBar
+import com.ktun.ailabapp.presentation.ui.components.DebugButton
+import com.ktun.ailabapp.presentation.ui.components.FeedbackDialog
+import com.ktun.ailabapp.presentation.ui.components.sendFeedbackEmail
 
 @Composable
 fun HomeScreen(
@@ -28,16 +32,37 @@ fun HomeScreen(
     onNavigateToProfile: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+
+    // Dialog state
+    var showFeedbackDialog by remember { mutableStateOf(false) }
+
+    // Feedback Dialog
+    if (showFeedbackDialog) {
+        FeedbackDialog(
+            onDismiss = { showFeedbackDialog = false },
+            onSubmit = { feedback ->
+                // TODO: Feedback'i gönder (email, API, Firebase)
+                println("📝 Feedback: $feedback")
+
+                // Başarılı mesajı göster (opsiyonel)
+                // Toast veya Snackbar
+
+                showFeedbackDialog = false
+            }
+        )
+    }
 
     Scaffold(
         bottomBar = {
             BottomNavigationBar(
                 selectedItem = 0,
-                onHomeClick = { },  // Zaten Home'dayız
-                onProjectsClick = onNavigateToProjects,  // ← BURAYI KONTROL EDİN
+                onHomeClick = { },
+                onProjectsClick = onNavigateToProjects,
                 onChatClick = onNavigateToChat,
                 onProfileClick = onNavigateToProfile
-            ) },
+            )
+        },
         containerColor = Color(0xFF071372),
         contentWindowInsets = WindowInsets(0.dp)
     ) { paddingValues ->
@@ -75,20 +100,9 @@ fun HomeScreen(
                         )
                     }
 
-                    IconButton(
-                        onClick = { },
-                        modifier = Modifier
-                            .size(44.dp)
-                            .clip(CircleShape)
-                            .background(Color.White.copy(alpha = 0.15f))
-                    ) {
-                        Icon(
-                            Icons.Default.Notifications,
-                            contentDescription = "Notifications",
-                            tint = Color.White,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
+                    DebugButton(
+                        onClick = {showFeedbackDialog = true}
+                    )
                 }
             }
 
@@ -315,7 +329,6 @@ fun HomeScreen(
                 }
 
                 Spacer(modifier = Modifier.height(12.dp))
-
 
                 // Takım Sıralaması
                 TeamRankingCard()

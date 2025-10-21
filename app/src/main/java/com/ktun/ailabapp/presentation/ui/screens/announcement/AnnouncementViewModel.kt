@@ -1,4 +1,4 @@
-package com.ktun.ailabapp.presentation.ui.screens.announcements
+package com.ktun.ailabapp.presentation.ui.screens.announcement
 
 import androidx.lifecycle.ViewModel
 import com.ktun.ailabapp.data.model.Announcement
@@ -122,9 +122,15 @@ class AnnouncementViewModel : ViewModel() {
 
         return when (filter) {
             AnnouncementFilter.ALL -> announcements
-            AnnouncementFilter.GENERAL -> announcements.filter { it.type == AnnouncementType.ALL }
-            AnnouncementFilter.TEAM -> announcements.filter { it.type == AnnouncementType.TEAM }
-            AnnouncementFilter.PERSONAL -> announcements.filter { it.type == AnnouncementType.PERSONAL }
+            AnnouncementFilter.GENERAL -> announcements.filter {
+                it.type == AnnouncementType.ALL  // Lab genel duyuruları
+            }
+            AnnouncementFilter.TEAM -> announcements.filter {
+                it.type == AnnouncementType.TEAM
+            }
+            AnnouncementFilter.PERSONAL -> announcements.filter {
+                it.type == AnnouncementType.PERSONAL
+            }
         }
     }
 

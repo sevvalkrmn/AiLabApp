@@ -23,6 +23,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.ktun.ailabapp.presentation.ui.navigation.Screen
+import com.ktun.ailabapp.presentation.ui.screens.announcement.AnnouncementScreen
+import com.ktun.ailabapp.presentation.ui.screens.profile.ProfileScreen
+import com.ktun.ailabapp.presentation.ui.screens.register.RegisterScreen
 
 @Composable
 fun NavGraph(navController: NavHostController) {
@@ -37,6 +41,22 @@ fun NavGraph(navController: NavHostController) {
                     navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Login.route) { inclusive = true }
                     }
+                },
+                onNavigateToRegister = {
+                    navController.navigate(Screen.Register.route)
+                }
+            )
+        }
+
+        composable(Screen.Register.route) {
+            RegisterScreen(
+                onRegisterSuccess = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Register.route) { inclusive = true }
+                    }
+                },
+                onNavigateBack = {
+                    navController.popBackStack()
                 }
             )
         }
@@ -48,7 +68,7 @@ fun NavGraph(navController: NavHostController) {
                     navController.navigate(Screen.Projects.route)
                 },
                 onNavigateToChat = {
-                    navController.navigate(Screen.Chat.route)
+                    navController.navigate(Screen.Announcements.route)
                 },
                 onNavigateToProfile = {
                     navController.navigate(Screen.Profile.route)
@@ -69,7 +89,7 @@ fun NavGraph(navController: NavHostController) {
                     }
                 },
                 onNavigateToChat = {
-                    navController.navigate(Screen.Chat.route)
+                    navController.navigate(Screen.Announcements.route)
                 },
                 onNavigateToProfile = {
                     navController.navigate(Screen.Profile.route)
@@ -103,7 +123,7 @@ fun NavGraph(navController: NavHostController) {
                     navController.popBackStack()
                 },
                 onNavigateToChat = {
-                    navController.navigate(Screen.Chat.route)
+                    navController.navigate(Screen.Announcements.route)
                 },
                 onNavigateToProfile = {
                     navController.navigate(Screen.Profile.route)
@@ -112,7 +132,7 @@ fun NavGraph(navController: NavHostController) {
         }
 
         // Chat Screen Placeholder
-        composable(route = Screen.Chat.route) {
+        composable(route = Screen.Announcements.route) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -128,21 +148,40 @@ fun NavGraph(navController: NavHostController) {
             }
         }
 
-        // Profile Screen Placeholder
-        composable(route = Screen.Profile.route) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color(0xFF071372)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "Profile Screen\n(Coming Soon)",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
-            }
+        // Profile
+        composable(Screen.Profile.route) {
+            ProfileScreen(
+                onNavigateToHome = {
+                    navController.navigate(Screen.Home.route)
+                },
+                onNavigateToProjects = {
+                    navController.navigate(Screen.Projects.route)
+                },
+                onNavigateToChat = {
+                    navController.navigate(Screen.Announcements.route)
+                },
+                onNavigateToProfile = { /* Zaten profile'dayız */ },
+                onLogout = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(0) { inclusive = true }  // Tüm stack'i temizle
+                    }
+                }
+            )
+        }
+
+        composable(Screen.Announcements.route) {
+            AnnouncementScreen(
+                onNavigateToHome = {
+                    navController.navigate(Screen.Home.route)
+                },
+                onNavigateToProjects = {
+                    navController.navigate(Screen.Projects.route)
+                },
+                onNavigateToChat = { /* Zaten announcements'tayız */ },
+                onNavigateToProfile = {
+                    navController.navigate(Screen.Profile.route)
+                }
+            )
         }
     }
 }

@@ -1,3 +1,5 @@
+
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -65,4 +67,7 @@ dependencies {
 
     // Icons
     implementation("androidx.compose.material:material-icons-extended:1.5.4")
+
+    // Coil - Image loading library
+    implementation("io.coil-kt:coil-compose:2.5.0")
 }
