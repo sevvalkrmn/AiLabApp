@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -44,6 +45,11 @@ fun AnnouncementScreen(
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
+    // Ekran boyutlarını al
+    val configuration = LocalConfiguration.current
+    val screenHeight = configuration.screenHeightDp.dp
+    val screenWidth = configuration.screenWidthDp.dp
+
     // Dialog state
     var showFeedbackDialog by remember { mutableStateOf(false) }
 
@@ -52,12 +58,7 @@ fun AnnouncementScreen(
         FeedbackDialog(
             onDismiss = { showFeedbackDialog = false },
             onSubmit = { feedback ->
-                // TODO: Feedback'i gönder (email, API, Firebase)
                 println("📝 Feedback: $feedback")
-
-                // Başarılı mesajı göster (opsiyonel)
-                // Toast veya Snackbar
-
                 showFeedbackDialog = false
             }
         )
@@ -76,7 +77,9 @@ fun AnnouncementScreen(
             onDismiss = {
                 viewModel.markAsRead(announcement.id)
                 selectedAnnouncement = null
-            }
+            },
+            screenWidth = screenWidth,
+            screenHeight = screenHeight
         )
     }
 
@@ -91,7 +94,7 @@ fun AnnouncementScreen(
             )
         },
         containerColor = Color(0xFF071372),
-        contentWindowInsets = WindowInsets(0.dp)
+        contentWindowInsets = WindowInsets.systemBars
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -103,17 +106,17 @@ fun AnnouncementScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Color(0xFF071372))
-                    .padding(16.dp)
+                    .padding(screenWidth * 0.04f)
             ) {
                 // Başlık ve debug butonu
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 20.dp)
+                        .padding(vertical = screenHeight * 0.02f)
                 ) {
                     Text(
                         text = "Duyurular",
-                        fontSize = 24.sp,
+                        fontSize = (screenWidth.value * 0.06f).sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White,
                         modifier = Modifier.align(Alignment.Center)
@@ -126,58 +129,73 @@ fun AnnouncementScreen(
                 }
             }
 
-            // İÇERİK ALANI - Açık gri/beyaz
+            // İÇERİK ALANI - ProfileScreen ile aynı yapı
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f)
-                    .clip(RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp))
+                    .weight(1f)  // ← ProfileScreen gibi
+                    .clip(RoundedCornerShape(topStart = screenWidth * 0.075f, topEnd = screenWidth * 0.075f))
                     .background(Color(0xFFE8EAF6))
-                    .padding(16.dp)
-            ) {
-                // Filtre Butonları
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {  // ← Burada padding yok, ProfileScreen gibi
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(screenWidth * 0.04f)  // ← İçerideki Column'da padding
                 ) {
-                    AnnouncementFilterChip(
-                        text = "Tümü",
-                        isSelected = uiState.selectedFilter == AnnouncementFilter.ALL,
-                        onClick = { viewModel.setFilter(AnnouncementFilter.ALL) },
-                        modifier = Modifier.weight(1f)
-                    )
-                    AnnouncementFilterChip(
-                        text = "Genel",
-                        isSelected = uiState.selectedFilter == AnnouncementFilter.GENERAL,
-                        onClick = { viewModel.setFilter(AnnouncementFilter.GENERAL) },
-                        modifier = Modifier.weight(1f)
-                    )
-                    AnnouncementFilterChip(
-                        text = "Takım",
-                        isSelected = uiState.selectedFilter == AnnouncementFilter.TEAM,
-                        onClick = { viewModel.setFilter(AnnouncementFilter.TEAM) },
-                        modifier = Modifier.weight(1f)
-                    )
-                    AnnouncementFilterChip(
-                        text = "Kişisel",
-                        isSelected = uiState.selectedFilter == AnnouncementFilter.PERSONAL,
-                        onClick = { viewModel.setFilter(AnnouncementFilter.PERSONAL) },
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Duyuru Listesi
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(filteredAnnouncements) { announcement ->
-                        AnnouncementCard(
-                            announcement = announcement,
-                            onClick = { selectedAnnouncement = announcement }
+                    // Filtre Butonları
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(screenWidth * 0.02f)
+                    ) {
+                        AnnouncementFilterChip(
+                            text = "Tümü",
+                            isSelected = uiState.selectedFilter == AnnouncementFilter.ALL,
+                            onClick = { viewModel.setFilter(AnnouncementFilter.ALL) },
+                            modifier = Modifier.weight(1f),
+                            screenWidth = screenWidth,
+                            screenHeight = screenHeight
                         )
+                        AnnouncementFilterChip(
+                            text = "Genel",
+                            isSelected = uiState.selectedFilter == AnnouncementFilter.GENERAL,
+                            onClick = { viewModel.setFilter(AnnouncementFilter.GENERAL) },
+                            modifier = Modifier.weight(1f),
+                            screenWidth = screenWidth,
+                            screenHeight = screenHeight
+                        )
+                        AnnouncementFilterChip(
+                            text = "Takım",
+                            isSelected = uiState.selectedFilter == AnnouncementFilter.TEAM,
+                            onClick = { viewModel.setFilter(AnnouncementFilter.TEAM) },
+                            modifier = Modifier.weight(1f),
+                            screenWidth = screenWidth,
+                            screenHeight = screenHeight
+                        )
+                        AnnouncementFilterChip(
+                            text = "Kişisel",
+                            isSelected = uiState.selectedFilter == AnnouncementFilter.PERSONAL,
+                            onClick = { viewModel.setFilter(AnnouncementFilter.PERSONAL) },
+                            modifier = Modifier.weight(1f),
+                            screenWidth = screenWidth,
+                            screenHeight = screenHeight
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(screenHeight * 0.02f))
+
+                    // Duyuru Listesi
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(screenHeight * 0.015f)
+                    ) {
+                        items(filteredAnnouncements) { announcement ->
+                            AnnouncementCard(
+                                announcement = announcement,
+                                onClick = { selectedAnnouncement = announcement },
+                                screenWidth = screenWidth,
+                                screenHeight = screenHeight
+                            )
+                        }
                     }
                 }
             }
@@ -190,20 +208,22 @@ fun AnnouncementFilterChip(
     text: String,
     isSelected: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    screenWidth: androidx.compose.ui.unit.Dp,
+    screenHeight: androidx.compose.ui.unit.Dp
 ) {
     Button(
         onClick = onClick,
-        modifier = modifier.height(40.dp),
+        modifier = modifier.height(screenHeight * 0.05f),
         colors = ButtonDefaults.buttonColors(
             containerColor = if (isSelected) Color(0xFF071372) else Color(0xFFB0B8D4),
             contentColor = Color.White
         ),
-        shape = RoundedCornerShape(20.dp)
+        shape = RoundedCornerShape(screenWidth * 0.05f)
     ) {
         Text(
             text = text,
-            fontSize = 12.sp,
+            fontSize = (screenWidth.value * 0.03f).sp,
             fontWeight = FontWeight.Black
         )
     }
@@ -212,7 +232,9 @@ fun AnnouncementFilterChip(
 @Composable
 fun AnnouncementCard(
     announcement: Announcement,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    screenWidth: androidx.compose.ui.unit.Dp,
+    screenHeight: androidx.compose.ui.unit.Dp
 ) {
     Card(
         modifier = Modifier
@@ -224,17 +246,17 @@ fun AnnouncementCard(
             else
                 Color.White
         ),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(screenWidth * 0.04f),
         border = if (!announcement.isRead)
-            BorderStroke(0.5.dp, Color(0xFF071372))
+            BorderStroke(screenWidth * 0.00125f, Color(0xFF071372))
         else
             null
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(screenWidth * 0.03f),
+            horizontalArrangement = Arrangement.spacedBy(screenWidth * 0.03f)
         ) {
             // Sol taraf - İkon veya profil resmi
             if (announcement.type == AnnouncementType.PERSONAL && announcement.senderImage != null) {
@@ -243,24 +265,24 @@ fun AnnouncementCard(
                     model = announcement.senderImage,
                     contentDescription = "Profil",
                     modifier = Modifier
-                        .size(48.dp)
+                        .size(screenWidth * 0.12f)
                         .clip(CircleShape)
-                        .border(2.dp, Color(0xFF071372).copy(alpha = 0.1f), CircleShape)
+                        .border(screenWidth * 0.005f, Color(0xFF071372).copy(alpha = 0.1f), CircleShape)
                 )
             } else {
                 // Lab ikonu
                 Box(
                     modifier = Modifier
-                        .size(48.dp)
+                        .size(screenWidth * 0.12f)
                         .background(
                             Color(0xFF071372).copy(alpha = 0.1f),
-                            RoundedCornerShape(12.dp)
+                            RoundedCornerShape(screenWidth * 0.03f)
                         ),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = "🔬",
-                        fontSize = 24.sp
+                        fontSize = (screenWidth.value * 0.06f).sp
                     )
                 }
             }
@@ -269,23 +291,23 @@ fun AnnouncementCard(
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(vertical = 2.dp)
+                    .padding(vertical = screenHeight * 0.0025f)
             ) {
                 Text(
                     text = announcement.title,
-                    fontSize = 16.sp,
+                    fontSize = (screenWidth.value * 0.04f).sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF071372)
                 )
 
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(screenHeight * 0.0075f))
 
                 Text(
                     text = announcement.content,
-                    fontSize = 13.sp,
+                    fontSize = (screenWidth.value * 0.032f).sp,
                     color = Color(0xFF071372).copy(alpha = 0.7f),
                     maxLines = 2,
-                    lineHeight = 18.sp
+                    lineHeight = (screenWidth.value * 0.045f).sp
                 )
             }
         }
@@ -295,14 +317,16 @@ fun AnnouncementCard(
 @Composable
 fun AnnouncementDetailDialog(
     announcement: Announcement,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    screenWidth: androidx.compose.ui.unit.Dp,
+    screenHeight: androidx.compose.ui.unit.Dp
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(screenWidth * 0.03f)
             ) {
                 // İkon veya profil resmi
                 if (announcement.type == AnnouncementType.PERSONAL && announcement.senderImage != null) {
@@ -310,23 +334,23 @@ fun AnnouncementDetailDialog(
                         model = announcement.senderImage,
                         contentDescription = "Profil",
                         modifier = Modifier
-                            .size(48.dp)
+                            .size(screenWidth * 0.12f)
                             .clip(CircleShape)
-                            .border(2.dp, Color(0xFF071372).copy(alpha = 0.1f), CircleShape)
+                            .border(screenWidth * 0.005f, Color(0xFF071372).copy(alpha = 0.1f), CircleShape)
                     )
                 } else {
                     Box(
                         modifier = Modifier
-                            .size(48.dp)
+                            .size(screenWidth * 0.12f)
                             .background(
                                 Color(0xFF071372).copy(alpha = 0.1f),
-                                RoundedCornerShape(12.dp)
+                                RoundedCornerShape(screenWidth * 0.03f)
                             ),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = "🔬",
-                            fontSize = 24.sp
+                            fontSize = (screenWidth.value * 0.06f).sp
                         )
                     }
                 }
@@ -334,14 +358,14 @@ fun AnnouncementDetailDialog(
                 Column {
                     Text(
                         text = announcement.title,
-                        fontSize = 18.sp,
+                        fontSize = (screenWidth.value * 0.045f).sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF071372)
                     )
-                    Spacer(modifier = Modifier.height(2.dp))
+                    Spacer(modifier = Modifier.height(screenHeight * 0.0025f))
                     Text(
                         text = announcement.timestamp,
-                        fontSize = 12.sp,
+                        fontSize = (screenWidth.value * 0.03f).sp,
                         color = Color(0xFF071372).copy(alpha = 0.5f)
                     )
                 }
@@ -358,7 +382,7 @@ fun AnnouncementDetailDialog(
                         AnnouncementType.TEAM -> Color(0xFFFF9800).copy(alpha = 0.2f)
                         AnnouncementType.PERSONAL -> Color(0xFF4CAF50).copy(alpha = 0.2f)
                     },
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(screenWidth * 0.03f)
                 ) {
                     Text(
                         text = when (announcement.type) {
@@ -366,24 +390,27 @@ fun AnnouncementDetailDialog(
                             AnnouncementType.TEAM -> "Takım Duyurusu"
                             AnnouncementType.PERSONAL -> "Kişisel Mesaj"
                         },
-                        fontSize = 11.sp,
+                        fontSize = (screenWidth.value * 0.027f).sp,
                         fontWeight = FontWeight.Medium,
                         color = when (announcement.type) {
                             AnnouncementType.ALL -> Color(0xFF5C6BC0)
                             AnnouncementType.TEAM -> Color(0xFFFF9800)
                             AnnouncementType.PERSONAL -> Color(0xFF4CAF50)
                         },
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                        modifier = Modifier.padding(
+                            horizontal = screenWidth * 0.03f,
+                            vertical = screenHeight * 0.0075f
+                        )
                     )
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(screenHeight * 0.02f))
 
                 Text(
                     text = announcement.content,
-                    fontSize = 14.sp,
+                    fontSize = (screenWidth.value * 0.035f).sp,
                     color = Color(0xFF071372).copy(alpha = 0.8f),
-                    lineHeight = 20.sp
+                    lineHeight = (screenWidth.value * 0.05f).sp
                 )
             }
         },
@@ -392,11 +419,12 @@ fun AnnouncementDetailDialog(
                 Text(
                     "Kapat",
                     color = Color(0xFF071372),
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    fontSize = (screenWidth.value * 0.035f).sp
                 )
             }
         },
         containerColor = Color.White,
-        shape = RoundedCornerShape(20.dp)
+        shape = RoundedCornerShape(screenWidth * 0.05f)
     )
 }

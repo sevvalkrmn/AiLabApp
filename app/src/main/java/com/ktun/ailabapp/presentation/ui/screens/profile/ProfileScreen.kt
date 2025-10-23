@@ -15,8 +15,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -27,6 +27,10 @@ import com.ktun.ailabapp.presentation.ui.components.BottomNavigationBar
 import com.ktun.ailabapp.presentation.ui.components.DebugButton
 import com.ktun.ailabapp.presentation.ui.components.FeedbackDialog
 import com.ktun.ailabapp.presentation.ui.components.sendFeedbackEmail
+import com.ktun.ailabapp.ui.theme.PrimaryBlue
+import com.ktun.ailabapp.ui.theme.SecondaryBlue
+import com.ktun.ailabapp.ui.theme.BackgroundLight
+import com.ktun.ailabapp.ui.theme.White
 
 @Composable
 fun ProfileScreen(
@@ -39,6 +43,11 @@ fun ProfileScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+
+    // Ekran boyutlarını al
+    val configuration = LocalConfiguration.current
+    val screenHeight = configuration.screenHeightDp.dp
+    val screenWidth = configuration.screenWidthDp.dp
 
     // Dialog state
     var showFeedbackDialog by remember { mutableStateOf(false) }
@@ -69,8 +78,8 @@ fun ProfileScreen(
                 onProfileClick = onNavigateToProfile
             )
         },
-        containerColor = Color(0xFF071372),
-        contentWindowInsets = WindowInsets(0.dp)
+        containerColor = PrimaryBlue,
+        contentWindowInsets = WindowInsets.systemBars
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -81,19 +90,19 @@ fun ProfileScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color(0xFF071372))
-                    .padding(16.dp)
+                    .background(PrimaryBlue)
+                    .padding(screenWidth * 0.04f)
             ) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 20.dp)
+                        .padding(vertical = screenHeight * 0.02f)
                 ) {
                     Text(
                         text = "Profilim",
-                        fontSize = 24.sp,
+                        fontSize = (screenWidth.value * 0.06f).sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White,
+                        color = White,
                         modifier = Modifier.align(Alignment.Center)
                     )
 
@@ -109,145 +118,153 @@ fun ProfileScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .clip(RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp))
-                    .background(Color(0xFFE8EAF6))
+                    .clip(RoundedCornerShape(topStart = screenWidth * 0.075f, topEnd = screenWidth * 0.075f))
+                    .background(BackgroundLight)
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
-                        .padding(24.dp),
+                        .padding(screenWidth * 0.06f),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(screenHeight * 0.03f))
 
                     // Profil Fotoğrafı
                     Box(
-                        modifier = Modifier.size(140.dp)
+                        modifier = Modifier.size(screenWidth * 0.35f)
                     ) {
                         AsyncImage(
                             model = uiState.profileImageUrl,
                             contentDescription = "Profil Fotoğrafı",
                             modifier = Modifier
-                                .size(140.dp)
+                                .size(screenWidth * 0.35f)
                                 .clip(CircleShape)
-                                .border(4.dp, Color.White, CircleShape)
+                                .border(screenWidth * 0.01f, White, CircleShape)
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(screenHeight * 0.02f))
 
                     Text(
                         text = uiState.name,
-                        fontSize = 24.sp,
+                        fontSize = (screenWidth.value * 0.06f).sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF071372)
+                        color = PrimaryBlue
                     )
 
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(screenHeight * 0.005f))
 
                     Text(
                         text = uiState.email,
-                        fontSize = 14.sp,
-                        color = Color(0xFF071372).copy(alpha = 0.7f)
+                        fontSize = (screenWidth.value * 0.035f).sp,
+                        color = PrimaryBlue.copy(alpha = 0.7f)
                     )
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(screenHeight * 0.03f))
 
                     // Puan Kartı
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(
-                            containerColor = Color.White
+                            containerColor = White
                         ),
-                        shape = RoundedCornerShape(16.dp),
-                        elevation = CardDefaults.cardElevation(2.dp)
+                        shape = RoundedCornerShape(screenWidth * 0.04f),
+                        elevation = CardDefaults.cardElevation(screenWidth * 0.005f)
                     ) {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(20.dp),
+                                .padding(screenWidth * 0.05f),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
                                 text = uiState.points.toString(),
-                                fontSize = 48.sp,
+                                fontSize = (screenWidth.value * 0.12f).sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF071372)
+                                color = PrimaryBlue
                             )
                             Text(
                                 text = "Points",
-                                fontSize = 16.sp,
-                                color = Color(0xFF071372).copy(alpha = 0.7f)
+                                fontSize = (screenWidth.value * 0.04f).sp,
+                                color = PrimaryBlue.copy(alpha = 0.7f)
                             )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(32.dp))
+                    Spacer(modifier = Modifier.height(screenHeight * 0.04f))
 
                     // Menü Öğeleri
                     ProfileMenuItem(
                         icon = Icons.Default.Person,
                         text = "Profil Fotoğrafını Değiştir",
-                        onClick = { /* TODO */ }
+                        onClick = { /* TODO */ },
+                        screenWidth = screenWidth,
+                        screenHeight = screenHeight
                     )
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(screenHeight * 0.015f))
 
                     ProfileMenuItem(
                         icon = Icons.Default.Email,
                         text = "E-posta Adresini Değiştir",
-                        onClick = { /* TODO */ }
+                        onClick = { /* TODO */ },
+                        screenWidth = screenWidth,
+                        screenHeight = screenHeight
                     )
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(screenHeight * 0.015f))
 
                     ProfileMenuItem(
                         icon = Icons.Default.Lock,
                         text = "Şifreyi Değiştir",
-                        onClick = { /* TODO */ }
+                        onClick = { /* TODO */ },
+                        screenWidth = screenWidth,
+                        screenHeight = screenHeight
                     )
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(screenHeight * 0.015f))
 
                     ProfileMenuItem(
                         icon = Icons.Default.Phone,
                         text = "Telefon Numarasını Değiştir",
-                        onClick = { /* TODO */ }
+                        onClick = { /* TODO */ },
+                        screenWidth = screenWidth,
+                        screenHeight = screenHeight
                     )
 
-                    Spacer(modifier = Modifier.height(32.dp))
+                    Spacer(modifier = Modifier.height(screenHeight * 0.04f))
 
                     // HESABI SİL BUTONU
                     Button(
                         onClick = { /* TODO: Hesap silme onayı */ },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(56.dp),
+                            .height(screenHeight * 0.07f),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFE53935)
+                            containerColor = MaterialTheme.colorScheme.error
                         ),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(screenWidth * 0.03f)
                     ) {
                         Icon(
                             Icons.Default.Delete,
-                            contentDescription = "Hesabı Sil",
-                            modifier = Modifier.size(20.dp)
+                            contentDescription = "Çıkış Yap",
+                            modifier = Modifier.size(screenWidth * 0.05f)
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(screenWidth * 0.02f))
                         Text(
-                            "Hesabı Sil",
-                            fontSize = 16.sp,
+                            "Çıkış Yap",
+                            fontSize = (screenWidth.value * 0.04f).sp,
                             fontWeight = FontWeight.Bold
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(screenHeight * 0.03f))
                 }
             }
         }
     }
-}  // ← ProfileScreen BURADA BİTİYOR
+}
 
 // ProfileMenuItem DIŞARIDA OLMALI
 @Composable
@@ -255,22 +272,24 @@ fun ProfileMenuItem(
     icon: ImageVector,
     text: String,
     onClick: () -> Unit,
-    isDestructive: Boolean = false
+    isDestructive: Boolean = false,
+    screenWidth: androidx.compose.ui.unit.Dp,
+    screenHeight: androidx.compose.ui.unit.Dp
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() },
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = White
         ),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(1.dp)
+        shape = RoundedCornerShape(screenWidth * 0.03f),
+        elevation = CardDefaults.cardElevation(screenWidth * 0.0025f)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(screenWidth * 0.04f),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -281,23 +300,23 @@ fun ProfileMenuItem(
                 Icon(
                     imageVector = icon,
                     contentDescription = text,
-                    tint = if (isDestructive) Color(0xFFE53935) else Color(0xFF071372),
-                    modifier = Modifier.size(24.dp)
+                    tint = if (isDestructive) MaterialTheme.colorScheme.error else PrimaryBlue,
+                    modifier = Modifier.size(screenWidth * 0.06f)
                 )
-                Spacer(modifier = Modifier.width(16.dp))
+                Spacer(modifier = Modifier.width(screenWidth * 0.04f))
                 Text(
                     text = text,
-                    fontSize = 14.sp,
+                    fontSize = (screenWidth.value * 0.035f).sp,
                     fontWeight = FontWeight.Medium,
-                    color = if (isDestructive) Color(0xFFE53935) else Color(0xFF071372)
+                    color = if (isDestructive) MaterialTheme.colorScheme.error else PrimaryBlue
                 )
             }
 
             Icon(
                 imageVector = Icons.Default.KeyboardArrowRight,
                 contentDescription = "Git",
-                tint = Color(0xFF071372).copy(alpha = 0.3f),
-                modifier = Modifier.size(20.dp)
+                tint = PrimaryBlue.copy(alpha = 0.3f),
+                modifier = Modifier.size(screenWidth * 0.05f)
             )
         }
     }
