@@ -19,14 +19,10 @@ import com.ktun.ailabapp.presentation.ui.screens.projects.ProjectsScreen
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.ktun.ailabapp.presentation.ui.screens.projects.ProjectDetailScreen
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.createSavedStateHandle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ktun.ailabapp.presentation.ui.navigation.Screen
 import com.ktun.ailabapp.presentation.ui.screens.announcement.AnnouncementScreen
 import com.ktun.ailabapp.presentation.ui.screens.profile.ProfileScreen
-import com.ktun.ailabapp.presentation.ui.screens.register.RegisterScreen
+import com.ktun.ailabapp.screens.RegisterScreen
 
 @Composable
 fun NavGraph(navController: NavHostController) {
@@ -48,15 +44,14 @@ fun NavGraph(navController: NavHostController) {
             )
         }
 
+        // Register Screen
         composable(Screen.Register.route) {
             RegisterScreen(
+                navController = navController,  // ← navController parametresi
                 onRegisterSuccess = {
                     navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Register.route) { inclusive = true }
                     }
-                },
-                onNavigateBack = {
-                    navController.popBackStack()
                 }
             )
         }
@@ -104,51 +99,36 @@ fun NavGraph(navController: NavHostController) {
         composable(
             route = Screen.ProjectDetail.route,
             arguments = listOf(
-                navArgument("projectId") { type = NavType.StringType }
+                navArgument("projectId") { type = NavType.StringType }  // ← StringType
             )
         ) { backStackEntry ->
-            val projectId = backStackEntry.arguments?.getString("projectId") ?: ""
+            val projectId = backStackEntry.arguments?.getString("projectId") ?: ""  // ← getString
 
             ProjectDetailScreen(
-                projectId = projectId,
+                projectId = projectId,  // String olarak gönder
                 onNavigateBack = {
                     navController.popBackStack()
-                },
+                }
+            )
+        }
+
+        // Announcements Screen
+        composable(Screen.Announcements.route) {
+            AnnouncementScreen(
                 onNavigateToHome = {
-                    navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.Home.route) { inclusive = true }
-                    }
+                    navController.navigate(Screen.Home.route)
                 },
                 onNavigateToProjects = {
-                    navController.popBackStack()
+                    navController.navigate(Screen.Projects.route)
                 },
-                onNavigateToChat = {
-                    navController.navigate(Screen.Announcements.route)
-                },
+                onNavigateToChat = { /* Zaten announcements'tayız */ },
                 onNavigateToProfile = {
                     navController.navigate(Screen.Profile.route)
                 }
             )
         }
 
-        // Chat Screen Placeholder
-        composable(route = Screen.Announcements.route) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color(0xFF071372)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "Chat Screen\n(Coming Soon)",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
-            }
-        }
-
-        // Profile
+        // Profile Screen
         composable(Screen.Profile.route) {
             ProfileScreen(
                 onNavigateToHome = {
@@ -163,23 +143,8 @@ fun NavGraph(navController: NavHostController) {
                 onNavigateToProfile = { /* Zaten profile'dayız */ },
                 onLogout = {
                     navController.navigate(Screen.Login.route) {
-                        popUpTo(0) { inclusive = true }  // Tüm stack'i temizle
+                        popUpTo(0) { inclusive = true }
                     }
-                }
-            )
-        }
-
-        composable(Screen.Announcements.route) {
-            AnnouncementScreen(
-                onNavigateToHome = {
-                    navController.navigate(Screen.Home.route)
-                },
-                onNavigateToProjects = {
-                    navController.navigate(Screen.Projects.route)
-                },
-                onNavigateToChat = { /* Zaten announcements'tayız */ },
-                onNavigateToProfile = {
-                    navController.navigate(Screen.Profile.route)
                 }
             )
         }
