@@ -52,24 +52,30 @@ class AuthRepository(private val context: Context) {
             if (response.isSuccessful && response.body() != null) {
                 val authResponse = response.body()!!
 
-                android.util.Log.d("AuthRepository", "Register Success: ${authResponse.message}")
+                android.util.Log.d("AuthRepository", "Login Success!")  // ← message kaldırıldı
 
-                // Token ve kullanıcı bilgilerini kaydet
-                authResponse.data?.let { data ->
-                    data.token?.let {
-                        preferencesManager.saveToken(it)
-                    }
-                    data.refreshToken?.let {
-                        preferencesManager.saveRefreshToken(it)
-                    }
-                    preferencesManager.saveUserData(
-                        userId = data.user.id,
-                        email = data.user.email,
-                        firstName = data.user.firstName,
-                        lastName = data.user.lastName,
-                        phone = data.user.phone
-                    )
+                // Token'ı kaydet
+                authResponse.token?.let { token ->
+                    android.util.Log.d("AuthRepository", "Token kaydediliyor: ${token.take(20)}...")
+                    preferencesManager.saveToken(token)
+                    android.util.Log.d("AuthRepository", "Token kaydedildi!")
                 }
+
+                // RefreshToken'ı kaydet
+                authResponse.refreshToken?.let { refreshToken ->
+                    android.util.Log.d("AuthRepository", "RefreshToken kaydediliyor...")
+                    preferencesManager.saveRefreshToken(refreshToken)
+                }
+
+                // Kullanıcı bilgilerini kaydet
+                preferencesManager.saveUserData(
+                    userId = authResponse.user.id,
+                    email = authResponse.user.email,
+                    firstName = authResponse.user.fullName.split(" ").firstOrNull() ?: "",
+                    lastName = authResponse.user.fullName.split(" ").drop(1).joinToString(" "),
+                    phone = authResponse.user.phoneNumber ?: ""
+                )
+                android.util.Log.d("AuthRepository", "Kullanıcı bilgileri kaydedildi!")
 
                 NetworkResult.Success(authResponse)
             } else {
@@ -118,43 +124,52 @@ class AuthRepository(private val context: Context) {
         password: String
     ): NetworkResult<AuthResponse> = withContext(Dispatchers.IO) {
         try {
-            val request = LoginRequest(email, password)
+            val request = LoginRequest(
+                emailOrUsername = email,
+                password = password
+            )
 
-            android.util.Log.d("AuthRepository", "Login Request: Email=$email")
+            android.util.Log.d("AuthRepository", "Login Request: EmailOrUsername=$email")
 
             val response = authApi.login(request)
 
             if (response.isSuccessful && response.body() != null) {
                 val authResponse = response.body()!!
 
-                android.util.Log.d("AuthRepository", "Login Success: ${authResponse.message}")
+                android.util.Log.d("AuthRepository", "Login Success!")
 
-                // Token ve kullanıcı bilgilerini kaydet
-                authResponse.data?.let { data ->
-                    data.token?.let {
-                        preferencesManager.saveToken(it)
-                    }
-                    data.refreshToken?.let {
-                        preferencesManager.saveRefreshToken(it)
-                    }
-                    preferencesManager.saveUserData(
-                        userId = data.user.id,
-                        email = data.user.email,
-                        firstName = data.user.firstName,
-                        lastName = data.user.lastName,
-                        phone = data.user.phone
-                    )
+                // Token'ı kaydet
+                authResponse.token?.let { token ->
+                    android.util.Log.d("AuthRepository", "Token kaydediliyor: ${token.take(20)}...")
+                    preferencesManager.saveToken(token)
+                    android.util.Log.d("AuthRepository", "Token kaydedildi!")
                 }
+
+                // RefreshToken'ı kaydet
+                authResponse.refreshToken?.let { refreshToken ->
+                    android.util.Log.d("AuthRepository", "RefreshToken kaydediliyor...")
+                    preferencesManager.saveRefreshToken(refreshToken)
+                }
+
+                // Kullanıcı bilgilerini kaydet
+                preferencesManager.saveUserData(
+                    userId = authResponse.user.id,
+                    email = authResponse.user.email,
+                    firstName = authResponse.user.fullName.split(" ").firstOrNull() ?: "",
+                    lastName = authResponse.user.fullName.split(" ").drop(1).joinToString(" "),
+                    phone = authResponse.user.phoneNumber ?: ""
+                )
+                android.util.Log.d("AuthRepository", "Kullanıcı bilgileri kaydedildi!")
 
                 NetworkResult.Success(authResponse)
             } else {
                 val errorBody = response.errorBody()?.string()
 
                 android.util.Log.e("AuthRepository", """
-                    Login Error:
-                    Code: ${response.code()}
-                    Error Body: $errorBody
-                """.trimIndent())
+                Login Error:
+                Code: ${response.code()}
+                Error Body: $errorBody
+            """.trimIndent())
 
                 val errorMessage = when (response.code()) {
                     401 -> "Email veya şifre hatalı"

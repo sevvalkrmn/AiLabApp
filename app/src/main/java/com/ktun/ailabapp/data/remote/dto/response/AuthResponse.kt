@@ -2,64 +2,40 @@ package com.ktun.ailabapp.data.remote.dto.response
 
 import com.google.gson.annotations.SerializedName
 
-// Backend'den dönen response yapısı
-// Örnek JSON:
-// {
-//   "success": true,
-//   "message": "Kayıt başarılı",
-//   "data": {
-//     "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-//     "user": {
-//       "id": "123",
-//       "firstName": "Ahmet",
-//       "lastName": "Yılmaz",
-//       "email": "ahmet@example.com",
-//       "phone": "5551234567"
-//     }
-//   }
-// }
-
+// Backend direkt token ve user döndürüyor, data wrapper'ı yok
 data class AuthResponse(
-    @SerializedName("success")
-    val success: Boolean,
-
-    @SerializedName("message")
-    val message: String?,
-
-    @SerializedName("data")
-    val data: AuthData?
-)
-
-data class AuthData(
     @SerializedName("token")
     val token: String?,
 
     @SerializedName("refreshToken")
-    val refreshToken: String? = null,
+    val refreshToken: String?,
+
+    @SerializedName("expiresAt")
+    val expiresAt: String?,
 
     @SerializedName("user")
-    val user: UserDto
+    val user: User
 )
 
-data class UserDto(
+data class User(
     @SerializedName("id")
     val id: String,
 
-    @SerializedName("firstName")
-    val firstName: String,
-
-    @SerializedName("lastName")
-    val lastName: String,
+    @SerializedName("userName")
+    val userName: String,
 
     @SerializedName("email")
     val email: String,
 
-    @SerializedName("phone")
-    val phone: String,
+    @SerializedName("fullName")
+    val fullName: String,
 
-    @SerializedName("profileImage")
-    val profileImage: String? = null,
+    @SerializedName("phoneNumber")
+    val phoneNumber: String?,
 
-    @SerializedName("createdAt")
-    val createdAt: String? = null
+    @SerializedName("avatarUrl")
+    val avatarUrl: String?,
+
+    @SerializedName("roles")
+    val roles: List<String>
 )
