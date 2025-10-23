@@ -25,10 +25,13 @@ import com.ktun.ailabapp.presentation.ui.screens.profile.ProfileScreen
 import com.ktun.ailabapp.screens.RegisterScreen
 
 @Composable
-fun NavGraph(navController: NavHostController) {
+fun NavGraph(
+    navController: NavHostController,
+    startDestination: String = Screen.Login.route  // ← Parametre eklendi
+) {
     NavHost(
         navController = navController,
-        startDestination = Screen.Login.route
+        startDestination = startDestination  // ← Dinamik başlangıç
     ) {
         // Login Screen
         composable(route = Screen.Login.route) {
@@ -47,7 +50,7 @@ fun NavGraph(navController: NavHostController) {
         // Register Screen
         composable(Screen.Register.route) {
             RegisterScreen(
-                navController = navController,  // ← navController parametresi
+                navController = navController,
                 onRegisterSuccess = {
                     navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Register.route) { inclusive = true }
@@ -99,13 +102,13 @@ fun NavGraph(navController: NavHostController) {
         composable(
             route = Screen.ProjectDetail.route,
             arguments = listOf(
-                navArgument("projectId") { type = NavType.StringType }  // ← StringType
+                navArgument("projectId") { type = NavType.StringType }
             )
         ) { backStackEntry ->
-            val projectId = backStackEntry.arguments?.getString("projectId") ?: ""  // ← getString
+            val projectId = backStackEntry.arguments?.getString("projectId") ?: ""
 
             ProjectDetailScreen(
-                projectId = projectId,  // String olarak gönder
+                projectId = projectId,
                 onNavigateBack = {
                     navController.popBackStack()
                 }

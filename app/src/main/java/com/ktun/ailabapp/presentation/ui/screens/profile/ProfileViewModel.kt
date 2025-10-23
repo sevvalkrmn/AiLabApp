@@ -1,20 +1,26 @@
 package com.ktun.ailabapp.presentation.ui.screens.profile
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.ktun.ailabapp.data.repository.AuthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 data class ProfileUiState(
-    val name: String = "Şevval Karaman",
-    val email: String = "sevvalkrmn14@gmail.com",
-    val points: Int = 270,
-    val profileImageUrl: String? = "https://i.pravatar.cc/300?img=1",
-    val isLoading: Boolean = false
+    val name: String = "Kullanıcı Adı",
+    val email: String = "user@example.com",
+    val profileImageUrl: String = "",
+    val points: Int = 0,
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null
 )
 
-class ProfileViewModel : ViewModel() {
+class ProfileViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val authRepository = AuthRepository(application.applicationContext)
 
     private val _uiState = MutableStateFlow(ProfileUiState())
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
@@ -24,20 +30,36 @@ class ProfileViewModel : ViewModel() {
     }
 
     private fun loadUserProfile() {
-        // TODO: API'den kullanıcı bilgilerini çek
-        // Şimdilik mock data kullanıyoruz
-        _uiState.update {
-            it.copy(
-                name = "Şevval Karaman",
-                email = "sevvalkrmn14@gmail.com",
-                points = 270,
-                profileImageUrl = "https://i.pravatar.cc/300?img=1"
-            )
+        // TODO: PreferencesManager'dan kullanıcı bilgilerini yükle
+        viewModelScope.launch {
+            // Örnek:
+            // val userData = preferencesManager.getUserData()
+            // _uiState.value = _uiState.value.copy(
+            //     name = userData.name,
+            //     email = userData.email,
+            //     points = userData.points
+            // )
         }
     }
 
-    fun logout(onLogoutSuccess: () -> Unit) {
-        // TODO: Logout işlemleri (token temizleme vs.)
-        onLogoutSuccess()
+    fun logout(onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
+
+            try {
+                android.util.Log.d("ProfileViewModel", "Logout started")
+                authRepository.logout()
+                android.util.Log.d("ProfileViewModel", "Logout successful")
+
+                _uiState.value = _uiState.value.copy(isLoading = false)
+                onSuccess()
+            } catch (e: Exception) {
+                android.util.Log.e("ProfileViewModel", "Logout error", e)
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = "Çıkış yapılırken hata oluştu"
+                )
+            }
+        }
     }
 }

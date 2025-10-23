@@ -1,5 +1,6 @@
 package com.ktun.ailabapp.presentation.ui.screens.profile
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -26,9 +27,8 @@ import coil.compose.AsyncImage
 import com.ktun.ailabapp.presentation.ui.components.BottomNavigationBar
 import com.ktun.ailabapp.presentation.ui.components.DebugButton
 import com.ktun.ailabapp.presentation.ui.components.FeedbackDialog
-import com.ktun.ailabapp.presentation.ui.components.sendFeedbackEmail
+import com.ktun.ailabapp.presentation.ui.components.LogoutDialog
 import com.ktun.ailabapp.ui.theme.PrimaryBlue
-import com.ktun.ailabapp.ui.theme.SecondaryBlue
 import com.ktun.ailabapp.ui.theme.BackgroundLight
 import com.ktun.ailabapp.ui.theme.White
 
@@ -49,23 +49,43 @@ fun ProfileScreen(
     val screenHeight = configuration.screenHeightDp.dp
     val screenWidth = configuration.screenWidthDp.dp
 
-    // Dialog state
+    // Dialog states
     var showFeedbackDialog by remember { mutableStateOf(false) }
+    var showLogoutDialog by remember { mutableStateOf(false) }  // ← YENİ EKLENDI
 
     // Feedback Dialog
     if (showFeedbackDialog) {
         FeedbackDialog(
             onDismiss = { showFeedbackDialog = false },
             onSubmit = { feedback ->
-                // TODO: Feedback'i gönder (email, API, Firebase)
                 println("📝 Feedback: $feedback")
-
-                // Başarılı mesajı göster (opsiyonel)
-                // Toast veya Snackbar
-
                 showFeedbackDialog = false
             }
         )
+    }
+
+    // Logout Dialog - YENİ EKLENDI
+    if (showLogoutDialog) {
+        LogoutDialog(
+            onDismiss = { showLogoutDialog = false },
+            onConfirm = {
+                showLogoutDialog = false
+                viewModel.logout(onSuccess = {
+                    Toast.makeText(context, "Çıkış yapıldı", Toast.LENGTH_SHORT).show()
+                    onLogout()
+                })
+            }
+        )
+    }
+
+    // Loading indicator
+    if (uiState.isLoading) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(color = PrimaryBlue)
+        }
     }
 
     Scaffold(
@@ -107,7 +127,7 @@ fun ProfileScreen(
                     )
 
                     DebugButton(
-                        onClick = {showFeedbackDialog = true},
+                        onClick = { showFeedbackDialog = true },
                         modifier = Modifier.align(Alignment.CenterEnd)
                     )
                 }
@@ -235,9 +255,9 @@ fun ProfileScreen(
 
                     Spacer(modifier = Modifier.height(screenHeight * 0.04f))
 
-                    // HESABI SİL BUTONU
+                    // ÇIKIŞ YAP BUTONU - GÜNCELLENDİ
                     Button(
-                        onClick = { /* TODO: Hesap silme onayı */ },
+                        onClick = { showLogoutDialog = true },  // ← Dialog'u göster
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(screenHeight * 0.07f),
@@ -247,7 +267,7 @@ fun ProfileScreen(
                         shape = RoundedCornerShape(screenWidth * 0.03f)
                     ) {
                         Icon(
-                            Icons.Default.Delete,
+                            Icons.Default.ExitToApp,  // ← Icon değişti
                             contentDescription = "Çıkış Yap",
                             modifier = Modifier.size(screenWidth * 0.05f)
                         )
@@ -266,7 +286,7 @@ fun ProfileScreen(
     }
 }
 
-// ProfileMenuItem DIŞARIDA OLMALI
+// ProfileMenuItem fonksiyonu aynı kalacak...
 @Composable
 fun ProfileMenuItem(
     icon: ImageVector,
