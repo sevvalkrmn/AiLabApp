@@ -1,83 +1,153 @@
 package com.ktun.ailabapp.presentation.ui.screens.projects
 
+import android.app.Application
 import androidx.lifecycle.ViewModel
-import com.ktun.ailabapp.R
-import com.ktun.ailabapp.data.model.Project
-import com.ktun.ailabapp.data.model.ProjectsUiState
-import com.ktun.ailabapp.data.model.ProjectStatus
-import com.ktun.ailabapp.data.model.ProjectFilter
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
+import com.ktun.ailabapp.data.remote.dto.response.MyProjectsResponse
+import com.ktun.ailabapp.data.repository.AuthRepository
+import com.ktun.ailabapp.data.repository.ProjectRepository
+import com.ktun.ailabapp.util.NetworkResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
-class ProjectsViewModel : ViewModel() {
+data class ProjectsUiState(
+    val projects: List<MyProjectsResponse> = emptyList(),
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null,
+    val selectedFilter: ProjectFilter = ProjectFilter.ALL
+)
+
+enum class ProjectFilter {
+    ALL,
+    CAPTAIN,
+    MEMBER
+}
+
+class ProjectsViewModel(application: Application) : ViewModel() {
+
+    private val projectRepository = ProjectRepository(application.applicationContext)
+    private val authRepository = AuthRepository(application.applicationContext)
 
     private val _uiState = MutableStateFlow(ProjectsUiState())
     val uiState: StateFlow<ProjectsUiState> = _uiState.asStateFlow()
 
+    private var currentUserId: String = ""
+
     init {
-        loadProjects()
+        loadUserIdAndProjects()
     }
 
-    private fun loadProjects() {
-        _uiState.update { it.copy(isLoading = true) }
+    private fun loadUserIdAndProjects() {
+        viewModelScope.launch {
+            // Önce kullanıcının ID'sini al
+            when (val profileResult = authRepository.getProfile()) {
+                is NetworkResult.Success -> {
+                    profileResult.data?.let { profile ->
+                        currentUserId = profile.id
+                        android.util.Log.d("ProjectsViewModel", "Current User ID: $currentUserId")
 
-        // Örnek projeler
-        val sampleProjects = listOf(
-            Project(
-                id = "1",
-                title = "Ai Lab - Demirağ",
-                description = "TEKNOFEST Savaşan İHA Yarışması",
-                logoResId = R.drawable.teknofest_logo,
-                progress = 0.65f,
-                status = ProjectStatus.IN_PROGRESS,
-                category = "TEKNOFEST",
-                dueDate = "15 Kasım 2024"
-            ),
-            Project(
-                id = "2",
-                title = "Tübitak 2209-A",
-                description = "Sürü İHA'lar ile Orman Yangınlarına Müdehale Projesi",
-                logoResId = R.drawable.tubitak_logo,
-                progress = 0.85f,
-                status = ProjectStatus.TESTING,
-                category = "TÜBİTAK",
-                dueDate = "30 Ekim 2024"
-            ),
-            Project(
-                id = "3",
-                title = "Ai Lab - Yalkın",
-                description = "TEKNOFEST Sürü İHA Yarışması",
-                logoResId = R.drawable.teknofest_logo,
-                progress = 0.45f,
-                status = ProjectStatus.IN_PROGRESS,
-                category = "TEKNOFEST",
-                dueDate = "20 Aralık 2024"
-            )
-        )
+                        // UserId alındıktan sonra projeleri yükle
+                        loadProjects()
+                    }
+                }
+                is NetworkResult.Error -> {
+                    android.util.Log.e("ProjectsViewModel", "Profile alınamadı: ${profileResult.message}")
+                    // Yine de projeleri yüklemeyi dene
+                    loadProjects()
+                }
+                else -> {}
+            }
+        }
+    }
 
-        _uiState.update {
-            it.copy(
-                projects = sampleProjects,
-                isLoading = false
+    fun loadProjects(filter: ProjectFilter = ProjectFilter.ALL) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                isLoading = true,
+                errorMessage = null,
+                selectedFilter = filter
             )
+
+            val roleFilter = when (filter) {
+                ProjectFilter.CAPTAIN -> "Captain"
+                ProjectFilter.MEMBER -> "Member"
+                ProjectFilter.ALL -> null
+            }
+
+            when (val result = projectRepository.getMyProjects(roleFilter)) {
+                is NetworkResult.Success -> {
+                    result.data?.let { projects ->
+                        android.util.Log.d("ProjectsViewModel", "Projeler yüklendi: ${projects.size}")
+
+                        // Her proje için üye bilgisini çek ve kullanıcının rolünü bul
+                        val projectsWithRoles = mutableListOf<MyProjectsResponse>()
+
+                        projects.forEach { project ->
+                            // Proje üyelerini çek
+                            when (val membersResult = projectRepository.getProjectMembers(project.id)) {
+                                is NetworkResult.Success -> {
+                                    membersResult.data?.let { members ->
+                                        // Giriş yapan kullanıcının bu projedeki rolünü bul
+                                        val userMember = members.find { it.userId == currentUserId }
+                                        val userRole = userMember?.role ?: "Member"
+
+                                        projectsWithRoles.add(project.copy(userRole = userRole))
+
+                                        android.util.Log.d("ProjectsViewModel", """
+                                            Proje: ${project.name}
+                                            User ID: $currentUserId
+                                            User Role: $userRole
+                                        """.trimIndent())
+                                    }
+                                }
+                                is NetworkResult.Error -> {
+                                    android.util.Log.e("ProjectsViewModel", "Üyeler alınamadı: ${membersResult.message}")
+                                    // Üyeler alınamazsa default role kullan
+                                    projectsWithRoles.add(project.copy(userRole = "Member"))
+                                }
+                                else -> {}
+                            }
+                        }
+
+                        _uiState.value = _uiState.value.copy(
+                            projects = projectsWithRoles,
+                            isLoading = false,
+                            errorMessage = null
+                        )
+
+                        android.util.Log.d("ProjectsViewModel", "Tüm projeler rolleriyle yüklendi: ${projectsWithRoles.size}")
+                    }
+                }
+                is NetworkResult.Error -> {
+                    android.util.Log.e("ProjectsViewModel", "Proje yükleme hatası: ${result.message}")
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = result.message
+                    )
+                }
+                is NetworkResult.Loading -> {}
+            }
         }
     }
 
-    fun setFilter(filter: ProjectFilter) {
-        _uiState.update { it.copy(selectedFilter = filter) }
+    fun refreshProjects() {
+        loadProjects(_uiState.value.selectedFilter)
     }
 
-    fun getFilteredProjects(): List<Project> {
-        return when (_uiState.value.selectedFilter) {
-            ProjectFilter.ALL -> _uiState.value.projects
-            ProjectFilter.ACTIVE -> _uiState.value.projects.filter {
-                it.status == ProjectStatus.IN_PROGRESS || it.status == ProjectStatus.TESTING
-            }
-            ProjectFilter.COMPLETED -> _uiState.value.projects.filter {
-                it.status == ProjectStatus.COMPLETED
-            }
+    fun filterProjects(filter: ProjectFilter) {
+        loadProjects(filter)
+    }
+}
+
+class ProjectsViewModelFactory(private val application: Application) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(ProjectsViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return ProjectsViewModel(application) as T
         }
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

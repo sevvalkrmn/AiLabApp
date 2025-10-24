@@ -1,37 +1,28 @@
 package com.ktun.ailabapp.presentation.ui.screens.navigation
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.ktun.ailabapp.presentation.ui.screens.home.HomeScreen
-import com.ktun.ailabapp.presentation.ui.screens.login.LoginScreen
-import com.ktun.ailabapp.presentation.ui.screens.projects.ProjectsScreen
-import androidx.navigation.NavType
 import androidx.navigation.navArgument
-import com.ktun.ailabapp.presentation.ui.screens.projects.ProjectDetailScreen
 import com.ktun.ailabapp.presentation.ui.navigation.Screen
 import com.ktun.ailabapp.presentation.ui.screens.announcement.AnnouncementScreen
+import com.ktun.ailabapp.presentation.ui.screens.home.HomeScreen
+import com.ktun.ailabapp.presentation.ui.screens.login.LoginScreen
 import com.ktun.ailabapp.presentation.ui.screens.profile.ProfileScreen
+import com.ktun.ailabapp.presentation.ui.screens.projects.ProjectDetailScreen
+import com.ktun.ailabapp.presentation.ui.screens.projects.ProjectsScreen
 import com.ktun.ailabapp.screens.RegisterScreen
 
 @Composable
 fun NavGraph(
     navController: NavHostController,
-    startDestination: String = Screen.Login.route  // ← Parametre eklendi
+    startDestination: String = Screen.Login.route
 ) {
     NavHost(
         navController = navController,
-        startDestination = startDestination  // ← Dinamik başlangıç
+        startDestination = startDestination
     ) {
         // Login Screen
         composable(route = Screen.Login.route) {
@@ -79,11 +70,7 @@ fun NavGraph(
             ProjectsScreen(
                 onNavigateToHome = {
                     navController.navigate(Screen.Home.route) {
-                        popUpTo(navController.graph.startDestinationId) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
+                        popUpTo(Screen.Home.route) { inclusive = true }
                     }
                 },
                 onNavigateToChat = {

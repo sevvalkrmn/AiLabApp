@@ -9,6 +9,7 @@ object ApiConfig {
     object Endpoints {
         const val REGISTER = "api/auth/register"
         const val LOGIN = "api/auth/login"
+        const val REFRESH_TOKEN = "/api/Auth/refresh-token"
         const val LOGOUT = "api/auth/logout"
         const val GET_PROFILE = "api/user/profile"
         const val UPDATE_PROFILE = "api/user/profile"

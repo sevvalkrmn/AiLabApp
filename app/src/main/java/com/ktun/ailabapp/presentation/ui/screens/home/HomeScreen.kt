@@ -55,6 +55,11 @@ fun HomeScreen(
         )
     }
 
+    // HomeScreen.kt içinde bir yere ekleyin
+    Button(onClick = { onNavigateToProjects() }) {
+        Text("Test: Projects'e Git")
+    }
+
     Scaffold(
         bottomBar = {
             BottomNavigationBar(
@@ -90,13 +95,13 @@ fun HomeScreen(
                 ) {
                     Column {
                         Text(
-                            text = "Hi, Welcome Back",
+                            text = "Hi, ${uiState.userName}",
                             fontSize = (screenWidth.value * 0.045f).sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
                         )
                         Text(
-                            text = "Good Morning",
+                            text = uiState.greeting,
                             fontSize = (screenWidth.value * 0.032f).sp,
                             color = Color.White.copy(alpha = 0.7f)
                         )
