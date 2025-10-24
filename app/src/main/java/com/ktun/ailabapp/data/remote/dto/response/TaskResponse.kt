@@ -1,4 +1,4 @@
-package com.ktun.ailabapp.data.remote.dto.response
+package com.ktunailab.ailabapp.data.remote.dto.response
 
 import com.google.gson.annotations.SerializedName
 
@@ -13,7 +13,7 @@ data class TaskResponse(
     val description: String? = null,
 
     @SerializedName("status")
-    private val _status: Int = 0,  // ← Backend'den 0, 1, 2 geliyor
+    public val _status: Int = 0,  // ← Backend'den 0, 1, 2 geliyor
 
     @SerializedName("projectId")
     val projectId: String? = null,

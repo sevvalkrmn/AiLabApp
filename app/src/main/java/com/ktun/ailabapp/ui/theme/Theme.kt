@@ -1,4 +1,4 @@
-package com.ktun.ailabapp.ui.theme
+package com.ktunailab.ailabapp.ui.theme
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes

@@ -1,4 +1,4 @@
-package com.ktun.ailabapp.ui.theme
+package com.ktunailab.ailabapp.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
@@ -11,3 +11,9 @@ val BorderGray = Color(0xFFE0E0E0)
 val LabelGray = Color(0xFF9E9E9E)
 val White = Color(0xFFFFFFFF)
 val Black = Color(0xFF000000)
+
+// Menu kartları için renkler
+val LightBlue = Color(0xFF42A5F5)      // Projelerim
+val LightGreen = Color(0xFF66BB6A)     // AI Asistan
+val LightPurple = Color(0xFF9575CD)    // Profilim
+val LightOrange = Color(0xFFFF9800)    // Duyurular

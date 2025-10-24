@@ -1,13 +1,13 @@
-package com.ktun.ailabapp.presentation.ui.screens.projects
+package com.ktunailab.ailabapp.presentation.ui.screens.projects
 
 import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.ktun.ailabapp.data.remote.dto.response.MyProjectsResponse
-import com.ktun.ailabapp.data.repository.AuthRepository
-import com.ktun.ailabapp.data.repository.ProjectRepository
-import com.ktun.ailabapp.util.NetworkResult
+import com.ktunailab.ailabapp.data.remote.dto.response.MyProjectsResponse
+import com.ktunailab.ailabapp.data.repository.AuthRepository
+import com.ktunailab.ailabapp.data.repository.ProjectRepository
+import com.ktunailab.ailabapp.util.NetworkResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

@@ -1,4 +1,4 @@
-package com.ktun.ailabapp.presentation.ui.screens.profile
+package com.ktunailab.ailabapp.presentation.ui.screens.profile
 
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -24,14 +24,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.ktun.ailabapp.R
-import com.ktun.ailabapp.presentation.ui.components.BottomNavigationBar
-import com.ktun.ailabapp.presentation.ui.components.DebugButton
-import com.ktun.ailabapp.presentation.ui.components.FeedbackDialog
-import com.ktun.ailabapp.presentation.ui.components.LogoutDialog
-import com.ktun.ailabapp.ui.theme.PrimaryBlue
-import com.ktun.ailabapp.ui.theme.BackgroundLight
-import com.ktun.ailabapp.ui.theme.White
+import com.ktunailab.ailabapp.R
+import com.ktunailab.ailabapp.presentation.ui.components.BottomNavigationBar
+import com.ktunailab.ailabapp.presentation.ui.components.DebugButton
+import com.ktunailab.ailabapp.presentation.ui.components.FeedbackDialog
+import com.ktunailab.ailabapp.presentation.ui.components.LogoutDialog
+import com.ktunailab.ailabapp.ui.theme.PrimaryBlue
+import com.ktunailab.ailabapp.ui.theme.BackgroundLight
+import com.ktunailab.ailabapp.ui.theme.White
 
 @Composable
 fun ProfileScreen(

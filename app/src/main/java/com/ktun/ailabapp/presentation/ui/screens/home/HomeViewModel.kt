@@ -1,18 +1,23 @@
-package com.ktun.ailabapp.presentation.ui.screens.home
+package com.ktunailab.ailabapp.presentation.ui.screens.home
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.ktun.ailabapp.data.repository.AuthRepository
-import com.ktun.ailabapp.util.NetworkResult
+import com.ktunailab.ailabapp.data.remote.dto.response.ProfileResponse
+import com.ktunailab.ailabapp.data.remote.dto.response.TaskResponse
+import com.ktunailab.ailabapp.data.repository.AuthRepository
+import com.ktunailab.ailabapp.data.repository.TaskRepository
+import com.ktunailab.ailabapp.util.NetworkResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 data class HomeUiState(
-    val userName: String = "",  // ← Kullanıcı adı eklendi
+    val user: ProfileResponse? = null,
+    val userName: String = "",
     val greeting: String = "Good Morning",
+    val currentTasks: List<TaskResponse> = emptyList(),  // ← Görevler eklendi
     val isLoading: Boolean = false,
     val errorMessage: String? = null
 )
@@ -20,16 +25,18 @@ data class HomeUiState(
 class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     private val authRepository = AuthRepository(application.applicationContext)
+    private val taskRepository = TaskRepository(application.applicationContext)  // ← Eklendi
 
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     init {
-        loadUserProfile()
+        loadUserData()
+        loadCurrentTasks()  // ← Görevleri yükle
         updateGreeting()
     }
 
-    private fun loadUserProfile() {
+    fun loadUserData() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
 
@@ -39,25 +46,28 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                         val firstName = profile.fullName.split(" ").firstOrNull() ?: "Kullanıcı"
 
                         _uiState.value = _uiState.value.copy(
+                            user = profile,
                             userName = firstName,
                             isLoading = false
                         )
 
-                        android.util.Log.d("HomeViewModel", "User loaded: $firstName")
+                        android.util.Log.d("HomeViewModel", """
+                            User loaded: $firstName
+                            Total Score: ${profile.totalScore}
+                            Avatar URL: ${profile.avatarUrl ?: "Yok"}
+                        """.trimIndent())
                     }
                 }
                 is NetworkResult.Error -> {
                     android.util.Log.e("HomeViewModel", "Profile error: ${result.message}")
 
-                    // Eğer token expired ise yenilemeyi dene
                     if (result.message?.contains("Oturum süresi") == true) {
                         android.util.Log.d("HomeViewModel", "Token expired, yenileme deneniyor...")
 
                         when (val refreshResult = authRepository.refreshToken()) {
                             is NetworkResult.Success -> {
                                 android.util.Log.d("HomeViewModel", "Token yenilendi, profil tekrar yükleniyor...")
-                                // Token yenilendi, profili tekrar yükle
-                                loadUserProfile()
+                                loadUserData()
                             }
                             is NetworkResult.Error -> {
                                 android.util.Log.e("HomeViewModel", "Token yenileme başarısız: ${refreshResult.message}")
@@ -81,6 +91,57 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    private fun loadCurrentTasks() {
+        viewModelScope.launch {
+            android.util.Log.d("HomeViewModel", "🔵 loadCurrentTasks() başladı")
+
+            when (val result = taskRepository.getMyTasks()) {
+                is NetworkResult.Success -> {
+                    android.util.Log.d("HomeViewModel", "✅ NetworkResult.Success")
+
+                    result.data?.let { allTasks ->
+                        android.util.Log.d("HomeViewModel", "📦 Gelen görev sayısı: ${allTasks.size}")
+
+                        // HER GÖREVİ DETAYLI LOGLA
+                        allTasks.forEachIndexed { index, task ->
+                            android.util.Log.d("HomeViewModel", """
+                            ----------------------------------------
+                            Görev #$index:
+                            - ID: ${task.id}
+                            - Title: ${task.title}
+                            - Status String: '${task.status}'
+                            - Raw _status: ${task._status}
+                            - Description: ${task.description}
+                            - Project: ${task.projectName}
+                            ----------------------------------------
+                        """.trimIndent())
+                        }
+
+                        // FİLTRESİZ HEMEN ATAR - TEST İÇİN
+                        val testTasks = allTasks.take(2)
+
+                        android.util.Log.d("HomeViewModel", "🎯 UI'a gönderilen görev sayısı: ${testTasks.size}")
+
+                        _uiState.value = _uiState.value.copy(
+                            currentTasks = testTasks
+                        )
+
+                        android.util.Log.d("HomeViewModel", "✅ uiState güncellendi - currentTasks.size: ${_uiState.value.currentTasks.size}")
+
+                    } ?: run {
+                        android.util.Log.e("HomeViewModel", "❌ result.data NULL!")
+                    }
+                }
+                is NetworkResult.Error -> {
+                    android.util.Log.e("HomeViewModel", "❌ NetworkResult.Error: ${result.message}")
+                }
+                is NetworkResult.Loading -> {
+                    android.util.Log.d("HomeViewModel", "⏳ NetworkResult.Loading")
+                }
+            }
+        }
+    }
+
     private fun updateGreeting() {
         val currentHour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
         val greeting = when (currentHour) {
@@ -90,5 +151,10 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             else -> "Good Night"
         }
         _uiState.value = _uiState.value.copy(greeting = greeting)
+    }
+
+    fun refreshUserData() {
+        loadUserData()
+        loadCurrentTasks()
     }
 }

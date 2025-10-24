@@ -1,9 +1,9 @@
-package com.ktun.ailabapp.presentation.ui.screens.announcement
+package com.ktunailab.ailabapp.presentation.ui.screens.announcement
 
 import androidx.lifecycle.ViewModel
-import com.ktun.ailabapp.data.model.Announcement
-import com.ktun.ailabapp.data.model.AnnouncementFilter
-import com.ktun.ailabapp.data.model.AnnouncementType
+import com.ktunailab.ailabapp.data.model.Announcement
+import com.ktunailab.ailabapp.data.model.AnnouncementFilter
+import com.ktunailab.ailabapp.data.model.AnnouncementType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

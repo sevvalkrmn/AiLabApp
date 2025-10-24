@@ -1,6 +1,6 @@
-package com.ktun.ailabapp.data.repository
+package com.ktunailab.ailabapp.data.repository
 
-import com.ktun.ailabapp.data.model.LeaderboardItem
+import com.ktunailab.ailabapp.data.model.LeaderboardItem
 
 object SampleData {
     val leaderboardList = listOf(

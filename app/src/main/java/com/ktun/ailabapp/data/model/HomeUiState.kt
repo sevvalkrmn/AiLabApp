@@ -1,4 +1,4 @@
-package com.ktun.ailabapp.data.model
+package com.ktunailab.ailabapp.data.model
 
 data class HomeUiState(
     val userName: String = "Şevval",

@@ -1,10 +1,10 @@
-package com.ktun.ailabapp.data.remote.api
+package com.ktunailab.ailabapp.data.remote.api
 
-import com.ktun.ailabapp.data.remote.dto.request.LoginRequest
-import com.ktun.ailabapp.data.remote.dto.request.RegisterRequest
-import com.ktun.ailabapp.data.remote.dto.request.RefreshTokenRequest
-import com.ktun.ailabapp.data.remote.dto.response.AuthResponse
-import com.ktun.ailabapp.data.remote.dto.response.ProfileResponse
+import com.ktunailab.ailabapp.data.remote.dto.request.LoginRequest
+import com.ktunailab.ailabapp.data.remote.dto.request.RegisterRequest
+import com.ktunailab.ailabapp.data.remote.dto.request.RefreshTokenRequest
+import com.ktunailab.ailabapp.data.remote.dto.response.AuthResponse
+import com.ktunailab.ailabapp.data.remote.dto.response.ProfileResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET

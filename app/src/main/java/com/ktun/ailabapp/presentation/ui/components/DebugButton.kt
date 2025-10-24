@@ -1,4 +1,4 @@
-package com.ktun.ailabapp.presentation.ui.components
+package com.ktunailab.ailabapp.presentation.ui.components
 
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons

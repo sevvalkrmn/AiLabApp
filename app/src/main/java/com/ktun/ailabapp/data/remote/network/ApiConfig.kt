@@ -1,4 +1,4 @@
-package com.ktun.ailabapp.data.remote.network
+package com.ktunailab.ailabapp.data.remote.network
 
 object ApiConfig {
 
