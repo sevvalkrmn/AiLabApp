@@ -1,6 +1,6 @@
-package com.ktun.ailabapp.data.model
+package com.ktunailab.ailabapp.data.model
 
-import com.ktun.ailabapp.data.remote.dto.response.MyProjectsResponse
+import com.ktunailab.ailabapp.data.remote.dto.response.MyProjectsResponse
 
 data class ProjectsUiState(
     val projects: List<MyProjectsResponse> = emptyList(),

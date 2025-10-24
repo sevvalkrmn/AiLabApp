@@ -1,4 +1,4 @@
-package com.ktun.ailabapp
+package com.ktunailab.ailabapp
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -9,10 +9,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
-import com.ktun.ailabapp.data.local.datastore.PreferencesManager
-import com.ktun.ailabapp.presentation.ui.navigation.Screen
-import com.ktun.ailabapp.presentation.ui.screens.navigation.NavGraph
-import com.ktun.ailabapp.ui.theme.AiLabAppTheme
+import com.ktunailab.ailabapp.presentation.ui.screens.navigation.NavGraph
+import com.ktunailab.ailabapp.ui.theme.AiLabAppTheme
+import com.ktunailab.ailabapp.data.local.datastore.PreferencesManager
+import com.ktunailab.ailabapp.presentation.ui.navigation.Screen
 import kotlinx.coroutines.flow.first
 
 class MainActivity : ComponentActivity() {

@@ -1,4 +1,4 @@
-package com.ktun.ailabapp.data.remote.dto.response
+package com.ktunailab.ailabapp.data.remote.dto.response
 
 import com.google.gson.annotations.SerializedName
 

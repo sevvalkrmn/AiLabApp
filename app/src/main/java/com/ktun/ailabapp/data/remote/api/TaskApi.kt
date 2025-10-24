@@ -1,10 +1,10 @@
-package com.ktun.ailabapp.data.remote.api
+package com.ktunailab.ailabapp.data.remote.api
 
-import com.ktun.ailabapp.data.remote.dto.request.CreateTaskRequest
-import com.ktun.ailabapp.data.remote.dto.request.UpdateTaskRequest
-import com.ktun.ailabapp.data.remote.dto.request.UpdateTaskStatusRequest
-import com.ktun.ailabapp.data.remote.dto.response.PaginatedResponse
-import com.ktun.ailabapp.data.remote.dto.response.TaskResponse
+import com.ktunailab.ailabapp.data.remote.dto.request.CreateTaskRequest
+import com.ktunailab.ailabapp.data.remote.dto.request.UpdateTaskRequest
+import com.ktunailab.ailabapp.data.remote.dto.request.UpdateTaskStatusRequest
+import com.ktunailab.ailabapp.data.remote.dto.response.PaginatedResponse
+import com.ktunailab.ailabapp.data.remote.dto.response.TaskResponse
 import retrofit2.Response
 import retrofit2.http.*
 
@@ -28,7 +28,7 @@ interface TaskApi {
     @GET("api/tasks/{id}")
     suspend fun getTaskDetail(
         @Path("id") taskId: String
-    ): Response<TaskResponse>
+    ): Response<List<TaskResponse>>
 
     /**
      * Kullanıcıya atanan görevleri listele
@@ -37,7 +37,7 @@ interface TaskApi {
     @GET("api/tasks/my-tasks")
     suspend fun getMyTasks(
         @Query("status") status: String? = null
-    ): Response<PaginatedResponse<TaskResponse>>  // ← DEĞİŞTİ: List yerine PaginatedResponse
+    ): Response<List<TaskResponse>>
 
     /**
      * Yeni görev oluştur (Admin veya Captain)

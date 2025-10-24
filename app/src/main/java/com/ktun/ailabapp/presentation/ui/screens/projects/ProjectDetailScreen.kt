@@ -1,4 +1,4 @@
-package com.ktun.ailabapp.presentation.ui.screens.projects
+package com.ktunailab.ailabapp.presentation.ui.screens.projects
 
 import android.app.Application
 import androidx.compose.foundation.background
@@ -23,14 +23,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.ktun.ailabapp.data.remote.dto.response.ProjectDetailResponse
-import com.ktun.ailabapp.data.remote.dto.response.ProjectMember
-import com.ktun.ailabapp.data.remote.dto.response.TaskResponse
-import com.ktun.ailabapp.data.remote.dto.response.TaskStatistics
-import com.ktun.ailabapp.ui.theme.BackgroundLight
-import com.ktun.ailabapp.ui.theme.PrimaryBlue
-import com.ktun.ailabapp.ui.theme.White
-import com.ktun.ailabapp.presentation.ui.util.formatDate
+import com.ktunailab.ailabapp.data.remote.dto.response.ProjectDetailResponse
+import com.ktunailab.ailabapp.data.remote.dto.response.ProjectMember
+import com.ktunailab.ailabapp.data.remote.dto.response.TaskResponse
+import com.ktunailab.ailabapp.data.remote.dto.response.TaskStatistics
+import com.ktunailab.ailabapp.ui.theme.BackgroundLight
+import com.ktunailab.ailabapp.ui.theme.PrimaryBlue
+import com.ktunailab.ailabapp.ui.theme.White
+import com.ktunailab.ailabapp.presentation.ui.util.formatDate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

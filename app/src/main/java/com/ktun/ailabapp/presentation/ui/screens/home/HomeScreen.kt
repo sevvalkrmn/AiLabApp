@@ -1,12 +1,12 @@
-package com.ktun.ailabapp.presentation.ui.screens.home
+package com.ktunailab.ailabapp.presentation.ui.screens.home
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -15,597 +15,569 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.ktun.ailabapp.presentation.ui.components.BottomNavigationBar
-import com.ktun.ailabapp.presentation.ui.components.DebugButton
-import com.ktun.ailabapp.presentation.ui.components.FeedbackDialog
+import coil.compose.AsyncImage
+import com.ktunailab.ailabapp.data.remote.dto.response.TaskResponse
+import com.ktunailab.ailabapp.presentation.ui.components.BottomNavigationBar
+import com.ktunailab.ailabapp.ui.theme.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    viewModel: HomeViewModel = viewModel(),
+    onNavigateToHome: () -> Unit = {},
     onNavigateToProjects: () -> Unit = {},
     onNavigateToChat: () -> Unit = {},
-    onNavigateToProfile: () -> Unit = {}
+    onNavigateToProfile: () -> Unit = {},
+    viewModel: HomeViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
-    // Ekran boyutlarını al
+    LaunchedEffect(Unit) {
+        viewModel.loadUserData()
+    }
+
     val configuration = LocalConfiguration.current
     val screenHeight = configuration.screenHeightDp.dp
     val screenWidth = configuration.screenWidthDp.dp
-
-    // Dialog state
-    var showFeedbackDialog by remember { mutableStateOf(false) }
-
-    // Feedback Dialog
-    if (showFeedbackDialog) {
-        FeedbackDialog(
-            onDismiss = { showFeedbackDialog = false },
-            onSubmit = { feedback ->
-                println("📝 Feedback: $feedback")
-                showFeedbackDialog = false
-            }
-        )
-    }
-
-    // HomeScreen.kt içinde bir yere ekleyin
-    Button(onClick = { onNavigateToProjects() }) {
-        Text("Test: Projects'e Git")
-    }
 
     Scaffold(
         bottomBar = {
             BottomNavigationBar(
                 selectedItem = 0,
-                onHomeClick = { },
+                onHomeClick = { /* Zaten Home'dayız */ },
                 onProjectsClick = onNavigateToProjects,
                 onChatClick = onNavigateToChat,
                 onProfileClick = onNavigateToProfile
             )
         },
-        containerColor = Color(0xFF071372),
-        contentWindowInsets = WindowInsets.systemBars
+        containerColor = PrimaryBlue
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // ÜST KISIM - Koyu mavi (071372)
-            Column(
+            // Header
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color(0xFF071372))
                     .padding(screenWidth * 0.04f)
+                    .padding(top = screenHeight * 0.02f),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                // Header
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = screenHeight * 0.02f),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            text = "Hi, ${uiState.userName}",
-                            fontSize = (screenWidth.value * 0.045f).sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                        Text(
-                            text = uiState.greeting,
-                            fontSize = (screenWidth.value * 0.032f).sp,
-                            color = Color.White.copy(alpha = 0.7f)
-                        )
-                    }
+                Column {
+                    Text(
+                        text = "Hi, ${uiState.user?.fullName ?: ""}",
+                        fontSize = (screenWidth.value * 0.05f).sp,
+                        fontWeight = FontWeight.Bold,
+                        color = White
+                    )
+                    Text(
+                        text = "Good Night",
+                        fontSize = (screenWidth.value * 0.035f).sp,
+                        color = White.copy(alpha = 0.8f)
+                    )
+                }
 
-                    DebugButton(
-                        onClick = { showFeedbackDialog = true }
+                IconButton(onClick = { /* Bildirimler */ }) {
+                    Icon(
+                        Icons.Default.Notifications,
+                        contentDescription = "Bildirimler",
+                        tint = White,
+                        modifier = Modifier.size(screenWidth * 0.07f)
                     )
                 }
             }
 
-            // ORTA KISIM - Açık beyaz/gri (F4F6FC)
-            Column(
+            // Ana içerik - Beyaz kart
+            Card(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .clip(RoundedCornerShape(topStart = screenWidth * 0.075f, topEnd = screenWidth * 0.075f))
-                    .background(Color(0xFFF4F6FC))
-                    .padding(screenWidth * 0.04f)
+                    .fillMaxSize()
+                    .padding(top = screenHeight * 0.02f),
+                colors = CardDefaults.cardColors(containerColor = BackgroundLight),
+                shape = RoundedCornerShape(
+                    topStart = screenWidth * 0.08f,
+                    topEnd = screenWidth * 0.08f
+                )
             ) {
-                // Laboratuvar doluluk kartı
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    shape = RoundedCornerShape(screenWidth * 0.05f)
-                ) {
-                    Column(modifier = Modifier.padding(screenWidth * 0.04f)) {
-                        Text(
-                            text = "Laboratuvar doluluğu oranı",
-                            fontSize = (screenWidth.value * 0.032f).sp,
-                            color = Color(0xFF071372),
-                            fontWeight = FontWeight.Normal
-                        )
-
-                        Spacer(modifier = Modifier.height(screenHeight * 0.012f))
-
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(screenHeight * 0.03f)
-                                .clip(RoundedCornerShape(screenWidth * 0.06f))
-                                .background(Color(0xFFE0E0E0))
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxHeight()
-                                    .fillMaxWidth(0.17f)
-                                    .clip(RoundedCornerShape(screenWidth * 0.06f))
-                                    .background(Color(0xFF071372))
-                            )
-
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(horizontal = screenWidth * 0.045f),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = "3",
-                                    fontSize = (screenWidth.value * 0.04f).sp,
-                                    fontWeight = FontWeight.Light,
-                                    color = Color.White
-                                )
-                                Text(
-                                    text = "18",
-                                    fontSize = (screenWidth.value * 0.04f).sp,
-                                    fontWeight = FontWeight.Light,
-                                    color = Color.Gray
-                                )
-                            }
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(screenHeight * 0.015f))
-
-                // Kullanıcı bilgisi kartı
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF071372)),
-                    shape = RoundedCornerShape(screenWidth * 0.05f)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(screenWidth * 0.04f),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // Sol taraf - Profil resmi ve Points
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(screenWidth * 0.175f)
-                                    .clip(CircleShape)
-                                    .background(Color.White)
-                            )
-
-                            Spacer(modifier = Modifier.height(screenHeight * 0.01f))
-
-                            Text(
-                                text = "35",
-                                fontSize = (screenWidth.value * 0.06f).sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White
-                            )
-                            Text(
-                                text = "Points",
-                                fontSize = (screenWidth.value * 0.025f).sp,
-                                color = Color.White.copy(alpha = 0.7f)
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.width(screenWidth * 0.03f))
-
-                        Box(
-                            modifier = Modifier
-                                .width(screenWidth * 0.005f)
-                                .height(screenHeight * 0.15f)
-                                .background(Color(0xFFF4F6FC))
-                        )
-
-                        Spacer(modifier = Modifier.width(screenWidth * 0.04f))
-
-                        // Sağ taraf - İkonlu bilgiler
-                        Column(modifier = Modifier.weight(1f)) {
-                            // Son Giriş Tarihi
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    Icons.Default.CalendarToday,
-                                    contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(screenWidth * 0.07f)
-                                )
-                                Spacer(modifier = Modifier.width(screenWidth * 0.03f))
-                                Column {
-                                    Text(
-                                        text = "Son Giriş Tarihim",
-                                        fontSize = (screenWidth.value * 0.035f).sp,
-                                        color = Color(0xFFF4F6FC)
-                                    )
-                                    Text(
-                                        text = "14.12.2003",
-                                        fontSize = (screenWidth.value * 0.04f).sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.White
-                                    )
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(screenHeight * 0.01f))
-
-                            // Yatay çizgi
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth(0.9f)
-                                    .height(screenHeight * 0.001f)
-                                    .background(Color(0xFFF4F6FC))
-                            )
-
-                            Spacer(modifier = Modifier.height(screenHeight * 0.01f))
-
-                            // Laboratuvardaki Takım
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    Icons.Default.Group,
-                                    contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(screenWidth * 0.07f)
-                                )
-                                Spacer(modifier = Modifier.width(screenWidth * 0.03f))
-                                Column {
-                                    Text(
-                                        text = "Laboratuvardaki",
-                                        fontSize = (screenWidth.value * 0.035f).sp,
-                                        color = Color(0xFFF4F6FC)
-                                    )
-                                    Text(
-                                        text = "Takım Arkadaşlarım",
-                                        fontSize = (screenWidth.value * 0.035f).sp,
-                                        color = Color(0xFFF4F6FC)
-                                    )
-                                    Text(
-                                        text = "1/5",
-                                        fontSize = (screenWidth.value * 0.04f).sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.White,
-                                        modifier = Modifier.padding(top = screenHeight * 0.002f)
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(screenHeight * 0.015f))
-
-                // Güncel Görevler - SCROLL EKLENMİŞ
-                Card(
+                LazyColumn(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(screenHeight * 0.22f),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF071372)),
-                    shape = RoundedCornerShape(screenWidth * 0.05f)
+                        .fillMaxSize()
+                        .padding(screenWidth * 0.04f),
+                    verticalArrangement = Arrangement.spacedBy(screenHeight * 0.02f)
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(screenWidth * 0.04f)
-                    ) {
-                        Text(
-                            text = "Güncel Görevler",
-                            fontSize = (screenWidth.value * 0.04f).sp,
-                            fontWeight = FontWeight.Normal,
-                            color = Color(0xFFF4F6FC)
+                    // Laboratuvar Doluluk Oranı
+                    item {
+                        LabOccupancyCard(
+                            screenWidth = screenWidth,
+                            screenHeight = screenHeight
                         )
+                    }
 
-                        Spacer(modifier = Modifier.height(screenHeight * 0.012f))
+                    // Profil Kartı
+                    item {
+                        ProfileCard(
+                            totalScore = uiState.user?.totalScore ?: 0,  // ← Backend'den puan
+                            avatarUrl = uiState.user?.avatarUrl,  // ← Backend'den avatar
+                            screenWidth = screenWidth,
+                            screenHeight = screenHeight
+                        )
+                    }
 
-                        // Scroll eklenmiş liste
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .verticalScroll(rememberScrollState()),
-                            verticalArrangement = Arrangement.spacedBy(screenHeight * 0.01f)
-                        ) {
-                            TaskItemCompact(
-                                title = "ÖTR Yazıla...",
-                                frequency = "Monthly",
-                                status = "In Progress",
-                                statusColor = Color(0xFFFF9800),
-                                screenWidth = screenWidth,
-                                screenHeight = screenHeight
-                            )
+                    // Güncel Görevler
+                    item {
+                        CurrentTasksCard(
+                            tasks = uiState.currentTasks,
+                            screenWidth = screenWidth,
+                            screenHeight = screenHeight
+                        )
+                    }
 
-                            TaskItemCompact(
-                                title = "1500 Etiket...",
-                                frequency = "Monthly",
-                                status = "Done",
-                                statusColor = Color(0xFF4CAF50),
-                                screenWidth = screenWidth,
-                                screenHeight = screenHeight
-                            )
-
-                            TaskItemCompact(
-                                title = "UI Tasarım Güncelleme",
-                                frequency = "Weekly",
-                                status = "To Do",
-                                statusColor = Color(0xFF9FA8DA),
-                                screenWidth = screenWidth,
-                                screenHeight = screenHeight
-                            )
-
-                            TaskItemCompact(
-                                title = "Backend API Entegrasyonu",
-                                frequency = "Monthly",
-                                status = "In Progress",
-                                statusColor = Color(0xFFFF9800),
-                                screenWidth = screenWidth,
-                                screenHeight = screenHeight
-                            )
-
-                            TaskItemCompact(
-                                title = "Test Senaryoları",
-                                frequency = "Weekly",
-                                status = "Done",
-                                statusColor = Color(0xFF4CAF50),
-                                screenWidth = screenWidth,
-                                screenHeight = screenHeight
-                            )
-
-                            TaskItemCompact(
-                                title = "Dokümantasyon",
-                                frequency = "Monthly",
-                                status = "To Do",
-                                statusColor = Color(0xFF9FA8DA),
-                                screenWidth = screenWidth,
-                                screenHeight = screenHeight
-                            )
-                        }
+                    // Alt kart (3 daire)
+                    item {
+                        BottomCard(
+                            screenWidth = screenWidth,
+                            screenHeight = screenHeight
+                        )
                     }
                 }
-
-                Spacer(modifier = Modifier.height(screenHeight * 0.015f))
-
-                // Takım Sıralaması
-                TeamRankingCard(screenWidth = screenWidth, screenHeight = screenHeight)
             }
         }
     }
 }
 
 @Composable
-fun TaskItemCompact(
+fun LabOccupancyCard(
+    screenWidth: Dp,
+    screenHeight: Dp
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = White),
+        shape = RoundedCornerShape(screenWidth * 0.04f)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(screenWidth * 0.04f)
+        ) {
+            Text(
+                text = "Laboratuvar doluluğu oranı",
+                fontSize = (screenWidth.value * 0.035f).sp,
+                color = PrimaryBlue,
+                fontWeight = FontWeight.Medium
+            )
+
+            Spacer(modifier = Modifier.height(screenHeight * 0.01f))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Sol taraf - Mavi kapsül
+                Box(
+                    modifier = Modifier
+                        .width(screenWidth * 0.15f)
+                        .height(screenHeight * 0.04f)
+                        .background(PrimaryBlue, RoundedCornerShape(50))
+                        .padding(horizontal = screenWidth * 0.02f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "3",
+                        color = White,
+                        fontSize = (screenWidth.value * 0.04f).sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                // Progress bar
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(screenHeight * 0.04f)
+                        .padding(horizontal = screenWidth * 0.02f)
+                        .background(Color(0xFFE0E0E0), RoundedCornerShape(50))
+                )
+
+                // Sağ taraf - Açık gri kapsül
+                Box(
+                    modifier = Modifier
+                        .width(screenWidth * 0.15f)
+                        .height(screenHeight * 0.04f)
+                        .background(Color(0xFFE0E0E0), RoundedCornerShape(50))
+                        .padding(horizontal = screenWidth * 0.02f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "18",
+                        color = Color.Gray,
+                        fontSize = (screenWidth.value * 0.04f).sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ProfileCard(
+    totalScore: Int,  // ← Backend'den gelen puan
+    avatarUrl: String?,  // ← Backend'den gelen avatar
+    screenWidth: Dp,
+    screenHeight: Dp
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = PrimaryBlue),
+        shape = RoundedCornerShape(screenWidth * 0.04f)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(screenWidth * 0.04f),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Sol taraf - Avatar + Puan
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(end = screenWidth * 0.04f)
+            ) {
+                // Avatar
+                if (!avatarUrl.isNullOrEmpty()) {
+                    AsyncImage(
+                        model = avatarUrl,
+                        contentDescription = "Profil Fotoğrafı",
+                        modifier = Modifier
+                            .size(screenWidth * 0.18f)
+                            .clip(CircleShape)
+                            .background(White),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .size(screenWidth * 0.18f)
+                            .clip(CircleShape)
+                            .background(White),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Default.Person,
+                            contentDescription = null,
+                            tint = PrimaryBlue,
+                            modifier = Modifier.size(screenWidth * 0.1f)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(screenHeight * 0.01f))
+
+                // Puan
+                Text(
+                    text = "$totalScore",  // ← Backend'den gelen puan
+                    fontSize = (screenWidth.value * 0.08f).sp,
+                    fontWeight = FontWeight.Bold,
+                    color = White
+                )
+                Text(
+                    text = "Points",
+                    fontSize = (screenWidth.value * 0.03f).sp,
+                    color = White.copy(alpha = 0.9f)
+                )
+            }
+
+            // Dikey çizgi
+            Box(
+                modifier = Modifier
+                    .width(2.dp)
+                    .height(screenHeight * 0.12f)
+                    .background(White.copy(alpha = 0.3f))
+            )
+
+            Spacer(modifier = Modifier.width(screenWidth * 0.04f))
+
+            // Sağ taraf - Bilgiler
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                // Son Giriş Tarihi
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Default.CalendarToday,
+                        contentDescription = null,
+                        tint = White,
+                        modifier = Modifier.size(screenWidth * 0.05f)
+                    )
+                    Spacer(modifier = Modifier.width(screenWidth * 0.02f))
+                    Column {
+                        Text(
+                            text = "Son Giriş Tarihim",
+                            fontSize = (screenWidth.value * 0.03f).sp,
+                            color = White.copy(alpha = 0.8f)
+                        )
+                        Text(
+                            text = "14.12.2003",
+                            fontSize = (screenWidth.value * 0.04f).sp,
+                            fontWeight = FontWeight.Bold,
+                            color = White
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(screenHeight * 0.015f))
+
+                HorizontalDivider(
+                    color = White.copy(alpha = 0.3f),
+                    thickness = 1.dp
+                )
+
+                Spacer(modifier = Modifier.height(screenHeight * 0.015f))
+
+                // Takım Arkadaşları
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Default.Group,
+                        contentDescription = null,
+                        tint = White,
+                        modifier = Modifier.size(screenWidth * 0.05f)
+                    )
+                    Spacer(modifier = Modifier.width(screenWidth * 0.02f))
+                    Column {
+                        Text(
+                            text = "Laboratuvardaki",
+                            fontSize = (screenWidth.value * 0.03f).sp,
+                            color = White.copy(alpha = 0.8f)
+                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "Takım Arkadaşlarım",
+                                fontSize = (screenWidth.value * 0.04f).sp,
+                                fontWeight = FontWeight.Bold,
+                                color = White
+                            )
+                            Spacer(modifier = Modifier.width(screenWidth * 0.02f))
+                            Text(
+                                text = "1/5",
+                                fontSize = (screenWidth.value * 0.04f).sp,
+                                fontWeight = FontWeight.Bold,
+                                color = White
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun CurrentTasksCard(
+    tasks: List<TaskResponse>,  // ← Backend'den gelen görevler
+    screenWidth: Dp,
+    screenHeight: Dp
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = PrimaryBlue),
+        shape = RoundedCornerShape(screenWidth * 0.04f)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(screenWidth * 0.04f)
+        ) {
+            Text(
+                text = "Güncel Görevler",
+                fontSize = (screenWidth.value * 0.04f).sp,
+                fontWeight = FontWeight.Bold,
+                color = White,
+                modifier = Modifier.padding(bottom = screenHeight * 0.02f)
+            )
+
+            if (tasks.isEmpty()) {
+                // Görev yoksa
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = screenHeight * 0.02f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Aktif görev yok",
+                        fontSize = (screenWidth.value * 0.035f).sp,
+                        color = White.copy(alpha = 0.7f)
+                    )
+                }
+            } else {
+                // Görevler varsa
+                tasks.forEachIndexed { index, task ->
+                    if (index > 0) {
+                        Spacer(modifier = Modifier.height(screenHeight * 0.015f))
+                    }
+
+                    TaskItem(
+                        icon = Icons.Default.Create,
+                        title = task.title.take(12) + if (task.title.length > 12) "..." else "",  // Max 12 karakter
+                        frequency = "Monthly",  // TODO: Backend'den gelebilir
+                        status = when (task.status) {
+                            "InProgress" -> "In Progress"
+                            "Done" -> "Done"
+                            "Todo" -> "To Do"
+                            else -> task.status
+                        },
+                        statusColor = when (task.status) {
+                            "InProgress" -> Color(0xFFFFA726)  // Turuncu
+                            "Done" -> Color(0xFF66BB6A)  // Yeşil
+                            "Todo" -> Color(0xFF42A5F5)  // Mavi
+                            else -> Color.Gray
+                        },
+                        screenWidth = screenWidth,
+                        screenHeight = screenHeight
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun TaskItem(
+    icon: ImageVector,
     title: String,
     frequency: String,
     status: String,
     statusColor: Color,
-    screenWidth: androidx.compose.ui.unit.Dp,
-    screenHeight: androidx.compose.ui.unit.Dp
+    screenWidth: Dp,
+    screenHeight: Dp
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(screenWidth * 0.04f))
-            .background(Color.White)
-            .height(screenHeight * 0.075f)
-            .padding(screenWidth * 0.025f),
+            .background(White, RoundedCornerShape(screenWidth * 0.03f))
+            .padding(screenWidth * 0.03f),
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Icon
         Box(
             modifier = Modifier
                 .size(screenWidth * 0.12f)
-                .background(
-                    color = Color(0xFF071372),
-                    shape = CircleShape
-                ),
+                .background(PrimaryBlue, CircleShape),
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = Icons.Default.Refresh,
+                icon,
                 contentDescription = null,
-                tint = Color.White,
+                tint = White,
                 modifier = Modifier.size(screenWidth * 0.06f)
             )
         }
 
         Spacer(modifier = Modifier.width(screenWidth * 0.03f))
 
-        // Content with dividers
-        Row(
-            modifier = Modifier.weight(1f),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Title
+        // Text
+        Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
-                fontSize = (screenWidth.value * 0.037f).sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF1A1A1A),
-                modifier = Modifier.weight(1f, fill = false)
+                fontSize = (screenWidth.value * 0.04f).sp,
+                fontWeight = FontWeight.Bold,
+                color = PrimaryBlue
             )
-
-            // Divider 1
-            Spacer(modifier = Modifier.width(screenWidth * 0.02f))
-            Box(
-                modifier = Modifier
-                    .width(screenWidth * 0.0025f)
-                    .height(screenHeight * 0.025f)
-                    .background(Color(0xFFD1D5DB))
-            )
-            Spacer(modifier = Modifier.width(screenWidth * 0.02f))
-
-            // Frequency
             Text(
                 text = frequency,
-                fontSize = (screenWidth.value * 0.032f).sp,
-                color = Color(0xFF6B7280)
-            )
-
-            // Divider 2
-            Spacer(modifier = Modifier.width(screenWidth * 0.02f))
-            Box(
-                modifier = Modifier
-                    .width(screenWidth * 0.0025f)
-                    .height(screenHeight * 0.025f)
-                    .background(Color(0xFFD1D5))
-            )
-            Spacer(modifier = Modifier.width(screenWidth * 0.02f))
-
-            // Status
-            Text(
-                text = status,
-                fontSize = (screenWidth.value * 0.032f).sp,
-                fontWeight = FontWeight.Medium,
-                color = statusColor
+                fontSize = (screenWidth.value * 0.03f).sp,
+                color = Color.Gray
             )
         }
+
+        // Status
+        Text(
+            text = status,
+            fontSize = (screenWidth.value * 0.03f).sp,
+            fontWeight = FontWeight.Bold,
+            color = statusColor
+        )
     }
 }
 
 @Composable
-fun TeamRankingCard(
-    screenWidth: androidx.compose.ui.unit.Dp,
-    screenHeight: androidx.compose.ui.unit.Dp
+fun BottomCard(
+    screenWidth: Dp,
+    screenHeight: Dp
 ) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(screenHeight * 0.22f),  // ← Yükseklik küçültüldü
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF071372)),
-        shape = RoundedCornerShape(screenWidth * 0.05f)
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = PrimaryBlue),
+        shape = RoundedCornerShape(screenWidth * 0.04f)
     ) {
-        Box(
+        Row(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
                 .padding(screenWidth * 0.04f),
-            contentAlignment = Alignment.Center
+            horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.Bottom
-            ) {
-                // 2. sıra (Sol)
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(screenWidth * 0.18f)  // ← 0.22'den 0.18'e düşürüldü
-                            .border(screenWidth * 0.01f, Color(0xFFC0C0C0), CircleShape)
-                            .clip(CircleShape)
-                            .background(Color.White)
-                    )
-
-                    Spacer(modifier = Modifier.height(screenHeight * 0.008f))
-
-                    Box(
-                        modifier = Modifier
-                            .width(screenWidth * 0.1f)  // ← 0.12'den 0.1'e düşürüldü
-                            .height(screenHeight * 0.022f)  // ← 0.025'ten 0.022'ye düşürüldü
-                            .clip(RoundedCornerShape(screenWidth * 0.025f))
-                            .background(Color(0xFFC0C0C0)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "2",
-                            fontSize = (screenWidth.value * 0.03f).sp,  // ← 0.035'ten 0.03'e düşürüldü
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                    }
-                }
-
-                // 1. sıra (Orta) - Biraz yukarıda
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
+            // Sol daire - Beyaz
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Box(
                     modifier = Modifier
-                        .weight(1f)
-                        .offset(y = -(screenHeight * 0.02f))  // ← 0.025'ten 0.02'ye
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(screenWidth * 0.18f)  // ← 0.22'den 0.18'e düşürüldü
-                            .border(screenWidth * 0.01f, Color(0xFFFFD700), CircleShape)
-                            .clip(CircleShape)
-                            .background(Color.White)
-                    )
+                        .size(screenWidth * 0.15f)
+                        .background(White, CircleShape)
+                )
+                Spacer(modifier = Modifier.height(screenHeight * 0.01f))
+                Box(
+                    modifier = Modifier
+                        .width(screenWidth * 0.1f)
+                        .height(screenHeight * 0.01f)
+                        .background(White, RoundedCornerShape(50))
+                )
+            }
 
-                    Spacer(modifier = Modifier.height(screenHeight * 0.008f))
+            // Orta daire - Sarı (Seçili)
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Box(
+                    modifier = Modifier
+                        .size(screenWidth * 0.15f)
+                        .background(Color(0xFFFFD54F), CircleShape)
+                        .padding(4.dp)
+                        .background(White, CircleShape)
+                )
+                Spacer(modifier = Modifier.height(screenHeight * 0.01f))
+                Box(
+                    modifier = Modifier
+                        .width(screenWidth * 0.1f)
+                        .height(screenHeight * 0.01f)
+                        .background(Color(0xFFFFD54F), RoundedCornerShape(50))
+                )
+            }
 
-                    Box(
-                        modifier = Modifier
-                            .width(screenWidth * 0.1f)  // ← 0.12'den 0.1'e düşürüldü
-                            .height(screenHeight * 0.022f)
-                            .clip(RoundedCornerShape(screenWidth * 0.025f))
-                            .background(Color(0xFFFFD700)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "1",
-                            fontSize = (screenWidth.value * 0.03f).sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                    }
-                }
-
-                // 3. sıra (Sağ)
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(screenWidth * 0.18f)  // ← 0.22'den 0.18'e düşürüldü
-                            .border(screenWidth * 0.01f, Color(0xFFCD7F32), CircleShape)
-                            .clip(CircleShape)
-                            .background(Color.White)
-                    )
-
-                    Spacer(modifier = Modifier.height(screenHeight * 0.008f))
-
-                    Box(
-                        modifier = Modifier
-                            .width(screenWidth * 0.1f)  // ← 0.12'den 0.1'e düşürüldü
-                            .height(screenHeight * 0.022f)
-                            .clip(RoundedCornerShape(screenWidth * 0.025f))
-                            .background(Color(0xFFCD7F32)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "3",
-                            fontSize = (screenWidth.value * 0.03f).sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                    }
-                }
+            // Sağ daire - Turuncu
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Box(
+                    modifier = Modifier
+                        .size(screenWidth * 0.15f)
+                        .background(Color(0xFFFF9800), CircleShape)
+                        .padding(4.dp)
+                        .background(White, CircleShape)
+                )
+                Spacer(modifier = Modifier.height(screenHeight * 0.01f))
+                Box(
+                    modifier = Modifier
+                        .width(screenWidth * 0.1f)
+                        .height(screenHeight * 0.01f)
+                        .background(Color(0xFFFF9800), RoundedCornerShape(50))
+                )
             }
         }
     }

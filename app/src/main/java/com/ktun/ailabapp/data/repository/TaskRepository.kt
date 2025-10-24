@@ -1,16 +1,16 @@
-package com.ktun.ailabapp.data.repository
+package com.ktunailab.ailabapp.data.repository
 
 import android.content.Context
-import com.ktun.ailabapp.data.local.datastore.PreferencesManager
-import com.ktun.ailabapp.data.remote.api.TaskApi
-import com.ktun.ailabapp.data.remote.dto.request.CreateTaskRequest
-import com.ktun.ailabapp.data.remote.dto.request.UpdateTaskRequest
-import com.ktun.ailabapp.data.remote.dto.request.UpdateTaskStatusRequest
-import com.ktun.ailabapp.data.remote.dto.response.TaskResponse
-import com.ktun.ailabapp.data.remote.interceptor.AuthInterceptor
-import com.ktun.ailabapp.data.remote.network.ApiConfig
-import com.ktun.ailabapp.util.Constants
-import com.ktun.ailabapp.util.NetworkResult
+import com.ktunailab.ailabapp.data.local.datastore.PreferencesManager
+import com.ktunailab.ailabapp.data.remote.api.TaskApi
+import com.ktunailab.ailabapp.data.remote.dto.request.CreateTaskRequest
+import com.ktunailab.ailabapp.data.remote.dto.request.UpdateTaskRequest
+import com.ktunailab.ailabapp.data.remote.dto.request.UpdateTaskStatusRequest
+import com.ktunailab.ailabapp.data.remote.dto.response.TaskResponse
+import com.ktunailab.ailabapp.data.remote.interceptor.AuthInterceptor
+import com.ktunailab.ailabapp.data.remote.network.ApiConfig
+import com.ktunailab.ailabapp.util.Constants
+import com.ktunailab.ailabapp.util.NetworkResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
@@ -58,7 +58,7 @@ class TaskRepository(private val context: Context) {
 
                 if (response.isSuccessful && response.body() != null) {
                     val paginatedResponse = response.body()!!
-                    val tasks = paginatedResponse.items  // ← DEĞİŞTİ: items'ı al
+                    val tasks = paginatedResponse.items
 
                     android.util.Log.d("TaskRepository", "Görev sayısı: ${tasks.size}")
 
@@ -97,10 +97,13 @@ class TaskRepository(private val context: Context) {
                 val response = taskApi.getMyTasks(status)
 
                 if (response.isSuccessful && response.body() != null) {
-                    val paginatedResponse = response.body()!!
-                    val tasks = paginatedResponse.items  // ← DEĞİŞTİ: items'ı al
+                    val tasks = response.body()!!
 
                     android.util.Log.d("TaskRepository", "Görev sayısı: ${tasks.size}")
+
+                    tasks.forEach { task ->
+                        android.util.Log.d("TaskRepository", "Görev: ${task.title} - Status: ${task.status}")
+                    }
 
                     NetworkResult.Success(tasks)
                 } else {
@@ -121,12 +124,11 @@ class TaskRepository(private val context: Context) {
      */
     suspend fun updateTaskStatus(
         taskId: String,
-        status: String  // UI'dan "Todo", "InProgress", "Done" gelecek
+        status: String
     ): NetworkResult<TaskResponse> = withContext(Dispatchers.IO) {
         try {
             android.util.Log.d("TaskRepository", "Görev durumu güncelleniyor: $taskId -> $status")
 
-            // String'i numeric'e çevir
             val numericStatus = when (status) {
                 "Todo" -> 0
                 "InProgress" -> 1

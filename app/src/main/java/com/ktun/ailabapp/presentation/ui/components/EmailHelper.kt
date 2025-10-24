@@ -1,4 +1,4 @@
-package com.ktun.ailabapp.presentation.ui.components
+package com.ktunailab.ailabapp.presentation.ui.components
 
 import android.content.Context
 import android.content.Intent

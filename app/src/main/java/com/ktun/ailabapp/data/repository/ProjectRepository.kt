@@ -1,15 +1,15 @@
-package com.ktun.ailabapp.data.repository
+package com.ktunailab.ailabapp.data.repository
 
 import android.content.Context
-import com.ktun.ailabapp.data.remote.dto.request.AddMemberRequest
-import com.ktun.ailabapp.data.remote.dto.request.CreateProjectRequest
-import com.ktun.ailabapp.data.remote.dto.request.UpdateMemberRoleRequest
-import com.ktun.ailabapp.data.remote.dto.request.UpdateProjectRequest
-import com.ktun.ailabapp.data.remote.dto.response.MyProjectsResponse
-import com.ktun.ailabapp.data.remote.dto.response.ProjectDetailResponse
-import com.ktun.ailabapp.data.remote.dto.response.ProjectMember
-import com.ktun.ailabapp.data.remote.network.RetrofitClient
-import com.ktun.ailabapp.util.NetworkResult
+import com.ktunailab.ailabapp.data.remote.dto.request.AddMemberRequest
+import com.ktunailab.ailabapp.data.remote.dto.request.CreateProjectRequest
+import com.ktunailab.ailabapp.data.remote.dto.request.UpdateMemberRoleRequest
+import com.ktunailab.ailabapp.data.remote.dto.request.UpdateProjectRequest
+import com.ktunailab.ailabapp.data.remote.dto.response.MyProjectsResponse
+import com.ktunailab.ailabapp.data.remote.dto.response.ProjectDetailResponse
+import com.ktunailab.ailabapp.data.remote.dto.response.ProjectMember
+import com.ktunailab.ailabapp.data.remote.network.RetrofitClient
+import com.ktunailab.ailabapp.util.NetworkResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 

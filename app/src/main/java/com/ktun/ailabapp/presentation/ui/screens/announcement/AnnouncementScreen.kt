@@ -1,4 +1,4 @@
-package com.ktun.ailabapp.presentation.ui.screens.announcement
+package com.ktunailab.ailabapp.presentation.ui.screens.announcement
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -26,13 +26,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.ktun.ailabapp.data.model.Announcement
-import com.ktun.ailabapp.data.model.AnnouncementFilter
-import com.ktun.ailabapp.data.model.AnnouncementType
-import com.ktun.ailabapp.presentation.ui.components.BottomNavigationBar
-import com.ktun.ailabapp.presentation.ui.components.DebugButton
-import com.ktun.ailabapp.presentation.ui.components.FeedbackDialog
-import com.ktun.ailabapp.presentation.ui.components.sendFeedbackEmail
+import com.ktunailab.ailabapp.data.model.Announcement
+import com.ktunailab.ailabapp.data.model.AnnouncementFilter
+import com.ktunailab.ailabapp.data.model.AnnouncementType
+import com.ktunailab.ailabapp.presentation.ui.components.BottomNavigationBar
+import com.ktunailab.ailabapp.presentation.ui.components.DebugButton
+import com.ktunailab.ailabapp.presentation.ui.components.FeedbackDialog
+import com.ktunailab.ailabapp.presentation.ui.components.sendFeedbackEmail
 
 @Composable
 fun AnnouncementScreen(

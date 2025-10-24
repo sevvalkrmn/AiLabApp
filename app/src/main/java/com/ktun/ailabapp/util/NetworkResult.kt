@@ -1,4 +1,4 @@
-package com.ktun.ailabapp.util
+package com.ktunailab.ailabapp.util
 
 sealed class NetworkResult<T>(
     val data: T? = null,

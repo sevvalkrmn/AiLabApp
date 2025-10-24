@@ -1,12 +1,12 @@
-package com.ktun.ailabapp.data.remote.network
+package com.ktunailab.ailabapp.data.remote.network
 
 import android.content.Context
-import com.ktun.ailabapp.data.local.datastore.PreferencesManager
-import com.ktun.ailabapp.data.remote.api.AuthApi
-import com.ktun.ailabapp.data.remote.api.ProjectApi
-import com.ktun.ailabapp.data.remote.api.TaskApi
-import com.ktun.ailabapp.data.remote.interceptor.AuthInterceptor
-import com.ktun.ailabapp.util.Constants
+import com.ktunailab.ailabapp.data.local.datastore.PreferencesManager
+import com.ktunailab.ailabapp.data.remote.api.AuthApi
+import com.ktunailab.ailabapp.data.remote.api.ProjectApi
+import com.ktunailab.ailabapp.data.remote.api.TaskApi
+import com.ktunailab.ailabapp.data.remote.interceptor.AuthInterceptor
+import com.ktunailab.ailabapp.util.Constants
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit

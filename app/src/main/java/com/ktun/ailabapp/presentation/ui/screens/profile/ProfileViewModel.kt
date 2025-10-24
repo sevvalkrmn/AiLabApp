@@ -1,10 +1,10 @@
-package com.ktun.ailabapp.presentation.ui.screens.profile
+package com.ktunailab.ailabapp.presentation.ui.screens.profile
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.ktun.ailabapp.data.repository.AuthRepository
-import com.ktun.ailabapp.util.NetworkResult
+import com.ktunailab.ailabapp.data.repository.AuthRepository
+import com.ktunailab.ailabapp.util.NetworkResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

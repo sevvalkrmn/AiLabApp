@@ -1,7 +1,7 @@
-package com.ktun.ailabapp.data.remote.interceptor
+package com.ktunailab.ailabapp.data.remote.interceptor
 
-import com.ktun.ailabapp.data.local.datastore.PreferencesManager
-import com.ktun.ailabapp.data.remote.network.ApiConfig
+import com.ktunailab.ailabapp.data.remote.network.ApiConfig
+import com.ktunailab.ailabapp.data.local.datastore.PreferencesManager
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor

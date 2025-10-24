@@ -8,7 +8,7 @@ plugins {
 }
 
 android {
-    namespace = "com.ktun.ailabapp"
+    namespace = "com.ktunailab.ailabapp"
     compileSdk = 36
 
     defaultConfig {

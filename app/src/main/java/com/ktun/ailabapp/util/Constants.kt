@@ -1,4 +1,4 @@
-package com.ktun.ailabapp.util
+package com.ktunailab.ailabapp.util
 
 object Constants {
     // Network Timeouts
