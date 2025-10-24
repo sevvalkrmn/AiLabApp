@@ -3,13 +3,17 @@ package com.ktun.ailabapp.data.repository
 import android.content.Context
 import com.google.gson.Gson
 import com.ktun.ailabapp.data.local.datastore.PreferencesManager
+import com.ktun.ailabapp.data.remote.api.AuthApi
 import com.ktun.ailabapp.data.remote.dto.request.LoginRequest
+import com.ktun.ailabapp.data.remote.dto.request.RefreshTokenRequest
 import com.ktun.ailabapp.data.remote.dto.request.RegisterRequest
 import com.ktun.ailabapp.data.remote.dto.response.AuthResponse
 import com.ktun.ailabapp.data.remote.dto.response.ErrorResponse
+import com.ktun.ailabapp.data.remote.dto.response.ProfileResponse
 import com.ktun.ailabapp.data.remote.network.RetrofitClient
 import com.ktun.ailabapp.util.NetworkResult
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 
 class AuthRepository(private val context: Context) {
@@ -52,7 +56,7 @@ class AuthRepository(private val context: Context) {
             if (response.isSuccessful && response.body() != null) {
                 val authResponse = response.body()!!
 
-                android.util.Log.d("AuthRepository", "Login Success!")  // ← message kaldırıldı
+                android.util.Log.d("AuthRepository", "Register Success!")
 
                 // Token'ı kaydet
                 authResponse.token?.let { token ->
@@ -191,6 +195,54 @@ class AuthRepository(private val context: Context) {
     }
 
     /**
+     * Kullanıcı Profil Bilgilerini Getir
+     */
+    suspend fun getProfile(): NetworkResult<ProfileResponse> = withContext(Dispatchers.IO) {
+        try {
+            android.util.Log.d("AuthRepository", "Profile bilgileri çekiliyor...")
+
+            val response = authApi.getProfile()  // ← authApi kullanıldı (AuthApi değil)
+
+            if (response.isSuccessful && response.body() != null) {
+                val profileResponse = response.body()!!
+
+                android.util.Log.d("AuthRepository", """
+                    Profile Success:
+                    Name: ${profileResponse.fullName}
+                    Email: ${profileResponse.email}
+                    Score: ${profileResponse.totalScore}
+                """.trimIndent())
+
+                NetworkResult.Success(profileResponse)
+            } else {
+                val errorBody = response.errorBody()?.string()
+
+                android.util.Log.e("AuthRepository", """
+                    Profile Error:
+                    Code: ${response.code()}
+                    Error Body: $errorBody
+                """.trimIndent())
+
+                val errorMessage = when (response.code()) {
+                    401 -> "Oturum süresi dolmuş. Lütfen tekrar giriş yapın."
+                    404 -> "Profil bulunamadı"
+                    else -> "Profil bilgileri alınamadı"
+                }
+                NetworkResult.Error(errorMessage)
+            }
+        } catch (e: java.net.UnknownHostException) {
+            android.util.Log.e("AuthRepository", "Profile: İnternet bağlantısı yok", e)
+            NetworkResult.Error("İnternet bağlantısı yok")
+        } catch (e: java.net.SocketTimeoutException) {
+            android.util.Log.e("AuthRepository", "Profile: Bağlantı zaman aşımı", e)
+            NetworkResult.Error("Bağlantı zaman aşımına uğradı")
+        } catch (e: Exception) {
+            android.util.Log.e("AuthRepository", "Profile: Bilinmeyen hata", e)
+            NetworkResult.Error(e.message ?: "Bilinmeyen bir hata oluştu")
+        }
+    }
+
+    /**
      * Çıkış Yap
      */
     suspend fun logout() {
@@ -203,6 +255,53 @@ class AuthRepository(private val context: Context) {
         } finally {
             preferencesManager.clearAllData()
             android.util.Log.d("AuthRepository", "Local data cleared")
+        }
+    }
+
+    /**
+     * Token Yenile
+     */
+    suspend fun refreshToken(): NetworkResult<AuthResponse> = withContext(Dispatchers.IO) {
+        try {
+            val refreshToken = preferencesManager.getRefreshToken().first()
+
+            if (refreshToken.isNullOrEmpty()) {
+                android.util.Log.e("AuthRepository", "Refresh token bulunamadı")
+                return@withContext NetworkResult.Error("Oturum süresi dolmuş. Lütfen tekrar giriş yapın.")
+            }
+
+            android.util.Log.d("AuthRepository", "Token yenileniyor...")
+
+            val request = RefreshTokenRequest(refreshToken)
+            val response = authApi.refreshToken(request)
+
+            if (response.isSuccessful && response.body() != null) {
+                val authResponse = response.body()!!
+
+                android.util.Log.d("AuthRepository", "Token yenileme başarılı!")
+
+                // Yeni token'ları kaydet
+                authResponse.token?.let { token ->
+                    android.util.Log.d("AuthRepository", "Yeni token kaydediliyor...")
+                    preferencesManager.saveToken(token)
+                }
+                authResponse.refreshToken?.let { newRefreshToken ->
+                    android.util.Log.d("AuthRepository", "Yeni refresh token kaydediliyor...")
+                    preferencesManager.saveRefreshToken(newRefreshToken)
+                }
+
+                NetworkResult.Success(authResponse)
+            } else {
+                val errorBody = response.errorBody()?.string()
+                android.util.Log.e("AuthRepository", "Token yenileme hatası: ${response.code()} - $errorBody")
+
+                // Refresh token da geçersizse logout yap
+                preferencesManager.clearAllData()
+                NetworkResult.Error("Oturum süresi dolmuş. Lütfen tekrar giriş yapın.")
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("AuthRepository", "Token refresh error", e)
+            NetworkResult.Error("Token yenilenemedi")
         }
     }
 }

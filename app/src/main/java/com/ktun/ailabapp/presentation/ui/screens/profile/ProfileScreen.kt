@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.ktun.ailabapp.R
 import com.ktun.ailabapp.presentation.ui.components.BottomNavigationBar
 import com.ktun.ailabapp.presentation.ui.components.DebugButton
 import com.ktun.ailabapp.presentation.ui.components.FeedbackDialog
@@ -154,20 +155,39 @@ fun ProfileScreen(
                     Box(
                         modifier = Modifier.size(screenWidth * 0.35f)
                     ) {
-                        AsyncImage(
-                            model = uiState.profileImageUrl,
-                            contentDescription = "Profil Fotoğrafı",
-                            modifier = Modifier
-                                .size(screenWidth * 0.35f)
-                                .clip(CircleShape)
-                                .border(screenWidth * 0.01f, White, CircleShape)
-                        )
+                        if (uiState.avatarUrl != null) {
+                            AsyncImage(
+                                model = uiState.avatarUrl,
+                                contentDescription = "Profil Fotoğrafı",
+                                modifier = Modifier
+                                    .size(screenWidth * 0.35f)
+                                    .clip(CircleShape)
+                                    .border(screenWidth * 0.01f, White, CircleShape)
+                            )
+                        } else {
+                            // Avatar yoksa placeholder göster
+                            Box(
+                                modifier = Modifier
+                                    .size(screenWidth * 0.35f)
+                                    .clip(CircleShape)
+                                    .border(screenWidth * 0.01f, White, CircleShape)
+                                    .background(PrimaryBlue.copy(alpha = 0.2f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Person,
+                                    contentDescription = "Varsayılan Avatar",
+                                    modifier = Modifier.size(screenWidth * 0.2f),
+                                    tint = PrimaryBlue
+                                )
+                            }
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(screenHeight * 0.02f))
 
                     Text(
-                        text = uiState.name,
+                        text = uiState.fullName,  // ← Backend'den gelen fullName
                         fontSize = (screenWidth.value * 0.06f).sp,
                         fontWeight = FontWeight.Bold,
                         color = PrimaryBlue
@@ -176,7 +196,7 @@ fun ProfileScreen(
                     Spacer(modifier = Modifier.height(screenHeight * 0.005f))
 
                     Text(
-                        text = uiState.email,
+                        text = uiState.email,  // ← Backend'den gelen email
                         fontSize = (screenWidth.value * 0.035f).sp,
                         color = PrimaryBlue.copy(alpha = 0.7f)
                     )
@@ -199,7 +219,7 @@ fun ProfileScreen(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
-                                text = uiState.points.toString(),
+                                text = uiState.totalScore.toString(),  // ← totalScore kullanıldı (points değil)
                                 fontSize = (screenWidth.value * 0.12f).sp,
                                 fontWeight = FontWeight.Bold,
                                 color = PrimaryBlue

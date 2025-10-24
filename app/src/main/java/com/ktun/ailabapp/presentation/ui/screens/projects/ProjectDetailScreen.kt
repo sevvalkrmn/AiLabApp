@@ -1,14 +1,13 @@
 package com.ktun.ailabapp.presentation.ui.screens.projects
 
+import android.app.Application
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -18,207 +17,199 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.ktun.ailabapp.data.model.Task
-import com.ktun.ailabapp.data.model.TaskFilter
-import com.ktun.ailabapp.data.model.TaskStatus
-import com.ktun.ailabapp.presentation.ui.components.BottomNavigationBar
-import androidx.compose.runtime.SideEffect
+import coil.compose.AsyncImage
+import com.ktun.ailabapp.data.remote.dto.response.ProjectDetailResponse
+import com.ktun.ailabapp.data.remote.dto.response.ProjectMember
+import com.ktun.ailabapp.data.remote.dto.response.TaskResponse
+import com.ktun.ailabapp.data.remote.dto.response.TaskStatistics
+import com.ktun.ailabapp.ui.theme.BackgroundLight
+import com.ktun.ailabapp.ui.theme.PrimaryBlue
+import com.ktun.ailabapp.ui.theme.White
+import com.ktun.ailabapp.presentation.ui.util.formatDate
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProjectDetailScreen(
     projectId: String,
-    viewModel: ProjectDetailViewModel = viewModel(),
-    onNavigateBack: () -> Unit = {},
-    onNavigateToHome: () -> Unit = {},
-    onNavigateToProjects: () -> Unit = {},
-    onNavigateToChat: () -> Unit = {},
-    onNavigateToProfile: () -> Unit = {}
+    onNavigateBack: () -> Unit = {}
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-    val filteredTasks = viewModel.getFilteredTasks()
+    val context = LocalContext.current
+    val viewModel: ProjectDetailViewModel = viewModel(
+        factory = ProjectDetailViewModelFactory(context.applicationContext as Application)
+    )
 
-    // Ekran boyutlarını al
+    val uiState by viewModel.uiState.collectAsState()
+
     val configuration = LocalConfiguration.current
     val screenHeight = configuration.screenHeightDp.dp
     val screenWidth = configuration.screenWidthDp.dp
 
-    //Dialog State
-    var selectedTask by remember { mutableStateOf<Task?>(null) }
-
-    // SideEffect - recomposition'da çalışmaz, sadece ilk kez
-    SideEffect {
-        println("📱 SideEffect: Loading project $projectId")
-        viewModel.loadProjectDetails(projectId)
+    LaunchedEffect(projectId) {
+        viewModel.loadProjectDetail(projectId)
     }
-
-    // Task detay dialogu
-    selectedTask?.let { task ->
-        TaskDetailDialog(
-            task = task,
-            onDismiss = { selectedTask = null },
-            onStatusChange = { newStatus ->
-                viewModel.updateTaskStatus(task.id, newStatus)
-                selectedTask = null
-            },
-            screenWidth = screenWidth,
-            screenHeight = screenHeight
-        )
-    }
-
-    println("🖼️ Screen recomposed - tasks: ${uiState.tasks.size}")
 
     Scaffold(
-        bottomBar = {
-            BottomNavigationBar(
-                selectedItem = 1,
-                onHomeClick = onNavigateToHome,
-                onProjectsClick = onNavigateToProjects,
-                onChatClick = onNavigateToChat,
-                onProfileClick = onNavigateToProfile
+        topBar = {
+            TopAppBar(
+                title = { Text(uiState.project?.name ?: "Proje Detayı") },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Geri")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { viewModel.refreshProject() }) {
+                        Icon(Icons.Default.Refresh, contentDescription = "Yenile")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = PrimaryBlue,
+                    titleContentColor = White,
+                    navigationIconContentColor = White,
+                    actionIconContentColor = White
+                )
             )
         },
-        containerColor = Color(0xFF071372),
-        contentWindowInsets = WindowInsets.systemBars
+        containerColor = BackgroundLight
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            // ÜST KISIM - Koyu mavi header
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color(0xFF071372))
-                    .padding(screenWidth * 0.04f)
-            ) {
-                // Back button ve başlık
-                Row(
+        when {
+            uiState.isLoading -> {
+                Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = screenHeight * 0.025f),
-                    verticalAlignment = Alignment.CenterVertically
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
                 ) {
-                    IconButton(
-                        onClick = onNavigateBack,
-                        modifier = Modifier.size(screenWidth * 0.11f)
-                    ) {
-                        Icon(
-                            Icons.Default.ArrowBack,
-                            contentDescription = "Back",
-                            tint = Color.White,
-                            modifier = Modifier.size(screenWidth * 0.07f)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(screenWidth * 0.02f))
-
-                    Text(
-                        text = uiState.project?.title ?: "Ai Lab - Demirağ",
-                        fontSize = (screenWidth.value * 0.05f).sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        modifier = Modifier.weight(1f)
-                    )
+                    CircularProgressIndicator(color = PrimaryBlue)
                 }
             }
-
-            // İÇERİK ALANI - Açık gri/beyaz
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .clip(RoundedCornerShape(topStart = screenWidth * 0.075f, topEnd = screenWidth * 0.075f))
-                    .background(Color(0xFFE8EAF6))
-                    .padding(screenWidth * 0.04f)
-            ) {
-                // Güncel Proje Durumu Kartı
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    shape = RoundedCornerShape(screenWidth * 0.04f)
+            uiState.errorMessage != null -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(screenWidth * 0.04f),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = "Güncel Proje Durumu",
-                            fontSize = (screenWidth.value * 0.04f).sp,
-                            fontWeight = FontWeight.Normal,
-                            color = Color(0xFF071372)
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(
+                            Icons.Default.Warning,
+                            contentDescription = null,
+                            tint = Color.Red,
+                            modifier = Modifier.size(screenWidth * 0.15f)
                         )
-                        Spacer(modifier = Modifier.height(screenHeight * 0.01f))
+                        Spacer(modifier = Modifier.height(screenHeight * 0.02f))
                         Text(
-                            text = "KTR Hazırlık Aşaması",
-                            fontSize = (screenWidth.value * 0.05f).sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFFE53935)
+                            text = uiState.errorMessage ?: "Hata oluştu",
+                            color = Color.Red
                         )
+                        Spacer(modifier = Modifier.height(screenHeight * 0.02f))
+                        Button(onClick = { viewModel.refreshProject() }) {
+                            Text("Tekrar Dene")
+                        }
                     }
                 }
-
-                Spacer(modifier = Modifier.height(screenHeight * 0.02f))
-
-                // Filtre Butonları
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(screenWidth * 0.02f)
-                ) {
-                    FilterChip(
-                        text = "All",
-                        isSelected = uiState.selectedFilter == TaskFilter.ALL,
-                        onClick = { viewModel.setFilter(TaskFilter.ALL) },
-                        modifier = Modifier.weight(1f),
-                        screenWidth = screenWidth,
-                        screenHeight = screenHeight
-                    )
-                    FilterChip(
-                        text = "To - Do",
-                        isSelected = uiState.selectedFilter == TaskFilter.TO_DO,
-                        onClick = { viewModel.setFilter(TaskFilter.TO_DO) },
-                        modifier = Modifier.weight(1f),
-                        screenWidth = screenWidth,
-                        screenHeight = screenHeight
-                    )
-                    FilterChip(
-                        text = "In Prog",
-                        isSelected = uiState.selectedFilter == TaskFilter.IN_PROGRESS,
-                        onClick = { viewModel.setFilter(TaskFilter.IN_PROGRESS) },
-                        modifier = Modifier.weight(1f),
-                        screenWidth = screenWidth,
-                        screenHeight = screenHeight
-                    )
-                    FilterChip(
-                        text = "Done",
-                        isSelected = uiState.selectedFilter == TaskFilter.DONE,
-                        onClick = { viewModel.setFilter(TaskFilter.DONE) },
-                        modifier = Modifier.weight(1f),
-                        screenWidth = screenWidth,
-                        screenHeight = screenHeight
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(screenHeight * 0.02f))
-
-                // Görev Listesi
+            }
+            uiState.project != null -> {
                 LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.spacedBy(screenHeight * 0.015f)
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                        .padding(screenWidth * 0.04f),
+                    verticalArrangement = Arrangement.spacedBy(screenHeight * 0.02f)
                 ) {
-                    items(filteredTasks) { task ->
-                        TaskCard(
-                            task = task,
-                            onClick = { selectedTask = task },
+                    // Proje Bilgileri
+                    item {
+                        ProjectInfoCard(
+                            project = uiState.project!!,
                             screenWidth = screenWidth,
                             screenHeight = screenHeight
                         )
+                    }
+
+                    // Görev İstatistikleri
+                    item {
+                        TaskStatisticsCard(
+                            statistics = uiState.project!!.taskStatistics,
+                            screenWidth = screenWidth,
+                            screenHeight = screenHeight
+                        )
+                    }
+
+                    // Üyeler Başlık
+                    item {
+                        Text(
+                            text = "Proje Üyeleri (${uiState.project!!.members.size})",
+                            fontSize = (screenWidth.value * 0.045f).sp,
+                            fontWeight = FontWeight.Bold,
+                            color = PrimaryBlue
+                        )
+                    }
+
+                    // Üyeler Listesi
+                    items(uiState.project!!.members) { member ->
+                        MemberCard(
+                            member = member,
+                            screenWidth = screenWidth,
+                            screenHeight = screenHeight
+                        )
+                    }
+
+                    // Görevler Başlık
+                    item {
+                        Spacer(modifier = Modifier.height(screenHeight * 0.01f))
+                        Text(
+                            text = "Görevler (${uiState.tasks.size})",
+                            fontSize = (screenWidth.value * 0.045f).sp,
+                            fontWeight = FontWeight.Bold,
+                            color = PrimaryBlue
+                        )
+                    }
+
+                    // Görevler Listesi
+                    if (uiState.tasks.isEmpty()) {
+                        item {
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(containerColor = White)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(screenWidth * 0.08f),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Icon(
+                                            Icons.Default.CheckCircle,
+                                            contentDescription = null,
+                                            tint = PrimaryBlue.copy(alpha = 0.3f),
+                                            modifier = Modifier.size(screenWidth * 0.15f)
+                                        )
+                                        Spacer(modifier = Modifier.height(screenHeight * 0.01f))
+                                        Text(
+                                            text = "Henüz görev yok",
+                                            color = PrimaryBlue.copy(alpha = 0.5f)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        items(uiState.tasks) { task ->
+                            TaskCard(
+                                task = task,
+                                onStatusChange = { newStatus ->
+                                    viewModel.updateTaskStatus(task.id, newStatus)
+                                },
+                                screenWidth = screenWidth,
+                                screenHeight = screenHeight
+                            )
+                        }
                     }
                 }
             }
@@ -226,109 +217,306 @@ fun ProjectDetailScreen(
     }
 }
 
+// ============= COMPOSABLE KARTLAR =============
+
 @Composable
-fun FilterChip(
-    text: String,
-    isSelected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
+fun ProjectInfoCard(
+    project: ProjectDetailResponse,
     screenWidth: androidx.compose.ui.unit.Dp,
     screenHeight: androidx.compose.ui.unit.Dp
 ) {
-    Button(
-        onClick = onClick,
-        modifier = modifier.height(screenHeight * 0.05f),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = if (isSelected) Color(0xFF071372) else Color(0xFFB0B8D4),
-            contentColor = Color.White
-        ),
-        shape = RoundedCornerShape(screenWidth * 0.05f)
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = White),
+        shape = RoundedCornerShape(screenWidth * 0.03f)
     ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(screenWidth * 0.04f)
+        ) {
+            Text(
+                text = project.name,
+                fontSize = (screenWidth.value * 0.05f).sp,
+                fontWeight = FontWeight.Bold,
+                color = PrimaryBlue
+            )
+
+            if (!project.description.isNullOrEmpty()) {
+                Spacer(modifier = Modifier.height(screenHeight * 0.01f))
+                Text(
+                    text = project.description,
+                    fontSize = (screenWidth.value * 0.035f).sp,
+                    color = PrimaryBlue.copy(alpha = 0.7f)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(screenHeight * 0.015f))
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Default.DateRange,
+                    contentDescription = null,
+                    tint = PrimaryBlue.copy(alpha = 0.5f),
+                    modifier = Modifier.size(screenWidth * 0.04f)
+                )
+                Spacer(modifier = Modifier.width(screenWidth * 0.01f))
+                Text(
+                    text = "Oluşturulma: ${formatDate(project.createdAt)}",
+                    fontSize = (screenWidth.value * 0.03f).sp,
+                    color = PrimaryBlue.copy(alpha = 0.5f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun TaskStatisticsCard(
+    statistics: TaskStatistics,
+    screenWidth: androidx.compose.ui.unit.Dp,
+    screenHeight: androidx.compose.ui.unit.Dp
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = White),
+        shape = RoundedCornerShape(screenWidth * 0.03f)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(screenWidth * 0.04f)
+        ) {
+            Text(
+                text = "Görev İstatistikleri",
+                fontSize = (screenWidth.value * 0.04f).sp,
+                fontWeight = FontWeight.Bold,
+                color = PrimaryBlue
+            )
+
+            Spacer(modifier = Modifier.height(screenHeight * 0.02f))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                StatItem("Toplam", statistics.total.toString(), Color.Gray, screenWidth)
+                StatItem("Yapılacak", statistics.todo.toString(), Color(0xFFFF9800), screenWidth)
+                StatItem("Devam Eden", statistics.inProgress.toString(), Color(0xFF2196F3), screenWidth)
+                StatItem("Tamamlanan", statistics.done.toString(), Color(0xFF4CAF50), screenWidth)
+            }
+        }
+    }
+}
+
+@Composable
+fun StatItem(label: String, value: String, color: Color, screenWidth: androidx.compose.ui.unit.Dp) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
-            text = text,
-            fontSize = (screenWidth.value * 0.03f).sp,
-            fontWeight = FontWeight.Black
+            text = value,
+            fontSize = (screenWidth.value * 0.06f).sp,
+            fontWeight = FontWeight.Bold,
+            color = color
         )
+        Text(
+            text = label,
+            fontSize = (screenWidth.value * 0.025f).sp,
+            color = PrimaryBlue.copy(alpha = 0.7f)
+        )
+    }
+}
+
+@Composable
+fun MemberCard(
+    member: ProjectMember,
+    screenWidth: androidx.compose.ui.unit.Dp,
+    screenHeight: androidx.compose.ui.unit.Dp
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = White),
+        shape = RoundedCornerShape(screenWidth * 0.03f)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(screenWidth * 0.03f),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Avatar
+            if (member.avatarUrl != null) {
+                AsyncImage(
+                    model = member.avatarUrl,
+                    contentDescription = "Avatar",
+                    modifier = Modifier
+                        .size(screenWidth * 0.12f)
+                        .clip(CircleShape)
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .size(screenWidth * 0.12f)
+                        .clip(CircleShape)
+                        .background(PrimaryBlue.copy(alpha = 0.2f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.Person,
+                        contentDescription = null,
+                        tint = PrimaryBlue,
+                        modifier = Modifier.size(screenWidth * 0.06f)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.width(screenWidth * 0.03f))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = member.fullName,
+                    fontSize = (screenWidth.value * 0.04f).sp,
+                    fontWeight = FontWeight.Medium,
+                    color = PrimaryBlue
+                )
+                Text(
+                    text = member.email,
+                    fontSize = (screenWidth.value * 0.03f).sp,
+                    color = PrimaryBlue.copy(alpha = 0.6f)
+                )
+            }
+
+            Surface(
+                color = if (member.role == "Captain") PrimaryBlue else PrimaryBlue.copy(alpha = 0.3f),
+                shape = RoundedCornerShape(screenWidth * 0.02f)
+            ) {
+                Text(
+                    text = member.role,
+                    color = if (member.role == "Captain") White else PrimaryBlue,
+                    fontSize = (screenWidth.value * 0.03f).sp,
+                    modifier = Modifier.padding(
+                        horizontal = screenWidth * 0.02f,
+                        vertical = screenHeight * 0.005f
+                    )
+                )
+            }
+        }
     }
 }
 
 @Composable
 fun TaskCard(
-    task: Task,
-    onClick: () -> Unit = {},
+    task: TaskResponse,
+    onStatusChange: (String) -> Unit,
     screenWidth: androidx.compose.ui.unit.Dp,
     screenHeight: androidx.compose.ui.unit.Dp
 ) {
+    var expanded by remember { mutableStateOf(false) }
+
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() },
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        shape = RoundedCornerShape(screenWidth * 0.04f)
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = White),
+        shape = RoundedCornerShape(screenWidth * 0.03f)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(screenWidth * 0.03f)
+                .padding(screenWidth * 0.04f)
         ) {
-            Text(
-                text = task.title,
-                fontSize = (screenWidth.value * 0.04f).sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF071372)
-            )
-
-            Spacer(modifier = Modifier.height(screenHeight * 0.01f))
-
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Tarih ve saat
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.AccessTime,
-                        contentDescription = null,
-                        tint = Color(0xFF071372),
-                        modifier = Modifier.size(screenWidth * 0.045f)
-                    )
-                    Spacer(modifier = Modifier.width(screenWidth * 0.015f))
-                    Text(
-                        text = "${task.dueDate} ${task.dueTime}",
-                        fontSize = (screenWidth.value * 0.032f).sp,
-                        color = Color(0xFF071372)
-                    )
-                }
+                Text(
+                    text = task.title,
+                    fontSize = (screenWidth.value * 0.04f).sp,
+                    fontWeight = FontWeight.Bold,
+                    color = PrimaryBlue,
+                    modifier = Modifier.weight(1f)
+                )
 
-                // Durum badge
-                Surface(
-                    color = when (task.status) {
-                        TaskStatus.IN_PROGRESS -> Color(0xFFFF9800).copy(alpha = 0.2f)
-                        TaskStatus.TO_DO -> Color(0xFF9FA8DA).copy(alpha = 0.3f)
-                        TaskStatus.DONE -> Color(0xFF4CAF50).copy(alpha = 0.2f)
-                    },
-                    shape = RoundedCornerShape(screenWidth * 0.03f)
-                ) {
-                    Text(
-                        text = when (task.status) {
-                            TaskStatus.IN_PROGRESS -> "In Progress"
-                            TaskStatus.TO_DO -> "To - Do"
-                            TaskStatus.DONE -> "Done"
-                        },
-                        fontSize = (screenWidth.value * 0.03f).sp,
-                        fontWeight = FontWeight.Medium,
-                        color = when (task.status) {
-                            TaskStatus.IN_PROGRESS -> Color(0xFFFF9800)
-                            TaskStatus.TO_DO -> Color(0xFF5C6BC0)
-                            TaskStatus.DONE -> Color(0xFF4CAF50)
-                        },
-                        modifier = Modifier.padding(
-                            horizontal = screenWidth * 0.03f,
-                            vertical = screenHeight * 0.0075f
+                // Status Dropdown
+                Box {
+                    Surface(
+                        color = getStatusColor(task.status),
+                        shape = RoundedCornerShape(screenWidth * 0.02f),
+                        modifier = Modifier.clickable { expanded = true }
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(
+                                horizontal = screenWidth * 0.02f,
+                                vertical = screenHeight * 0.005f
+                            ),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = getStatusText(task.status),
+                                color = White,
+                                fontSize = (screenWidth.value * 0.03f).sp
+                            )
+                            Icon(
+                                Icons.Default.ArrowDropDown,
+                                contentDescription = null,
+                                tint = White,
+                                modifier = Modifier.size(screenWidth * 0.04f)
+                            )
+                        }
+                    }
+
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Yapılacak") },
+                            onClick = {
+                                onStatusChange("Todo")
+                                expanded = false
+                            }
                         )
+                        DropdownMenuItem(
+                            text = { Text("Devam Ediyor") },
+                            onClick = {
+                                onStatusChange("InProgress")
+                                expanded = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Tamamlandı") },
+                            onClick = {
+                                onStatusChange("Done")
+                                expanded = false
+                            }
+                        )
+                    }
+                }
+            }
+
+            if (!task.description.isNullOrEmpty()) {
+                Spacer(modifier = Modifier.height(screenHeight * 0.01f))
+                Text(
+                    text = task.description,
+                    fontSize = (screenWidth.value * 0.035f).sp,
+                    color = PrimaryBlue.copy(alpha = 0.7f)
+                )
+            }
+
+            if (task.assignedTo != null) {
+                Spacer(modifier = Modifier.height(screenHeight * 0.01f))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Default.Person,
+                        contentDescription = null,
+                        tint = PrimaryBlue.copy(alpha = 0.5f),
+                        modifier = Modifier.size(screenWidth * 0.04f)
+                    )
+                    Spacer(modifier = Modifier.width(screenWidth * 0.01f))
+                    Text(
+                        text = task.assignedTo.fullName,
+                        fontSize = (screenWidth.value * 0.03f).sp,
+                        color = PrimaryBlue.copy(alpha = 0.7f)
                     )
                 }
             }
@@ -336,207 +524,23 @@ fun TaskCard(
     }
 }
 
-// Yeni Dialog Composable
-@Composable
-fun TaskDetailDialog(
-    task: Task,
-    onDismiss: () -> Unit,
-    onStatusChange: (TaskStatus) -> Unit,
-    screenWidth: androidx.compose.ui.unit.Dp,
-    screenHeight: androidx.compose.ui.unit.Dp
-) {
-    var showStatusMenu by remember { mutableStateOf(false) }
+// ============= HELPER FUNCTIONS =============
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Column {
-                Text(
-                    text = task.title,
-                    fontSize = (screenWidth.value * 0.05f).sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF071372)
-                )
-                Spacer(modifier = Modifier.height(screenHeight * 0.005f))
-                Text(
-                    text = "Takım Kaptanı: ${task.takimKaptani}",
-                    fontSize = (screenWidth.value * 0.035f).sp,
-                    color = Color(0xFF071372).copy(alpha = 0.7f)
-                )
-            }
-        },
-        text = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-            ) {
-                // Tarih ve Saat
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(vertical = screenHeight * 0.01f)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.AccessTime,
-                        contentDescription = null,
-                        tint = Color(0xFF071372),
-                        modifier = Modifier.size(screenWidth * 0.05f)
-                    )
-                    Spacer(modifier = Modifier.width(screenWidth * 0.02f))
-                    Text(
-                        text = "${task.dueDate} ${task.dueTime}",
-                        fontSize = (screenWidth.value * 0.035f).sp,
-                        color = Color(0xFF071372)
-                    )
-                }
-
-                // Durum - TIKLANABİLİR
-                Box {
-                    Surface(
-                        color = when (task.status) {
-                            TaskStatus.IN_PROGRESS -> Color(0xFFFF9800).copy(alpha = 0.2f)
-                            TaskStatus.TO_DO -> Color(0xFF9FA8DA).copy(alpha = 0.3f)
-                            TaskStatus.DONE -> Color(0xFF4CAF50).copy(alpha = 0.2f)
-                        },
-                        shape = RoundedCornerShape(screenWidth * 0.03f),
-                        modifier = Modifier
-                            .padding(vertical = screenHeight * 0.01f)
-                            .clickable { showStatusMenu = true }
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(
-                                horizontal = screenWidth * 0.03f,
-                                vertical = screenHeight * 0.0075f
-                            )
-                        ) {
-                            Text(
-                                text = when (task.status) {
-                                    TaskStatus.IN_PROGRESS -> "In Progress"
-                                    TaskStatus.TO_DO -> "To - Do"
-                                    TaskStatus.DONE -> "Done"
-                                },
-                                fontSize = (screenWidth.value * 0.03f).sp,
-                                fontWeight = FontWeight.Medium,
-                                color = when (task.status) {
-                                    TaskStatus.IN_PROGRESS -> Color(0xFFFF9800)
-                                    TaskStatus.TO_DO -> Color(0xFF5C6BC0)
-                                    TaskStatus.DONE -> Color(0xFF4CAF50)
-                                }
-                            )
-                            Spacer(modifier = Modifier.width(screenWidth * 0.01f))
-                            Icon(
-                                imageVector = Icons.Default.ArrowDropDown,
-                                contentDescription = "Durum değiştir",
-                                tint = when (task.status) {
-                                    TaskStatus.IN_PROGRESS -> Color(0xFFFF9800)
-                                    TaskStatus.TO_DO -> Color(0xFF5C6BC0)
-                                    TaskStatus.DONE -> Color(0xFF4CAF50)
-                                },
-                                modifier = Modifier.size(screenWidth * 0.04f)
-                            )
-                        }
-                    }
-
-                    // Dropdown Menu
-                    DropdownMenu(
-                        expanded = showStatusMenu,
-                        onDismissRequest = { showStatusMenu = false }
-                    ) {
-                        DropdownMenuItem(
-                            text = {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(screenWidth * 0.03f)
-                                            .background(
-                                                Color(0xFF9FA8DA),
-                                                CircleShape
-                                            )
-                                    )
-                                    Spacer(modifier = Modifier.width(screenWidth * 0.02f))
-                                    Text("To - Do", fontSize = (screenWidth.value * 0.035f).sp)
-                                }
-                            },
-                            onClick = {
-                                onStatusChange(TaskStatus.TO_DO)
-                                showStatusMenu = false
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(screenWidth * 0.03f)
-                                            .background(
-                                                Color(0xFFFF9800),
-                                                CircleShape
-                                            )
-                                    )
-                                    Spacer(modifier = Modifier.width(screenWidth * 0.02f))
-                                    Text("In Progress", fontSize = (screenWidth.value * 0.035f).sp)
-                                }
-                            },
-                            onClick = {
-                                onStatusChange(TaskStatus.IN_PROGRESS)
-                                showStatusMenu = false
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(screenWidth * 0.03f)
-                                            .background(
-                                                Color(0xFF4CAF50),
-                                                CircleShape
-                                            )
-                                    )
-                                    Spacer(modifier = Modifier.width(screenWidth * 0.02f))
-                                    Text("Done", fontSize = (screenWidth.value * 0.035f).sp)
-                                }
-                            },
-                            onClick = {
-                                onStatusChange(TaskStatus.DONE)
-                                showStatusMenu = false
-                            }
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(screenHeight * 0.02f))
-
-                // Detaylı Açıklama
-                Text(
-                    text = "Görev Detayları",
-                    fontSize = (screenWidth.value * 0.04f).sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF071372)
-                )
-
-                Spacer(modifier = Modifier.height(screenHeight * 0.01f))
-
-                Text(
-                    text = task.detayAciklamasi,
-                    fontSize = (screenWidth.value * 0.035f).sp,
-                    color = Color(0xFF071372).copy(alpha = 0.8f),
-                    lineHeight = (screenWidth.value * 0.05f).sp
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text(
-                    "Kapat",
-                    color = Color(0xFF071372),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = (screenWidth.value * 0.035f).sp
-                )
-            }
-        },
-        containerColor = Color.White,
-        shape = RoundedCornerShape(screenWidth * 0.05f)
-    )
+fun getStatusColor(status: String): Color {
+    return when (status) {
+        "Todo" -> Color(0xFFFF9800)
+        "InProgress" -> Color(0xFF2196F3)
+        "Done" -> Color(0xFF4CAF50)
+        else -> Color.Gray
+    }
 }
+
+fun getStatusText(status: String): String {
+    return when (status) {
+        "Todo" -> "Yapılacak"
+        "InProgress" -> "Devam Ediyor"
+        "Done" -> "Tamamlandı"
+        else -> status
+    }
+}
+

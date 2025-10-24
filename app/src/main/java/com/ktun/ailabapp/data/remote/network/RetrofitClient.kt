@@ -3,6 +3,8 @@ package com.ktun.ailabapp.data.remote.network
 import android.content.Context
 import com.ktun.ailabapp.data.local.datastore.PreferencesManager
 import com.ktun.ailabapp.data.remote.api.AuthApi
+import com.ktun.ailabapp.data.remote.api.ProjectApi
+import com.ktun.ailabapp.data.remote.api.TaskApi
 import com.ktun.ailabapp.data.remote.interceptor.AuthInterceptor
 import com.ktun.ailabapp.util.Constants
 import okhttp3.OkHttpClient
@@ -23,12 +25,12 @@ object RetrofitClient {
     }
 
     private fun buildRetrofit(context: Context): Retrofit {
-        // Logging Interceptor (Debug modda detaylı log)
+        // Logging Interceptor
         val loggingInterceptor = HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
         }
 
-        // Auth Interceptor (Token ekleme)
+        // Auth Interceptor
         val preferencesManager = PreferencesManager(context)
         val authInterceptor = AuthInterceptor(preferencesManager)
 
@@ -50,8 +52,18 @@ object RetrofitClient {
             .build()
     }
 
-    // API Instance'ları
+    // AuthApi instance
     fun getAuthApi(context: Context): AuthApi {
         return getRetrofit(context).create(AuthApi::class.java)
+    }
+
+    // ProjectApi instance - EKLE
+    fun getProjectApi(context: Context): ProjectApi {
+        return getRetrofit(context).create(ProjectApi::class.java)
+    }
+
+    // TaskApi instance - EKLE
+    fun getTaskApi(context: Context): TaskApi {
+        return getRetrofit(context).create(TaskApi::class.java)
     }
 }

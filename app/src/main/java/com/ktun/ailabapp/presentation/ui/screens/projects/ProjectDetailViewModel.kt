@@ -1,147 +1,149 @@
 package com.ktun.ailabapp.presentation.ui.screens.projects
 
+import android.app.Application
 import androidx.lifecycle.ViewModel
-import com.ktun.ailabapp.data.model.*
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
+import com.ktun.ailabapp.data.remote.dto.response.ProjectDetailResponse
+import com.ktun.ailabapp.data.remote.dto.response.TaskResponse
+import com.ktun.ailabapp.data.remote.dto.response.TaskStatistics
+import com.ktun.ailabapp.data.repository.ProjectRepository
+import com.ktun.ailabapp.data.repository.TaskRepository
+import com.ktun.ailabapp.util.NetworkResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
-class ProjectDetailViewModel : ViewModel() {
+data class ProjectDetailUiState(
+    val project: ProjectDetailResponse? = null,
+    val tasks: List<TaskResponse> = emptyList(),
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null
+)
+
+class ProjectDetailViewModel(application: Application) : ViewModel() {
+
+    private val projectRepository = ProjectRepository(application.applicationContext)
+    private val taskRepository = TaskRepository(application.applicationContext)
 
     private val _uiState = MutableStateFlow(ProjectDetailUiState())
     val uiState: StateFlow<ProjectDetailUiState> = _uiState.asStateFlow()
 
-    private var isInitialized = false
+    fun loadProjectDetail(projectId: String) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
 
-    fun loadProjectDetails(projectId: String) {
-        // Sadece ilk kez yükle
-        if (isInitialized) {
-            println("✅ Already initialized, skipping")
-            return
-        }
+            // Proje detayını çek
+            when (val projectResult = projectRepository.getProjectDetail(projectId)) {
+                is NetworkResult.Success -> {
+                    projectResult.data?.let { project ->
+                        _uiState.value = _uiState.value.copy(
+                            project = project,
+                            isLoading = false
+                        )
 
-        println("🔍 loadProjectDetails called - projectId: $projectId")
-        println("📥 Loading tasks...")
+                        android.util.Log.d("ProjectDetailViewModel", """
+                            Proje yüklendi: ${project.name}
+                            Backend taskStatistics: ${project.taskStatistics}
+                        """.trimIndent())
 
-        _uiState.update { it.copy(isLoading = true) }
-
-        val project = Project(
-            id = projectId,
-            title = "Ai Lab - Demirağ",
-            description = "TEKNOFEST Savaşan İHA Yarışması",
-            logoLetter = "A",
-            progress = 0.65f,
-            status = ProjectStatus.IN_PROGRESS,
-            category = "TEKNOFEST"
-        )
-
-        val sampleTasks = listOf(
-            Task(
-                id = "1",
-                title = "Rapor Revize",
-                description = "Madde 3,4,12,15 gerekli notlara dikkat edilerek düzenlenecek.",
-                detayAciklamasi = """
-            Proje raporunun aşağıdaki maddeleri gözden geçirilmeli ve güncellenmelidir:
-            
-            • Madde 3: Proje hedefleri ve kapsamı detaylandırılacak
-            • Madde 4: Risk analizi eklenecek
-            • Madde 12: Bütçe planlaması güncellenecek
-            • Madde 15: Zaman çizelgesi revize edilecek
-            
-            Lütfen değişiklikleri yaparken akademik yazım kurallarına dikkat edin ve kaynakları belirtin.
-        """.trimIndent(),
-                takimKaptani = "Ahmet Yılmaz",
-                dueDate = "14.12.2025",
-                dueTime = "15:00",
-                status = TaskStatus.IN_PROGRESS
-            ),
-            Task(
-                id = "2",
-                title = "Tasarım Dokümantasyonu",
-                description = "Sistem mimarisi ve tasarım kararları dokümante edilecek.",
-                detayAciklamasi = """
-            Sistem tasarım dokümantasyonu hazırlanacak:
-            
-            • UML diyagramları oluşturulacak
-            • Veritabanı şeması detaylandırılacak
-            • API endpoint'leri dokümante edilecek
-            • Güvenlik protokolleri açıklanacak
-            
-            Dokümantasyon IEEE standartlarına uygun olmalıdır.
-        """.trimIndent(),
-                takimKaptani = "Mehmet Demir",
-                dueDate = "14.12.2025",
-                dueTime = "15:00",
-                status = TaskStatus.IN_PROGRESS
-            ),
-            Task(
-                id = "3",
-                title = "Rapor Revize",
-                description = "Madde 3,4,12,15 gerekli notlara dikkat edilerek düzenlenecek.",
-                dueDate = "14.12.2025",
-                dueTime = "15:00",
-                status = TaskStatus.TO_DO
-            ),
-            Task(
-                id = "4",
-                title = "Rapor Revize",
-                description = "Madde 3,4,12,15 gerekli notlara dikkat edilerek düzenlenecek.",
-                dueDate = "14.12.2025",
-                dueTime = "15:00",
-                status = TaskStatus.TO_DO
-            ),
-            Task(
-                id = "5",
-                title = "Rapor Revize",
-                description = "Madde 3,4,12,15 gerekli notlara dikkat edilerek düzenlenecek.",
-                dueDate = "14.12.2025",
-                dueTime = "15:00",
-                status = TaskStatus.DONE
-            )
-        )
-
-        _uiState.update {
-            it.copy(
-                project = project,
-                tasks = sampleTasks,
-                isLoading = false
-            )
-        }
-
-        isInitialized = true
-        println("✨ Tasks loaded successfully! Total: ${sampleTasks.size}")
-    }
-
-    fun setFilter(filter: TaskFilter) {
-        _uiState.update { it.copy(selectedFilter = filter) }
-    }
-
-    fun getFilteredTasks(): List<Task> {
-        return when (_uiState.value.selectedFilter) {
-            TaskFilter.ALL -> _uiState.value.tasks
-            TaskFilter.TO_DO -> _uiState.value.tasks.filter { it.status == TaskStatus.TO_DO }
-            TaskFilter.IN_PROGRESS -> _uiState.value.tasks.filter { it.status == TaskStatus.IN_PROGRESS }
-            TaskFilter.DONE -> _uiState.value.tasks.filter { it.status == TaskStatus.DONE }
-        }
-    }
-
-    fun updateTaskStatus(taskId: String, newStatus: TaskStatus) {
-        println("📝 Updating task $taskId to $newStatus")
-
-        _uiState.update { currentState ->
-            val updatedTasks = currentState.tasks.map { task ->
-                if (task.id == taskId) {
-                    task.copy(status = newStatus)
-                } else {
-                    task
+                        // Proje görevlerini çek
+                        loadProjectTasks(projectId)
+                    }
                 }
+                is NetworkResult.Error -> {
+                    android.util.Log.e("ProjectDetailViewModel", "Proje yükleme hatası: ${projectResult.message}")
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = projectResult.message
+                    )
+                }
+                is NetworkResult.Loading -> {}
             }
-            currentState.copy(tasks = updatedTasks)
         }
-
-        println("✅ Task status updated successfully")
     }
 
+    private fun loadProjectTasks(projectId: String) {
+        viewModelScope.launch {
+            when (val tasksResult = taskRepository.getProjectTasks(projectId)) {
+                is NetworkResult.Success -> {
+                    tasksResult.data?.let { tasks ->
+                        // Manuel olarak istatistikleri hesapla
+                        val total = tasks.size
+                        val todo = tasks.count { it.status == "Todo" }
+                        val inProgress = tasks.count { it.status == "InProgress" }
+                        val done = tasks.count { it.status == "Done" }
 
+                        val calculatedStats = TaskStatistics(
+                            total = total,
+                            todo = todo,
+                            inProgress = inProgress,
+                            done = done
+                        )
+
+                        // Proje bilgisini güncelle - taskStatistics'i override et
+                        _uiState.value.project?.let { project ->
+                            val updatedProject = project.copy(taskStatistics = calculatedStats)
+                            _uiState.value = _uiState.value.copy(
+                                project = updatedProject,
+                                tasks = tasks
+                            )
+                        }
+
+                        android.util.Log.d("ProjectDetailViewModel", """
+                            Görevler yüklendi: ${tasks.size}
+                            Hesaplanan istatistikler:
+                            - Total: $total
+                            - Todo: $todo
+                            - InProgress: $inProgress
+                            - Done: $done
+                        """.trimIndent())
+                    }
+                }
+                is NetworkResult.Error -> {
+                    android.util.Log.e("ProjectDetailViewModel", "Görev yükleme hatası: ${tasksResult.message}")
+                }
+                is NetworkResult.Loading -> {}
+            }
+        }
+    }
+
+    fun updateTaskStatus(taskId: String, newStatus: String) {
+        viewModelScope.launch {
+            when (val result = taskRepository.updateTaskStatus(taskId, newStatus)) {
+                is NetworkResult.Success -> {
+                    android.util.Log.d("ProjectDetailViewModel", "Görev durumu güncellendi")
+
+                    // Projeyi yenile (istatistikler güncellensin)
+                    _uiState.value.project?.let { project ->
+                        loadProjectDetail(project.id)
+                    }
+                }
+                is NetworkResult.Error -> {
+                    android.util.Log.e("ProjectDetailViewModel", "Durum güncelleme hatası: ${result.message}")
+                    _uiState.value = _uiState.value.copy(
+                        errorMessage = result.message
+                    )
+                }
+                is NetworkResult.Loading -> {}
+            }
+        }
+    }
+
+    fun refreshProject() {
+        _uiState.value.project?.let { project ->
+            loadProjectDetail(project.id)
+        }
+    }
+}
+
+class ProjectDetailViewModelFactory(private val application: Application) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(ProjectDetailViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return ProjectDetailViewModel(application) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
+    }
 }

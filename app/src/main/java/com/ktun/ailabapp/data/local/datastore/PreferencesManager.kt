@@ -35,6 +35,11 @@ class PreferencesManager(private val context: Context) {
         }
     }
 
+    // RefreshToken okuma
+    fun getRefreshToken(): Flow<String?> = context.dataStore.data.map { preferences ->
+        preferences[REFRESH_TOKEN_KEY]
+    }
+
     // Refresh token kaydetme
     suspend fun saveRefreshToken(refreshToken: String) {
         context.dataStore.edit { preferences ->
