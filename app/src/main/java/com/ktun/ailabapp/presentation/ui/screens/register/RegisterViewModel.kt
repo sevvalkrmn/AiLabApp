@@ -1,14 +1,15 @@
 package com.ktunailab.ailabapp.presentation.ui.screens.register
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ktunailab.ailabapp.data.repository.AuthRepository
 import com.ktunailab.ailabapp.util.NetworkResult
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 data class RegisterUiState(
     val fullName: String = "",
@@ -25,9 +26,10 @@ data class RegisterUiState(
     val isRegistered: Boolean = false
 )
 
-class RegisterViewModel(application: Application) : AndroidViewModel(application) {
-
-    private val authRepository = AuthRepository(application.applicationContext)
+@HiltViewModel
+class RegisterViewModel @Inject constructor(
+    private val authRepository: AuthRepository
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RegisterUiState())
     val uiState: StateFlow<RegisterUiState> = _uiState.asStateFlow()

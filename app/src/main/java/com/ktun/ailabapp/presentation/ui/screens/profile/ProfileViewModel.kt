@@ -1,14 +1,15 @@
 package com.ktunailab.ailabapp.presentation.ui.screens.profile
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ktunailab.ailabapp.data.repository.AuthRepository
 import com.ktunailab.ailabapp.util.NetworkResult
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 data class ProfileUiState(
     val id: String = "",
@@ -23,9 +24,10 @@ data class ProfileUiState(
     val errorMessage: String? = null
 )
 
-class ProfileViewModel(application: Application) : AndroidViewModel(application) {
-
-    private val authRepository = AuthRepository(application.applicationContext)
+@HiltViewModel
+class ProfileViewModel @Inject constructor(
+    private val authRepository: AuthRepository
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileUiState())
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
@@ -40,7 +42,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 
             when (val result = authRepository.getProfile()) {
                 is NetworkResult.Success -> {
-                    result.data?.let { profile ->  // ← Safe call ekLendi
+                    result.data?.let { profile ->
                         _uiState.value = _uiState.value.copy(
                             id = profile.id,
                             fullName = profile.fullName,

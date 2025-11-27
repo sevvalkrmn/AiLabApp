@@ -1,50 +1,18 @@
 package com.ktunailab.ailabapp.data.repository
 
-import android.content.Context
-import com.ktunailab.ailabapp.data.local.datastore.PreferencesManager
 import com.ktunailab.ailabapp.data.remote.api.TaskApi
-import com.ktunailab.ailabapp.data.remote.dto.request.CreateTaskRequest
-import com.ktunailab.ailabapp.data.remote.dto.request.UpdateTaskRequest
 import com.ktunailab.ailabapp.data.remote.dto.request.UpdateTaskStatusRequest
 import com.ktunailab.ailabapp.data.remote.dto.response.TaskResponse
-import com.ktunailab.ailabapp.data.remote.interceptor.AuthInterceptor
-import com.ktunailab.ailabapp.data.remote.network.ApiConfig
-import com.ktunailab.ailabapp.util.Constants
 import com.ktunailab.ailabapp.util.NetworkResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
-import java.util.concurrent.TimeUnit
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class TaskRepository(private val context: Context) {
-
-    private val taskApi: TaskApi by lazy {
-        val loggingInterceptor = HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
-        }
-
-        val preferencesManager = PreferencesManager(context)
-        val authInterceptor = AuthInterceptor(preferencesManager)
-
-        val okHttpClient = OkHttpClient.Builder()
-            .addInterceptor(authInterceptor)
-            .addInterceptor(loggingInterceptor)
-            .connectTimeout(Constants.CONNECT_TIMEOUT, TimeUnit.SECONDS)
-            .readTimeout(Constants.READ_TIMEOUT, TimeUnit.SECONDS)
-            .writeTimeout(Constants.WRITE_TIMEOUT, TimeUnit.SECONDS)
-            .retryOnConnectionFailure(true)
-            .build()
-
-        Retrofit.Builder()
-            .baseUrl(ApiConfig.BASE_URL)
-            .client(okHttpClient)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-            .create(TaskApi::class.java)
-    }
+@Singleton
+class TaskRepository @Inject constructor(
+    private val taskApi: TaskApi
+) {
 
     /**
      * Projenin tüm görevlerini getir

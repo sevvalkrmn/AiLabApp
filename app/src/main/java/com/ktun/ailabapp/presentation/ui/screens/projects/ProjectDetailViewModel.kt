@@ -1,8 +1,6 @@
 package com.ktunailab.ailabapp.presentation.ui.screens.projects
 
-import android.app.Application
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.ktunailab.ailabapp.data.remote.dto.response.ProjectDetailResponse
 import com.ktunailab.ailabapp.data.remote.dto.response.TaskResponse
@@ -10,10 +8,12 @@ import com.ktunailab.ailabapp.data.remote.dto.response.TaskStatistics
 import com.ktunailab.ailabapp.data.repository.ProjectRepository
 import com.ktunailab.ailabapp.data.repository.TaskRepository
 import com.ktunailab.ailabapp.util.NetworkResult
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 data class ProjectDetailUiState(
     val project: ProjectDetailResponse? = null,
@@ -22,10 +22,11 @@ data class ProjectDetailUiState(
     val errorMessage: String? = null
 )
 
-class ProjectDetailViewModel(application: Application) : ViewModel() {
-
-    private val projectRepository = ProjectRepository(application.applicationContext)
-    private val taskRepository = TaskRepository(application.applicationContext)
+@HiltViewModel
+class ProjectDetailViewModel @Inject constructor(
+    private val projectRepository: ProjectRepository,
+    private val taskRepository: TaskRepository
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProjectDetailUiState())
     val uiState: StateFlow<ProjectDetailUiState> = _uiState.asStateFlow()
@@ -135,15 +136,5 @@ class ProjectDetailViewModel(application: Application) : ViewModel() {
         _uiState.value.project?.let { project ->
             loadProjectDetail(project.id)
         }
-    }
-}
-
-class ProjectDetailViewModelFactory(private val application: Application) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(ProjectDetailViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return ProjectDetailViewModel(application) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

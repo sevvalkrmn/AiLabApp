@@ -4,10 +4,12 @@ import androidx.lifecycle.ViewModel
 import com.ktunailab.ailabapp.data.model.Announcement
 import com.ktunailab.ailabapp.data.model.AnnouncementFilter
 import com.ktunailab.ailabapp.data.model.AnnouncementType
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import javax.inject.Inject
 
 data class AnnouncementUiState(
     val announcements: List<Announcement> = emptyList(),
@@ -15,7 +17,8 @@ data class AnnouncementUiState(
     val isLoading: Boolean = false
 )
 
-class AnnouncementViewModel : ViewModel() {
+@HiltViewModel
+class AnnouncementViewModel @Inject constructor() : ViewModel() {
 
     private val _uiState = MutableStateFlow(AnnouncementUiState())
     val uiState: StateFlow<AnnouncementUiState> = _uiState.asStateFlow()
@@ -152,4 +155,3 @@ class AnnouncementViewModel : ViewModel() {
         return _uiState.value.announcements.count { !it.isRead }
     }
 }
-

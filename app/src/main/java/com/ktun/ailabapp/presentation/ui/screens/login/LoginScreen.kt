@@ -29,8 +29,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.ktunailab.ailabapp.R
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.rememberScrollState
@@ -55,26 +54,25 @@ private val sfProFontFamily = FontFamily(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
-    viewModel: LoginViewModel = viewModel(),
+    viewModel: LoginViewModel = hiltViewModel(),
     onLoginSuccess: () -> Unit = {},
     onNavigateToRegister: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val context = LocalContext.current  // ← EKLENDI
+    val context = LocalContext.current
 
-    // Ekran boyutlarını al
     val configuration = LocalConfiguration.current
     val screenHeight = configuration.screenHeightDp.dp
     val screenWidth = configuration.screenWidthDp.dp
 
-    // Error mesajını göster - EKLENDI
+    // Error mesajını göster
     LaunchedEffect(uiState.errorMessage) {
         uiState.errorMessage?.let { error ->
             Toast.makeText(context, error, Toast.LENGTH_LONG).show()
         }
     }
 
-    // Giriş başarılı olduğunda - EKLENDI
+    // Giriş başarılı olduğunda
     LaunchedEffect(uiState.isLoggedIn) {
         if (uiState.isLoggedIn) {
             Toast.makeText(context, "Giriş başarılı!", Toast.LENGTH_SHORT).show()
@@ -114,7 +112,7 @@ fun LoginScreen(
             )
         }
 
-        // ALT KISIM - Form (SCROLL EKLENDİ)
+        // ALT KISIM - Form
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -325,27 +323,4 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(screenHeight * 0.02f))
         }
     }
-}
-
-@Preview(showBackground = true, name = "Login Ekranı")
-@Composable
-fun LoginScreenPreview() {
-    LoginScreen(
-        onLoginSuccess = {},
-        viewModel = viewModel()
-    )
-}
-
-@Preview(
-    showBackground = true,
-    name = "Login - Telefon Görünümü",
-    showSystemUi = true,
-    device = "spec:width=411dp,height=891dp"
-)
-@Composable
-fun LoginScreenFullPreview() {
-    LoginScreen(
-        onLoginSuccess = {},
-        viewModel = viewModel()
-    )
 }

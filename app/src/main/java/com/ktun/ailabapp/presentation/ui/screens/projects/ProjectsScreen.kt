@@ -19,6 +19,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ktunailab.ailabapp.data.remote.dto.response.MyProjectsResponse
 import com.ktunailab.ailabapp.presentation.ui.components.BottomNavigationBar
@@ -34,17 +36,10 @@ fun ProjectsScreen(
     onNavigateToProjects: () -> Unit = {},
     onNavigateToChat: () -> Unit = {},
     onNavigateToProfile: () -> Unit = {},
-    onNavigateToProjectDetail: (String) -> Unit = {}
+    onNavigateToProjectDetail: (String) -> Unit = {},
+    viewModel: ProjectsViewModel = hiltViewModel()
 ) {
-    // Context'i burada al
-    val context = LocalContext.current
-
-    // ViewModel'i context ile oluştur
-    val viewModel: ProjectsViewModel = viewModel(
-        factory = ProjectsViewModelFactory(context.applicationContext as Application)
-    )
-
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     val configuration = LocalConfiguration.current
     val screenHeight = configuration.screenHeightDp.dp

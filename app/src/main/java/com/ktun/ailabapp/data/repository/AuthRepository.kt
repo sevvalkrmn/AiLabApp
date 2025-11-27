@@ -1,6 +1,5 @@
 package com.ktunailab.ailabapp.data.repository
 
-import android.content.Context
 import com.google.gson.Gson
 import com.ktunailab.ailabapp.data.local.datastore.PreferencesManager
 import com.ktunailab.ailabapp.data.remote.api.AuthApi
@@ -10,16 +9,18 @@ import com.ktunailab.ailabapp.data.remote.dto.request.RegisterRequest
 import com.ktunailab.ailabapp.data.remote.dto.response.AuthResponse
 import com.ktunailab.ailabapp.data.remote.dto.response.ErrorResponse
 import com.ktunailab.ailabapp.data.remote.dto.response.ProfileResponse
-import com.ktunailab.ailabapp.data.remote.network.RetrofitClient
 import com.ktunailab.ailabapp.util.NetworkResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class AuthRepository(private val context: Context) {
-
-    private val authApi = RetrofitClient.getAuthApi(context)
-    private val preferencesManager = PreferencesManager(context)
+@Singleton
+class AuthRepository @Inject constructor(
+    private val authApi: AuthApi,
+    private val preferencesManager: PreferencesManager
+) {
 
     /**
      * Kullanıcı Kayıt
@@ -201,7 +202,7 @@ class AuthRepository(private val context: Context) {
         try {
             android.util.Log.d("AuthRepository", "Profile bilgileri çekiliyor...")
 
-            val response = authApi.getProfile()  // ← authApi kullanıldı (AuthApi değil)
+            val response = authApi.getProfile()
 
             if (response.isSuccessful && response.body() != null) {
                 val profileResponse = response.body()!!

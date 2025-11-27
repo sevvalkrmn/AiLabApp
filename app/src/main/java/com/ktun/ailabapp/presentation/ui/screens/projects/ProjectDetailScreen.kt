@@ -21,6 +21,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.ktunailab.ailabapp.data.remote.dto.response.ProjectDetailResponse
@@ -36,14 +38,11 @@ import com.ktunailab.ailabapp.presentation.ui.util.formatDate
 @Composable
 fun ProjectDetailScreen(
     projectId: String,
-    onNavigateBack: () -> Unit = {}
+    onNavigateBack: () -> Unit = {},
+    viewModel: ProjectDetailViewModel = hiltViewModel()
 ) {
-    val context = LocalContext.current
-    val viewModel: ProjectDetailViewModel = viewModel(
-        factory = ProjectDetailViewModelFactory(context.applicationContext as Application)
-    )
 
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     val configuration = LocalConfiguration.current
     val screenHeight = configuration.screenHeightDp.dp
