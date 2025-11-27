@@ -1,24 +1,30 @@
 package com.ktunailab.ailabapp.presentation.ui.screens.announcement
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.ktunailab.ailabapp.data.model.Announcement
 import com.ktunailab.ailabapp.data.model.AnnouncementFilter
 import com.ktunailab.ailabapp.data.model.AnnouncementType
+import com.ktunailab.ailabapp.data.repository.AnnouncementRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class AnnouncementUiState(
     val announcements: List<Announcement> = emptyList(),
     val selectedFilter: AnnouncementFilter = AnnouncementFilter.ALL,
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val error: String? = null
 )
 
 @HiltViewModel
-class AnnouncementViewModel @Inject constructor() : ViewModel() {
+class AnnouncementViewModel @Inject constructor(
+    private val repository: AnnouncementRepository
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AnnouncementUiState())
     val uiState: StateFlow<AnnouncementUiState> = _uiState.asStateFlow()
@@ -27,92 +33,61 @@ class AnnouncementViewModel @Inject constructor() : ViewModel() {
         loadAnnouncements()
     }
 
-    private fun loadAnnouncements() {
-        // Mock data - Gerçek uygulamada API'den gelecek
-        val mockAnnouncements = listOf(
-            Announcement(
-                id = "1",
-                type = AnnouncementType.ALL,
-                title = "Ai Lab Yönetim Kurulu",
-                content = "Lorem ipsum dolor sit amet consectetur. Tortor aenean suspendisse pretium nunc non facilisi.",
-                senderName = "Lab Yönetimi",
-                senderImage = null,
-                timestamp = "15.12.2025 09:00",
-                isRead = false
-            ),
-            Announcement(
-                id = "2",
-                type = AnnouncementType.PERSONAL,
-                title = "Şevval Karaman",
-                content = "Lorem ipsum dolor sit amet consectetur. Tortor aenean suspendisse pretium nunc non facilisi. Lorem ipsum dolor sit amet consectetur. Tortor aenean suspendisse pretium nunc non facilisi.",
-                senderName = "Şevval Karaman",
-                senderImage = "https://i.pravatar.cc/150?img=1",
-                timestamp = "14.12.2025 16:30",
-                isRead = false
-            ),
-            Announcement(
-                id = "3",
-                type = AnnouncementType.ALL,
-                title = "Ai Lab Yönetim Kurulu",
-                content = "Lorem ipsum dolor sit amet consectetur. Tortor aenean suspendisse pretium nunc non facilisi.",
-                senderName = "Lab Yönetimi",
-                senderImage = null,
-                timestamp = "14.12.2025 10:00",
-                isRead = true
-            ),
-            Announcement(
-                id = "4",
-                type = AnnouncementType.PERSONAL,
-                title = "Şevval Karaman",
-                content = "Lorem ipsum dolor sit amet consectetur. Tortor aenean suspendisse pretium nunc non facilisi. Lorem ipsum dolor sit amet consectetur. Tortor aenean suspendisse pretium nunc non facilisi.",
-                senderName = "Şevval Karaman",
-                senderImage = "https://i.pravatar.cc/150?img=1",
-                timestamp = "13.12.2025 14:20",
-                isRead = true
-            ),
-            Announcement(
-                id = "5",
-                type = AnnouncementType.TEAM,
-                title = "Takım Duyurusu",
-                content = "Lorem ipsum dolor sit amet consectetur. Tortor aenean suspendisse pretium nunc non facilisi.",
-                senderName = "Takım Lideri",
-                senderImage = null,
-                timestamp = "13.12.2025 11:00",
-                isRead = false
-            ),
-            Announcement(
-                id = "6",
-                type = AnnouncementType.TEAM,
-                title = "Sprint Toplantısı",
-                content = "Bu hafta sprint toplantımız Perşembe günü saat 14:00'te olacaktır. Lütfen hazırlıklı gelin.",
-                senderName = "Proje Yöneticisi",
-                senderImage = null,
-                timestamp = "12.12.2025 09:15",
-                isRead = false
-            ),
-            Announcement(
-                id = "7",
-                type = AnnouncementType.ALL,
-                title = "Laboratuvar Bakım Çalışması",
-                content = "15-16 Aralık tarihlerinde laboratuvarımızda bakım çalışması yapılacaktır. Bu süre zarfında laboratuvar kapalı olacaktır.",
-                senderName = "Lab Yönetimi",
-                senderImage = null,
-                timestamp = "11.12.2025 16:45",
-                isRead = true
-            ),
-            Announcement(
-                id = "8",
-                type = AnnouncementType.PERSONAL,
-                title = "Rapor Teslimi Hatırlatması",
-                content = "Proje raporunuzun son teslim tarihi 20 Aralık'tır. Lütfen zamanında teslim etmeyi unutmayın.",
-                senderName = "Akademik Danışman",
-                senderImage = "https://i.pravatar.cc/150?img=3",
-                timestamp = "10.12.2025 11:20",
-                isRead = false
-            )
-        )
+    fun loadAnnouncements() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
 
-        _uiState.update { it.copy(announcements = mockAnnouncements) }
+            repository.getMyAnnouncements().fold(
+                onSuccess = { announcements ->
+                    _uiState.update {
+                        it.copy(
+                            announcements = announcements,
+                            isLoading = false
+                        )
+                    }
+
+                    // ✅ EKLE: Her duyurunun detayını arka planda yükle
+                    announcements.forEach { announcement ->
+                        loadAnnouncementDetail(announcement.id)
+                    }
+                },
+                onFailure = { exception ->
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            error = exception.message ?: "Duyurular yüklenemedi"
+                        )
+                    }
+                }
+            )
+        }
+    }
+
+    fun loadAnnouncementDetail(id: String) {
+        viewModelScope.launch {
+            // ✅ Önce eski isRead değerini sakla
+            val oldAnnouncement = _uiState.value.announcements.find { it.id == id }
+            val oldIsRead = oldAnnouncement?.isRead
+
+            repository.getAnnouncementDetail(id).fold(
+                onSuccess = { detailAnnouncement ->
+                    _uiState.update { currentState ->
+                        val updatedAnnouncements = currentState.announcements.map { announcement ->
+                            if (announcement.id == id) {
+                                // ✅ Eski isRead değerini parametre olarak gönder
+                                detailAnnouncement.copy(isRead = oldIsRead ?: detailAnnouncement.isRead)
+                            } else {
+                                announcement
+                            }
+                        }
+                        currentState.copy(announcements = updatedAnnouncements)
+                    }
+                },
+                onFailure = {
+                    println("⚠️ Detay yüklenemedi: $id")
+                }
+            )
+        }
     }
 
     fun setFilter(filter: AnnouncementFilter) {
@@ -126,7 +101,7 @@ class AnnouncementViewModel @Inject constructor() : ViewModel() {
         return when (filter) {
             AnnouncementFilter.ALL -> announcements
             AnnouncementFilter.GENERAL -> announcements.filter {
-                it.type == AnnouncementType.ALL  // Lab genel duyuruları
+                it.type == AnnouncementType.ALL
             }
             AnnouncementFilter.TEAM -> announcements.filter {
                 it.type == AnnouncementType.TEAM
@@ -138,20 +113,28 @@ class AnnouncementViewModel @Inject constructor() : ViewModel() {
     }
 
     fun markAsRead(announcementId: String) {
-        _uiState.update { currentState ->
-            val updatedAnnouncements = currentState.announcements.map { announcement ->
-                if (announcement.id == announcementId) {
-                    announcement.copy(isRead = true)
-                } else {
-                    announcement
+        viewModelScope.launch {
+            // Backend'e okundu işareti gönder
+            repository.markAsRead(announcementId)
+
+            // UI'da güncelle
+            _uiState.update { currentState ->
+                val updatedAnnouncements = currentState.announcements.map { announcement ->
+                    if (announcement.id == announcementId) {
+                        announcement.copy(isRead = true)
+                    } else {
+                        announcement
+                    }
                 }
+                currentState.copy(announcements = updatedAnnouncements)
             }
-            currentState.copy(announcements = updatedAnnouncements)
         }
     }
 
-    // Okunmamış duyuru sayısını getir (ileride badge için kullanılabilir)
     fun getUnreadCount(): Int {
-        return _uiState.value.announcements.count { !it.isRead }
+        val count = _uiState.value.announcements.count { !it.isRead }
+        println("🔔 Okunmamış duyuru sayısı: $count")
+        println("📋 Tüm duyurular: ${_uiState.value.announcements.map { "id=${it.id}, isRead=${it.isRead}" }}")
+        return count
     }
 }

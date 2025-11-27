@@ -29,6 +29,7 @@ import com.ktunailab.ailabapp.data.remote.dto.response.ProjectDetailResponse
 import com.ktunailab.ailabapp.data.remote.dto.response.ProjectMember
 import com.ktunailab.ailabapp.data.remote.dto.response.TaskResponse
 import com.ktunailab.ailabapp.data.remote.dto.response.TaskStatistics
+import com.ktunailab.ailabapp.presentation.ui.screens.announcement.AnnouncementViewModel
 import com.ktunailab.ailabapp.ui.theme.BackgroundLight
 import com.ktunailab.ailabapp.ui.theme.PrimaryBlue
 import com.ktunailab.ailabapp.ui.theme.White
@@ -40,6 +41,7 @@ fun ProjectDetailScreen(
     projectId: String,
     onNavigateBack: () -> Unit = {},
     viewModel: ProjectDetailViewModel = hiltViewModel()
+
 ) {
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()

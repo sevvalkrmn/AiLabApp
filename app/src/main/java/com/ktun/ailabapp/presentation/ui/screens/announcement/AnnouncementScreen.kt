@@ -71,6 +71,11 @@ fun AnnouncementScreen(
 
     // Dialog
     selectedAnnouncement?.let { announcement ->
+
+        LaunchedEffect(announcement.id) {
+            viewModel.loadAnnouncementDetail(announcement.id)
+        }
+
         AnnouncementDetailDialog(
             announcement = announcement,
             onDismiss = {
@@ -82,14 +87,24 @@ fun AnnouncementScreen(
         )
     }
 
+    LaunchedEffect(uiState.announcements) {
+        val unreadCount = viewModel.getUnreadCount()
+        println("🔔 AnnouncementScreen - Unread count: $unreadCount")
+    }
+
     Scaffold(
         bottomBar = {
+
+            val unreadCount = viewModel.getUnreadCount()
+            println("🔔 BottomBar'a gönderilen count: $unreadCount")
+
             BottomNavigationBar(
                 selectedItem = 2,
                 onHomeClick = onNavigateToHome,
                 onProjectsClick = onNavigateToProjects,
                 onChatClick = onNavigateToChat,
-                onProfileClick = onNavigateToProfile
+                onProfileClick = onNavigateToProfile,
+                unreadAnnouncementCount = viewModel.getUnreadCount()
             )
         },
         containerColor = Color(0xFF071372),
