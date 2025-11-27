@@ -22,6 +22,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.ktunailab.ailabapp.R
@@ -35,7 +36,7 @@ import com.ktunailab.ailabapp.ui.theme.White
 
 @Composable
 fun ProfileScreen(
-    viewModel: ProfileViewModel = viewModel(),
+    viewModel: ProfileViewModel = hiltViewModel(),
     onNavigateToHome: () -> Unit = {},
     onNavigateToProjects: () -> Unit = {},
     onNavigateToChat: () -> Unit = {},

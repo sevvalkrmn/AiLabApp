@@ -1,22 +1,21 @@
 package com.ktunailab.ailabapp.data.repository
 
-import android.content.Context
-import com.ktunailab.ailabapp.data.remote.dto.request.AddMemberRequest
+import com.ktunailab.ailabapp.data.remote.api.ProjectApi
 import com.ktunailab.ailabapp.data.remote.dto.request.CreateProjectRequest
-import com.ktunailab.ailabapp.data.remote.dto.request.UpdateMemberRoleRequest
 import com.ktunailab.ailabapp.data.remote.dto.request.UpdateProjectRequest
 import com.ktunailab.ailabapp.data.remote.dto.response.MyProjectsResponse
 import com.ktunailab.ailabapp.data.remote.dto.response.ProjectDetailResponse
 import com.ktunailab.ailabapp.data.remote.dto.response.ProjectMember
-import com.ktunailab.ailabapp.data.remote.network.RetrofitClient
 import com.ktunailab.ailabapp.util.NetworkResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class ProjectRepository(private val context: Context) {
-
-    // ProjectApi'yi RetrofitClient'tan al
-    private val projectApi = RetrofitClient.getProjectApi(context)
+@Singleton
+class ProjectRepository @Inject constructor(
+    private val projectApi: ProjectApi
+) {
 
     /**
      * Kullanıcının projelerini getir

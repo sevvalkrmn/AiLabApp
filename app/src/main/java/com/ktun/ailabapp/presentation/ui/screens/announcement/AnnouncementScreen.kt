@@ -11,8 +11,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,6 +22,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.ktunailab.ailabapp.data.model.Announcement
@@ -36,7 +35,7 @@ import com.ktunailab.ailabapp.presentation.ui.components.sendFeedbackEmail
 
 @Composable
 fun AnnouncementScreen(
-    viewModel: AnnouncementViewModel = viewModel(),
+    viewModel: AnnouncementViewModel = hiltViewModel(),
     onNavigateToHome: () -> Unit = {},
     onNavigateToProjects: () -> Unit = {},
     onNavigateToChat: () -> Unit = {},

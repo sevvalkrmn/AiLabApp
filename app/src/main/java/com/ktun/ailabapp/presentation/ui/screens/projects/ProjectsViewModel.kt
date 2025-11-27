@@ -1,17 +1,17 @@
 package com.ktunailab.ailabapp.presentation.ui.screens.projects
 
-import android.app.Application
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.ktunailab.ailabapp.data.remote.dto.response.MyProjectsResponse
 import com.ktunailab.ailabapp.data.repository.AuthRepository
 import com.ktunailab.ailabapp.data.repository.ProjectRepository
 import com.ktunailab.ailabapp.util.NetworkResult
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 data class ProjectsUiState(
     val projects: List<MyProjectsResponse> = emptyList(),
@@ -26,10 +26,11 @@ enum class ProjectFilter {
     MEMBER
 }
 
-class ProjectsViewModel(application: Application) : ViewModel() {
-
-    private val projectRepository = ProjectRepository(application.applicationContext)
-    private val authRepository = AuthRepository(application.applicationContext)
+@HiltViewModel
+class ProjectsViewModel @Inject constructor(
+    private val projectRepository: ProjectRepository,
+    private val authRepository: AuthRepository
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProjectsUiState())
     val uiState: StateFlow<ProjectsUiState> = _uiState.asStateFlow()
@@ -139,15 +140,5 @@ class ProjectsViewModel(application: Application) : ViewModel() {
 
     fun filterProjects(filter: ProjectFilter) {
         loadProjects(filter)
-    }
-}
-
-class ProjectsViewModelFactory(private val application: Application) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(ProjectsViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return ProjectsViewModel(application) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

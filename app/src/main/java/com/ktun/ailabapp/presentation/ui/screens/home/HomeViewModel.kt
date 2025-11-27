@@ -1,38 +1,40 @@
 package com.ktunailab.ailabapp.presentation.ui.screens.home
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ktunailab.ailabapp.data.remote.dto.response.ProfileResponse
 import com.ktunailab.ailabapp.data.remote.dto.response.TaskResponse
 import com.ktunailab.ailabapp.data.repository.AuthRepository
 import com.ktunailab.ailabapp.data.repository.TaskRepository
 import com.ktunailab.ailabapp.util.NetworkResult
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 data class HomeUiState(
     val user: ProfileResponse? = null,
     val userName: String = "",
     val greeting: String = "Good Morning",
-    val currentTasks: List<TaskResponse> = emptyList(),  // ← Görevler eklendi
+    val currentTasks: List<TaskResponse> = emptyList(),
     val isLoading: Boolean = false,
     val errorMessage: String? = null
 )
 
-class HomeViewModel(application: Application) : AndroidViewModel(application) {
-
-    private val authRepository = AuthRepository(application.applicationContext)
-    private val taskRepository = TaskRepository(application.applicationContext)  // ← Eklendi
+@HiltViewModel
+class HomeViewModel @Inject constructor(
+    private val authRepository: AuthRepository,
+    private val taskRepository: TaskRepository
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     init {
         loadUserData()
-        loadCurrentTasks()  // ← Görevleri yükle
+        loadCurrentTasks()
         updateGreeting()
     }
 
