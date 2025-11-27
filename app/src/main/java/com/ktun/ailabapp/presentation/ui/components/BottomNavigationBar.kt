@@ -6,8 +6,11 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.ktunailab.ailabapp.ui.theme.PrimaryBlue
 import com.ktunailab.ailabapp.ui.theme.White
 
@@ -17,7 +20,8 @@ fun BottomNavigationBar(
     onHomeClick: () -> Unit = {},
     onProjectsClick: () -> Unit = {},
     onChatClick: () -> Unit = {},
-    onProfileClick: () -> Unit = {}
+    onProfileClick: () -> Unit = {},
+    unreadAnnouncementCount: Int = 0
 ) {
     NavigationBar(
         containerColor = PrimaryBlue
@@ -71,23 +75,28 @@ fun BottomNavigationBar(
         // Chat/Announcements
         NavigationBarItem(
             selected = selectedItem == 2,
-            onClick = {
-                if (selectedItem != 2) onChatClick()  // ← Sadece farklı ekrandaysa git
-            },
+            onClick = onChatClick,
             icon = {
-                Icon(
-                    imageVector = Icons.Default.Notifications,
+                BadgeIcon( // ✅ DEĞİŞTİR
+                    icon = Icons.Filled.Notifications,
                     contentDescription = "Duyurular",
-                    modifier = Modifier.size(24.dp)
+                    badgeCount = unreadAnnouncementCount,
+                    tint = if (selectedItem == 2) Color.White else Color.White.copy(alpha = 0.6f)
                 )
             },
-            label = { Text("Duyurular") },
+            label = {
+                Text(
+                    "Duyurular",
+                    fontSize = 12.sp,
+                    fontWeight = if (selectedItem == 2) FontWeight.Bold else FontWeight.Normal
+                )
+            },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = White,
-                selectedTextColor = White,
-                unselectedIconColor = White.copy(alpha = 0.6f),
-                unselectedTextColor = White.copy(alpha = 0.6f),
-                indicatorColor = PrimaryBlue.copy(alpha = 0.3f)
+                selectedIconColor = Color.White,
+                selectedTextColor = Color.White,
+                unselectedIconColor = Color.White.copy(alpha = 0.6f),
+                unselectedTextColor = Color.White.copy(alpha = 0.6f),
+                indicatorColor = Color.White.copy(alpha = 0.2f)
             )
         )
 

@@ -24,6 +24,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ktunailab.ailabapp.data.remote.dto.response.MyProjectsResponse
 import com.ktunailab.ailabapp.presentation.ui.components.BottomNavigationBar
+import com.ktunailab.ailabapp.presentation.ui.screens.announcement.AnnouncementViewModel
 import com.ktunailab.ailabapp.ui.theme.BackgroundLight
 import com.ktunailab.ailabapp.ui.theme.PrimaryBlue
 import com.ktunailab.ailabapp.ui.theme.White
@@ -37,7 +38,8 @@ fun ProjectsScreen(
     onNavigateToChat: () -> Unit = {},
     onNavigateToProfile: () -> Unit = {},
     onNavigateToProjectDetail: (String) -> Unit = {},
-    viewModel: ProjectsViewModel = hiltViewModel()
+    viewModel: ProjectsViewModel = hiltViewModel(),
+    announcementViewModel: AnnouncementViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -52,7 +54,8 @@ fun ProjectsScreen(
                 onHomeClick = onNavigateToHome,
                 onProjectsClick = { /* Zaten buradayız */ },
                 onChatClick = onNavigateToChat,
-                onProfileClick = onNavigateToProfile
+                onProfileClick = onNavigateToProfile,
+                unreadAnnouncementCount = announcementViewModel.getUnreadCount()
             )
         },
         containerColor = PrimaryBlue,

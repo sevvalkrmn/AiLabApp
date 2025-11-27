@@ -1,9 +1,11 @@
 package com.ktunailab.ailabapp.di
 
 import com.ktunailab.ailabapp.data.local.datastore.PreferencesManager
+import com.ktunailab.ailabapp.data.remote.api.AnnouncementApi
 import com.ktunailab.ailabapp.data.remote.api.AuthApi
 import com.ktunailab.ailabapp.data.remote.api.ProjectApi
 import com.ktunailab.ailabapp.data.remote.api.TaskApi
+import com.ktunailab.ailabapp.data.repository.AnnouncementRepository
 import com.ktunailab.ailabapp.data.repository.AuthRepository
 import com.ktunailab.ailabapp.data.repository.ProjectRepository
 import com.ktunailab.ailabapp.data.repository.TaskRepository
@@ -40,5 +42,13 @@ object RepositoryModule {
         taskApi: TaskApi
     ): TaskRepository {
         return TaskRepository(taskApi)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAnnouncementRepository(
+        announcementApi: AnnouncementApi
+    ): AnnouncementRepository {
+        return AnnouncementRepository(announcementApi)
     }
 }

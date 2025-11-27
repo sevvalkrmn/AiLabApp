@@ -30,6 +30,7 @@ import com.ktunailab.ailabapp.presentation.ui.components.BottomNavigationBar
 import com.ktunailab.ailabapp.presentation.ui.components.DebugButton
 import com.ktunailab.ailabapp.presentation.ui.components.FeedbackDialog
 import com.ktunailab.ailabapp.presentation.ui.components.LogoutDialog
+import com.ktunailab.ailabapp.presentation.ui.screens.announcement.AnnouncementViewModel
 import com.ktunailab.ailabapp.ui.theme.PrimaryBlue
 import com.ktunailab.ailabapp.ui.theme.BackgroundLight
 import com.ktunailab.ailabapp.ui.theme.White
@@ -37,6 +38,7 @@ import com.ktunailab.ailabapp.ui.theme.White
 @Composable
 fun ProfileScreen(
     viewModel: ProfileViewModel = hiltViewModel(),
+    announcementViewModel: AnnouncementViewModel = hiltViewModel(),
     onNavigateToHome: () -> Unit = {},
     onNavigateToProjects: () -> Unit = {},
     onNavigateToChat: () -> Unit = {},
@@ -97,7 +99,8 @@ fun ProfileScreen(
                 onHomeClick = onNavigateToHome,
                 onProjectsClick = onNavigateToProjects,
                 onChatClick = onNavigateToChat,
-                onProfileClick = onNavigateToProfile
+                onProfileClick = onNavigateToProfile,
+                unreadAnnouncementCount = announcementViewModel.getUnreadCount()
             )
         },
         containerColor = PrimaryBlue,

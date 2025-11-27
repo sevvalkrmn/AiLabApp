@@ -28,6 +28,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.ktunailab.ailabapp.data.remote.dto.response.TaskResponse
 import com.ktunailab.ailabapp.presentation.ui.components.BottomNavigationBar
+import com.ktunailab.ailabapp.presentation.ui.screens.announcement.AnnouncementViewModel
 import com.ktunailab.ailabapp.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -37,7 +38,8 @@ fun HomeScreen(
     onNavigateToProjects: () -> Unit = {},
     onNavigateToChat: () -> Unit = {},
     onNavigateToProfile: () -> Unit = {},
-    viewModel: HomeViewModel = hiltViewModel()
+    viewModel: HomeViewModel = hiltViewModel(),
+    announcementViewModel: AnnouncementViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
@@ -57,7 +59,8 @@ fun HomeScreen(
                 onHomeClick = { /* Zaten Home'dayız */ },
                 onProjectsClick = onNavigateToProjects,
                 onChatClick = onNavigateToChat,
-                onProfileClick = onNavigateToProfile
+                onProfileClick = onNavigateToProfile,
+                unreadAnnouncementCount = announcementViewModel.getUnreadCount()
             )
         },
         containerColor = PrimaryBlue

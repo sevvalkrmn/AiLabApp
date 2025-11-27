@@ -20,6 +20,7 @@ import javax.inject.Singleton
 import android.content.Context
 import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.google.firebase.appdistribution.gradle.ApiService
+import com.ktunailab.ailabapp.data.remote.api.AnnouncementApi
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -112,5 +113,11 @@ object NetworkModule {
         retrofit: Retrofit
     ): TaskApi {
         return retrofit.create(TaskApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAnnouncementApi(retrofit: Retrofit): AnnouncementApi {
+        return retrofit.create(AnnouncementApi::class.java)
     }
 }
