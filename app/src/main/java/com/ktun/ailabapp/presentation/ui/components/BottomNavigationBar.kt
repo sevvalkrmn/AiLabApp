@@ -21,7 +21,7 @@ fun BottomNavigationBar(
     onProjectsClick: () -> Unit = {},
     onChatClick: () -> Unit = {},
     onProfileClick: () -> Unit = {},
-    unreadAnnouncementCount: Int = 0
+    unreadAnnouncementCount: Int = 0 // ← DÜZELT: Tip belirt ve default value ver
 ) {
     NavigationBar(
         containerColor = PrimaryBlue
@@ -30,7 +30,7 @@ fun BottomNavigationBar(
         NavigationBarItem(
             selected = selectedItem == 0,
             onClick = {
-                if (selectedItem != 0) onHomeClick()  // ← Sadece farklı ekrandaysa git
+                if (selectedItem != 0) onHomeClick()
             },
             icon = {
                 Icon(
@@ -53,7 +53,7 @@ fun BottomNavigationBar(
         NavigationBarItem(
             selected = selectedItem == 1,
             onClick = {
-                if (selectedItem != 1) onProjectsClick()  // ← Sadece farklı ekrandaysa git
+                if (selectedItem != 1) onProjectsClick()
             },
             icon = {
                 Icon(
@@ -77,10 +77,10 @@ fun BottomNavigationBar(
             selected = selectedItem == 2,
             onClick = onChatClick,
             icon = {
-                BadgeIcon( // ✅ DEĞİŞTİR
+                BadgeIcon(
                     icon = Icons.Filled.Notifications,
                     contentDescription = "Duyurular",
-                    badgeCount = unreadAnnouncementCount,
+                    badgeCount = unreadAnnouncementCount, // ← Parametre olarak kullan
                     tint = if (selectedItem == 2) Color.White else Color.White.copy(alpha = 0.6f)
                 )
             },
@@ -104,7 +104,7 @@ fun BottomNavigationBar(
         NavigationBarItem(
             selected = selectedItem == 3,
             onClick = {
-                if (selectedItem != 3) onProfileClick()  // ← Sadece farklı ekrandaysa git
+                if (selectedItem != 3) onProfileClick()
             },
             icon = {
                 Icon(

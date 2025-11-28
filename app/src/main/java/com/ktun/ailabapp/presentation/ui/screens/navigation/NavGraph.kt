@@ -5,10 +5,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -16,6 +18,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.ktunailab.ailabapp.presentation.ui.navigation.Screen
 import com.ktunailab.ailabapp.presentation.ui.screens.announcement.AnnouncementScreen
+import com.ktunailab.ailabapp.presentation.ui.screens.announcement.AnnouncementViewModel
 import com.ktunailab.ailabapp.presentation.ui.screens.home.HomeScreen
 import com.ktunailab.ailabapp.presentation.ui.screens.login.LoginScreen
 import com.ktunailab.ailabapp.presentation.ui.screens.profile.ProfileScreen
@@ -28,6 +31,16 @@ fun NavGraph(
     navController: NavHostController,
     startDestination: String = Screen.Login.route
 ) {
+
+    val sharedAnnouncementViewModel: AnnouncementViewModel = hiltViewModel()
+
+    // ✅ ViewModel oluşunca bir kez yükle
+    LaunchedEffect(sharedAnnouncementViewModel) {
+        android.util.Log.d("NavGraph", "SharedViewModel created: ${sharedAnnouncementViewModel.hashCode()}")
+        android.util.Log.d("NavGraph", "📥 Loading announcements...")
+        sharedAnnouncementViewModel.loadAnnouncements()
+    }
+
     NavHost(
         navController = navController,
         startDestination = startDestination
@@ -36,6 +49,7 @@ fun NavGraph(
         composable(route = Screen.Login.route) {
             LoginScreen(
                 onLoginSuccess = {
+                    android.util.Log.d("NavGraph", "📥 Login successful - Reloading announcements...")
                     navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Login.route) { inclusive = true }
                     }
@@ -51,6 +65,7 @@ fun NavGraph(
             RegisterScreen(
                 navController = navController,
                 onRegisterSuccess = {
+                    android.util.Log.d("NavGraph", "📥 Login successful - Reloading announcements...")
                     navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Register.route) { inclusive = true }
                     }
@@ -69,7 +84,8 @@ fun NavGraph(
                 },
                 onNavigateToProfile = {
                     navController.navigate(Screen.Profile.route)
-                }
+                },
+                announcementViewModel = sharedAnnouncementViewModel
             )
         }
 
@@ -89,7 +105,8 @@ fun NavGraph(
                 },
                 onNavigateToProjectDetail = { projectId ->
                     navController.navigate(Screen.ProjectDetail.createRoute(projectId))
-                }
+                },
+                announcementViewModel = sharedAnnouncementViewModel // ✅ Aynı instance
             )
         }
 
@@ -122,7 +139,9 @@ fun NavGraph(
                 onNavigateToChat = { /* Zaten announcements'tayız */ },
                 onNavigateToProfile = {
                     navController.navigate(Screen.Profile.route)
-                }
+                },
+                announcementViewModel = sharedAnnouncementViewModel,
+                viewModel = sharedAnnouncementViewModel
             )
         }
 
@@ -143,9 +162,9 @@ fun NavGraph(
                     navController.navigate(Screen.Login.route) {
                         popUpTo(0) { inclusive = true }
                     }
-                }
+                },
+                announcementViewModel = sharedAnnouncementViewModel // ✅ Aynı instance
             )
         }
     }
-
 }

@@ -1,5 +1,6 @@
 package com.ktunailab.ailabapp.presentation.ui.screens.home
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -19,6 +20,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -30,6 +32,7 @@ import com.ktunailab.ailabapp.data.remote.dto.response.TaskResponse
 import com.ktunailab.ailabapp.presentation.ui.components.BottomNavigationBar
 import com.ktunailab.ailabapp.presentation.ui.screens.announcement.AnnouncementViewModel
 import com.ktunailab.ailabapp.ui.theme.*
+import com.ktunailab.ailabapp.util.AvatarUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,18 +42,27 @@ fun HomeScreen(
     onNavigateToChat: () -> Unit = {},
     onNavigateToProfile: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel(),
-    announcementViewModel: AnnouncementViewModel = hiltViewModel()
+    announcementViewModel: AnnouncementViewModel
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val announcementUiState by announcementViewModel.uiState.collectAsState()
     val context = LocalContext.current
 
     LaunchedEffect(Unit) {
         viewModel.loadUserData()
+
+        // ✅ Duyuruları da yükle
+        android.util.Log.d("HomeScreen", "📥 Loading announcements on Home screen...")
+        announcementViewModel.loadAnnouncements()
     }
 
     val configuration = LocalConfiguration.current
     val screenHeight = configuration.screenHeightDp.dp
     val screenWidth = configuration.screenWidthDp.dp
+
+    val unreadCount = remember(announcementUiState.announcements) {
+        announcementUiState.announcements.count { !it.isRead }
+    }
 
     Scaffold(
         bottomBar = {
@@ -60,7 +72,8 @@ fun HomeScreen(
                 onProjectsClick = onNavigateToProjects,
                 onChatClick = onNavigateToChat,
                 onProfileClick = onNavigateToProfile,
-                unreadAnnouncementCount = announcementViewModel.getUnreadCount()
+                unreadAnnouncementCount = unreadCount
+
             )
         },
         containerColor = PrimaryBlue
@@ -259,8 +272,22 @@ fun ProfileCard(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.padding(end = screenWidth * 0.04f)
             ) {
-                // Avatar
-                if (!avatarUrl.isNullOrEmpty()) {
+                // ✅ Avatar - GÜNCELLENDI
+                val localAvatarDrawable = AvatarUtils.getAvatarDrawable(avatarUrl)
+
+                if (localAvatarDrawable != null) {
+                    // Local avatar
+                    Image(
+                        painter = painterResource(id = localAvatarDrawable),
+                        contentDescription = "Profil Fotoğrafı",
+                        modifier = Modifier
+                            .size(screenWidth * 0.18f)
+                            .clip(CircleShape)
+                            .background(White),
+                        contentScale = ContentScale.Crop
+                    )
+                } else if (!avatarUrl.isNullOrEmpty()) {
+                    // Remote URL
                     AsyncImage(
                         model = avatarUrl,
                         contentDescription = "Profil Fotoğrafı",
@@ -271,6 +298,7 @@ fun ProfileCard(
                         contentScale = ContentScale.Crop
                     )
                 } else {
+                    // Placeholder
                     Box(
                         modifier = Modifier
                             .size(screenWidth * 0.18f)

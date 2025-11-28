@@ -35,14 +35,20 @@ import com.ktunailab.ailabapp.presentation.ui.components.sendFeedbackEmail
 
 @Composable
 fun AnnouncementScreen(
-    viewModel: AnnouncementViewModel = hiltViewModel(),
+    viewModel: AnnouncementViewModel,
     onNavigateToHome: () -> Unit = {},
     onNavigateToProjects: () -> Unit = {},
     onNavigateToChat: () -> Unit = {},
-    onNavigateToProfile: () -> Unit = {}
+    onNavigateToProfile: () -> Unit = {},
+    announcementViewModel: AnnouncementViewModel
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        android.util.Log.d("AnnouncementScreen", "📥 Reloading announcements...")
+        viewModel.loadAnnouncements()
+    }
 
     // Ekran boyutlarını al
     val configuration = LocalConfiguration.current
@@ -51,6 +57,10 @@ fun AnnouncementScreen(
 
     // Dialog state
     var showFeedbackDialog by remember { mutableStateOf(false) }
+
+    val unreadCount = remember(uiState.announcements) {
+        uiState.announcements.count { !it.isRead }
+    }
 
     // Feedback Dialog
     if (showFeedbackDialog) {
@@ -104,7 +114,7 @@ fun AnnouncementScreen(
                 onProjectsClick = onNavigateToProjects,
                 onChatClick = onNavigateToChat,
                 onProfileClick = onNavigateToProfile,
-                unreadAnnouncementCount = viewModel.getUnreadCount()
+                unreadAnnouncementCount = unreadCount
             )
         },
         containerColor = Color(0xFF071372),

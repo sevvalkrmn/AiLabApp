@@ -9,6 +9,7 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.PUT
 
 interface AuthApi {
 
@@ -26,4 +27,9 @@ interface AuthApi {
 
     @GET("api/Profile")
     suspend fun getProfile(): Response<ProfileResponse>
+
+    @PUT("api/Profile/avatar")  // ← /users/avatar DEĞİL, /Profile/avatar
+    suspend fun updateAvatar(
+        @Body request: Map<String, String>  // {"avatarFileName": "man01.png"}
+    ): Response<ProfileResponse>
 }
