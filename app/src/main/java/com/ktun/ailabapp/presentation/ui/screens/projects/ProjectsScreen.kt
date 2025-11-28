@@ -39,23 +39,27 @@ fun ProjectsScreen(
     onNavigateToProfile: () -> Unit = {},
     onNavigateToProjectDetail: (String) -> Unit = {},
     viewModel: ProjectsViewModel = hiltViewModel(),
-    announcementViewModel: AnnouncementViewModel = hiltViewModel()
+    announcementViewModel: AnnouncementViewModel
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val announcementUiState by announcementViewModel.uiState.collectAsState()
 
     val configuration = LocalConfiguration.current
     val screenHeight = configuration.screenHeightDp.dp
     val screenWidth = configuration.screenWidthDp.dp
+    val unreadCount = remember(announcementUiState.announcements) {
+        announcementUiState.announcements.count { !it.isRead }
+    }
 
     Scaffold(
         bottomBar = {
             BottomNavigationBar(
                 selectedItem = 1,
                 onHomeClick = onNavigateToHome,
-                onProjectsClick = { /* Zaten buradayız */ },
+                onProjectsClick = {  },
                 onChatClick = onNavigateToChat,
                 onProfileClick = onNavigateToProfile,
-                unreadAnnouncementCount = announcementViewModel.getUnreadCount()
+                unreadAnnouncementCount = unreadCount
             )
         },
         containerColor = PrimaryBlue,

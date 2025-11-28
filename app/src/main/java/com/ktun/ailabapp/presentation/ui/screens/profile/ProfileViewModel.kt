@@ -17,10 +17,10 @@ data class ProfileUiState(
     val email: String = "",
     val schoolNumber: String = "",
     val phone: String = "",
-    val avatarUrl: String? = null,
+    val avatarUrl: String? = null, // ← null başlasın
     val totalScore: Int = 0,
     val roles: List<String> = emptyList(),
-    val isLoading: Boolean = false,
+    val isLoading: Boolean = true, // ← true olarak başlasın (yükleniyor göstergesi)
     val errorMessage: String? = null
 )
 
@@ -58,7 +58,6 @@ class ProfileViewModel @Inject constructor(
 
                         android.util.Log.d("ProfileViewModel", "Profile loaded: ${profile.fullName}")
                     } ?: run {
-                        // data null ise
                         android.util.Log.e("ProfileViewModel", "Profile data is null")
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
@@ -82,6 +81,34 @@ class ProfileViewModel @Inject constructor(
 
     fun refreshProfile() {
         loadUserProfile()
+    }
+
+    // ✅ YENİ: Avatar güncelleme fonksiyonu
+    fun updateAvatar(avatarId: String) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+
+            android.util.Log.d("ProfileViewModel", "Updating avatar to: $avatarId")
+
+            when (val result = authRepository.updateAvatar(avatarId)) {
+                is NetworkResult.Success -> {
+                    android.util.Log.d("ProfileViewModel", "Avatar updated successfully")
+
+                    // Profili yeniden yükle
+                    loadUserProfile()
+                }
+                is NetworkResult.Error -> {
+                    android.util.Log.e("ProfileViewModel", "Avatar update error: ${result.message}")
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = result.message ?: "Avatar güncellenemedi"
+                    )
+                }
+                is NetworkResult.Loading -> {
+                    // Loading durumu zaten set edildi
+                }
+            }
+        }
     }
 
     fun logout(onSuccess: () -> Unit) {

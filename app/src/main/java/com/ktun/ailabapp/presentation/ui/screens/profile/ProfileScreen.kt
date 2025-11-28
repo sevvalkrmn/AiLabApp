@@ -1,6 +1,7 @@
 package com.ktunailab.ailabapp.presentation.ui.screens.profile
 
 import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -17,15 +18,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.ktunailab.ailabapp.R
+import com.ktunailab.ailabapp.presentation.ui.components.AvatarPickerDialog // ✅ EKLE
 import com.ktunailab.ailabapp.presentation.ui.components.BottomNavigationBar
 import com.ktunailab.ailabapp.presentation.ui.components.DebugButton
 import com.ktunailab.ailabapp.presentation.ui.components.FeedbackDialog
@@ -34,11 +36,12 @@ import com.ktunailab.ailabapp.presentation.ui.screens.announcement.AnnouncementV
 import com.ktunailab.ailabapp.ui.theme.PrimaryBlue
 import com.ktunailab.ailabapp.ui.theme.BackgroundLight
 import com.ktunailab.ailabapp.ui.theme.White
+import com.ktunailab.ailabapp.util.AvatarUtils
 
 @Composable
 fun ProfileScreen(
     viewModel: ProfileViewModel = hiltViewModel(),
-    announcementViewModel: AnnouncementViewModel = hiltViewModel(),
+    announcementViewModel: AnnouncementViewModel,
     onNavigateToHome: () -> Unit = {},
     onNavigateToProjects: () -> Unit = {},
     onNavigateToChat: () -> Unit = {},
@@ -47,15 +50,20 @@ fun ProfileScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+    val announcementUiState by announcementViewModel.uiState.collectAsState()
 
     // Ekran boyutlarını al
     val configuration = LocalConfiguration.current
     val screenHeight = configuration.screenHeightDp.dp
     val screenWidth = configuration.screenWidthDp.dp
+    val unreadCount = remember(announcementUiState.announcements) {
+        announcementUiState.announcements.count { !it.isRead }
+    }
 
     // Dialog states
     var showFeedbackDialog by remember { mutableStateOf(false) }
-    var showLogoutDialog by remember { mutableStateOf(false) }  // ← YENİ EKLENDI
+    var showLogoutDialog by remember { mutableStateOf(false) }
+    var showAvatarPicker by remember { mutableStateOf(false) } // ✅ EKLE
 
     // Feedback Dialog
     if (showFeedbackDialog) {
@@ -68,16 +76,34 @@ fun ProfileScreen(
         )
     }
 
-    // Logout Dialog - YENİ EKLENDI
+    // Logout Dialog
     if (showLogoutDialog) {
         LogoutDialog(
             onDismiss = { showLogoutDialog = false },
             onConfirm = {
                 showLogoutDialog = false
+
+                // ✅ Önce duyuruları temizle
+                announcementViewModel.clearAnnouncements()
+
+                // Sonra logout yap
                 viewModel.logout(onSuccess = {
                     Toast.makeText(context, "Çıkış yapıldı", Toast.LENGTH_SHORT).show()
                     onLogout()
                 })
+            }
+        )
+    }
+
+    // ✅ Avatar Picker Dialog
+    if (showAvatarPicker) {
+        AvatarPickerDialog(
+            currentAvatarUrl = uiState.avatarUrl,
+            onDismiss = { showAvatarPicker = false },
+            onAvatarSelected = { avatar ->
+                viewModel.updateAvatar(avatar.id)
+                showAvatarPicker = false
+                Toast.makeText(context, "Avatar güncelleniyor...", Toast.LENGTH_SHORT).show()
             }
         )
     }
@@ -92,6 +118,16 @@ fun ProfileScreen(
         }
     }
 
+    // ✅ DEBUG: Avatar kontrolü
+    LaunchedEffect(uiState.avatarUrl) {
+        android.util.Log.d("ProfileScreen", """
+        Avatar URL: '${uiState.avatarUrl}'
+        Is Null: ${uiState.avatarUrl == null}
+        Is Empty: ${uiState.avatarUrl?.isEmpty()}
+        Local Drawable ID: ${AvatarUtils.getAvatarDrawable(uiState.avatarUrl)}
+    """.trimIndent())
+    }
+
     Scaffold(
         bottomBar = {
             BottomNavigationBar(
@@ -100,7 +136,7 @@ fun ProfileScreen(
                 onProjectsClick = onNavigateToProjects,
                 onChatClick = onNavigateToChat,
                 onProfileClick = onNavigateToProfile,
-                unreadAnnouncementCount = announcementViewModel.getUnreadCount()
+                unreadAnnouncementCount = unreadCount
             )
         },
         containerColor = PrimaryBlue,
@@ -159,17 +195,32 @@ fun ProfileScreen(
                     Box(
                         modifier = Modifier.size(screenWidth * 0.35f)
                     ) {
-                        if (uiState.avatarUrl != null) {
+                        val localAvatarDrawable = AvatarUtils.getAvatarDrawable(uiState.avatarUrl)
+
+                        if (localAvatarDrawable != null) {
+                            // ✅ Local avatar varsa drawable'dan göster
+                            Image(
+                                painter = painterResource(id = localAvatarDrawable),
+                                contentDescription = "Profil Fotoğrafı",
+                                modifier = Modifier
+                                    .size(screenWidth * 0.35f)
+                                    .clip(CircleShape)
+                                    .border(screenWidth * 0.01f, White, CircleShape),
+                                contentScale = ContentScale.Crop
+                            )
+                        } else if (!uiState.avatarUrl.isNullOrEmpty()) {
+                            // ✅ Remote URL varsa Coil ile yükle
                             AsyncImage(
                                 model = uiState.avatarUrl,
                                 contentDescription = "Profil Fotoğrafı",
                                 modifier = Modifier
                                     .size(screenWidth * 0.35f)
                                     .clip(CircleShape)
-                                    .border(screenWidth * 0.01f, White, CircleShape)
+                                    .border(screenWidth * 0.01f, White, CircleShape),
+                                contentScale = ContentScale.Crop
                             )
                         } else {
-                            // Avatar yoksa placeholder göster
+                            // ✅ Avatar yoksa placeholder göster
                             Box(
                                 modifier = Modifier
                                     .size(screenWidth * 0.35f)
@@ -191,7 +242,7 @@ fun ProfileScreen(
                     Spacer(modifier = Modifier.height(screenHeight * 0.02f))
 
                     Text(
-                        text = uiState.fullName,  // ← Backend'den gelen fullName
+                        text = uiState.fullName,
                         fontSize = (screenWidth.value * 0.06f).sp,
                         fontWeight = FontWeight.Bold,
                         color = PrimaryBlue
@@ -200,7 +251,7 @@ fun ProfileScreen(
                     Spacer(modifier = Modifier.height(screenHeight * 0.005f))
 
                     Text(
-                        text = uiState.email,  // ← Backend'den gelen email
+                        text = uiState.email,
                         fontSize = (screenWidth.value * 0.035f).sp,
                         color = PrimaryBlue.copy(alpha = 0.7f)
                     )
@@ -223,7 +274,7 @@ fun ProfileScreen(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
-                                text = uiState.totalScore.toString(),  // ← totalScore kullanıldı (points değil)
+                                text = uiState.totalScore.toString(),
                                 fontSize = (screenWidth.value * 0.12f).sp,
                                 fontWeight = FontWeight.Bold,
                                 color = PrimaryBlue
@@ -242,7 +293,7 @@ fun ProfileScreen(
                     ProfileMenuItem(
                         icon = Icons.Default.Person,
                         text = "Profil Fotoğrafını Değiştir",
-                        onClick = { /* TODO */ },
+                        onClick = { showAvatarPicker = true }, // ✅ GÜNCELLENDI
                         screenWidth = screenWidth,
                         screenHeight = screenHeight
                     )
@@ -279,9 +330,9 @@ fun ProfileScreen(
 
                     Spacer(modifier = Modifier.height(screenHeight * 0.04f))
 
-                    // ÇIKIŞ YAP BUTONU - GÜNCELLENDİ
+                    // ÇIKIŞ YAP BUTONU
                     Button(
-                        onClick = { showLogoutDialog = true },  // ← Dialog'u göster
+                        onClick = { showLogoutDialog = true },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(screenHeight * 0.07f),
@@ -291,7 +342,7 @@ fun ProfileScreen(
                         shape = RoundedCornerShape(screenWidth * 0.03f)
                     ) {
                         Icon(
-                            Icons.Default.ExitToApp,  // ← Icon değişti
+                            Icons.Default.ExitToApp,
                             contentDescription = "Çıkış Yap",
                             modifier = Modifier.size(screenWidth * 0.05f)
                         )
@@ -310,7 +361,6 @@ fun ProfileScreen(
     }
 }
 
-// ProfileMenuItem fonksiyonu aynı kalacak...
 @Composable
 fun ProfileMenuItem(
     icon: ImageVector,

@@ -305,4 +305,54 @@ class AuthRepository @Inject constructor(
             NetworkResult.Error("Token yenilenemedi")
         }
     }
+
+    /**
+     * Avatar Güncelle
+     */
+    suspend fun updateAvatar(avatarId: String): NetworkResult<ProfileResponse> = withContext(Dispatchers.IO) {
+        try {
+            android.util.Log.d("AuthRepository", "Avatar güncelleniyor: $avatarId")
+
+            // ✅ Request body: avatarFileName ile
+            val requestBody = mapOf("avatarFileName" to "$avatarId.png")  // "man01.png"
+
+            val response = authApi.updateAvatar(requestBody)
+
+            if (response.isSuccessful && response.body() != null) {
+                val profileResponse = response.body()!!
+
+                android.util.Log.d("AuthRepository", """
+                Avatar Update Success:
+                New Avatar URL: ${profileResponse.avatarUrl}
+            """.trimIndent())
+
+                NetworkResult.Success(profileResponse)
+            } else {
+                val errorBody = response.errorBody()?.string()
+
+                android.util.Log.e("AuthRepository", """
+                Avatar Update Error:
+                Code: ${response.code()}
+                Error Body: $errorBody
+            """.trimIndent())
+
+                val errorMessage = when (response.code()) {
+                    400 -> "Geçersiz avatar dosya adı"
+                    401 -> "Oturum süresi dolmuş. Lütfen tekrar giriş yapın."
+                    404 -> "Avatar bulunamadı"
+                    else -> "Avatar güncellenemedi"
+                }
+                NetworkResult.Error(errorMessage)
+            }
+        } catch (e: java.net.UnknownHostException) {
+            android.util.Log.e("AuthRepository", "UpdateAvatar: İnternet bağlantısı yok", e)
+            NetworkResult.Error("İnternet bağlantısı yok")
+        } catch (e: java.net.SocketTimeoutException) {
+            android.util.Log.e("AuthRepository", "UpdateAvatar: Bağlantı zaman aşımı", e)
+            NetworkResult.Error("Bağlantı zaman aşımına uğradı")
+        } catch (e: Exception) {
+            android.util.Log.e("AuthRepository", "UpdateAvatar: Bilinmeyen hata", e)
+            NetworkResult.Error(e.message ?: "Bilinmeyen bir hata oluştu")
+        }
+    }
 }

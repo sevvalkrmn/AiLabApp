@@ -137,4 +137,10 @@ class AnnouncementViewModel @Inject constructor(
         println("📋 Tüm duyurular: ${_uiState.value.announcements.map { "id=${it.id}, isRead=${it.isRead}" }}")
         return count
     }
+
+    //Logout olurken duyuruları temizle
+    fun clearAnnouncements() {
+        android.util.Log.d("AnnouncementViewModel", "🗑️ Clearing all announcements and state")
+        _uiState.value = AnnouncementUiState() // Tüm state'i sıfırla
+    }
 }
