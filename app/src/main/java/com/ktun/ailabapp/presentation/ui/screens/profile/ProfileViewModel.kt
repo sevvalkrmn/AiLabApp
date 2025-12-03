@@ -1,5 +1,6 @@
 package com.ktunailab.ailabapp.presentation.ui.screens.profile
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ktunailab.ailabapp.data.repository.AuthRepository
@@ -17,11 +18,13 @@ data class ProfileUiState(
     val email: String = "",
     val schoolNumber: String = "",
     val phone: String = "",
-    val avatarUrl: String? = null, // ← null başlasın
+    val profileImageUrl: String? = null, // ✅ Sadece profileImageUrl
     val totalScore: Int = 0,
     val roles: List<String> = emptyList(),
-    val isLoading: Boolean = true, // ← true olarak başlasın (yükleniyor göstergesi)
-    val errorMessage: String? = null
+    val isLoading: Boolean = true,
+    val errorMessage: String? = null,
+    val isUploadingImage: Boolean = false,
+    val defaultAvatars: List<String> = emptyList()
 )
 
 @HiltViewModel
@@ -34,6 +37,7 @@ class ProfileViewModel @Inject constructor(
 
     init {
         loadUserProfile()
+        loadDefaultAvatars()
     }
 
     private fun loadUserProfile() {
@@ -49,7 +53,7 @@ class ProfileViewModel @Inject constructor(
                             email = profile.email,
                             schoolNumber = profile.schoolNumber,
                             phone = profile.phone,
-                            avatarUrl = profile.avatarUrl,
+                            profileImageUrl = profile.profileImageUrl, // ✅ Sadece profileImageUrl
                             totalScore = profile.totalScore,
                             roles = profile.roles,
                             isLoading = false,
@@ -83,29 +87,105 @@ class ProfileViewModel @Inject constructor(
         loadUserProfile()
     }
 
-    // ✅ YENİ: Avatar güncelleme fonksiyonu
-    fun updateAvatar(avatarId: String) {
+    // ✅ YENİ: Kullanıcının kendi fotoğrafını yükle
+    fun uploadAndUpdateProfileImage(imageUri: Uri) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+            _uiState.value = _uiState.value.copy(
+                isUploadingImage = true,
+                errorMessage = null
+            )
 
-            android.util.Log.d("ProfileViewModel", "Updating avatar to: $avatarId")
+            android.util.Log.d("ProfileViewModel", "Uploading profile image...")
 
-            when (val result = authRepository.updateAvatar(avatarId)) {
+            val userId = _uiState.value.id
+            when (val result = authRepository.uploadAndUpdateProfileImage(userId, imageUri)) {
                 is NetworkResult.Success -> {
-                    android.util.Log.d("ProfileViewModel", "Avatar updated successfully")
+                    android.util.Log.d("ProfileViewModel", "Profile image uploaded successfully")
 
-                    // Profili yeniden yükle
+                    result.data?.let { profile ->
+                        _uiState.value = _uiState.value.copy(
+                            profileImageUrl = profile.profileImageUrl,
+                            isUploadingImage = false,
+                            errorMessage = null
+                        )
+                    }
+
+                    // ✅ EKLE: Profili yeniden yükle
                     loadUserProfile()
                 }
                 is NetworkResult.Error -> {
-                    android.util.Log.e("ProfileViewModel", "Avatar update error: ${result.message}")
+                    android.util.Log.e("ProfileViewModel", "Profile image upload error: ${result.message}")
                     _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        errorMessage = result.message ?: "Avatar güncellenemedi"
+                        isUploadingImage = false,
+                        errorMessage = result.message ?: "Fotoğraf yüklenemedi"
                     )
                 }
                 is NetworkResult.Loading -> {
                     // Loading durumu zaten set edildi
+                }
+            }
+        }
+    }
+
+    // ✅ YENİ: Hazır avatar seç
+    fun selectDefaultAvatar(avatarUrl: String) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                isUploadingImage = true,
+                errorMessage = null
+            )
+
+            android.util.Log.d("ProfileViewModel", "Selecting default avatar: $avatarUrl")
+
+            when (val result = authRepository.selectDefaultAvatar(avatarUrl)) {
+                is NetworkResult.Success -> {
+                    android.util.Log.d("ProfileViewModel", "Default avatar selected successfully")
+
+                    result.data?.let { profile ->
+                        _uiState.value = _uiState.value.copy(
+                            profileImageUrl = profile.profileImageUrl,
+                            isUploadingImage = false,
+                            errorMessage = null
+                        )
+                    }
+
+                    // ✅ EKLE: Profili yeniden yükle
+                    loadUserProfile()
+                }
+                is NetworkResult.Error -> {
+                    android.util.Log.e("ProfileViewModel", "Default avatar selection error: ${result.message}")
+                    _uiState.value = _uiState.value.copy(
+                        isUploadingImage = false,
+                        errorMessage = result.message ?: "Avatar seçimi başarısız"
+                    )
+                }
+                is NetworkResult.Loading -> {
+                    // Loading durumu zaten set edildi
+                }
+            }
+        }
+    }
+
+    // ✅ YENİ: Hazır avatarları yükle
+    private fun loadDefaultAvatars() {
+        viewModelScope.launch {
+            android.util.Log.d("ProfileViewModel", "Loading default avatars...")
+
+            when (val result = authRepository.getDefaultAvatars()) {
+                is NetworkResult.Success -> {
+                    result.data?.let { avatars ->
+                        _uiState.value = _uiState.value.copy(
+                            defaultAvatars = avatars
+                        )
+                        android.util.Log.d("ProfileViewModel", "Default avatars loaded: ${avatars.size}")
+                    }
+                }
+                is NetworkResult.Error -> {
+                    android.util.Log.e("ProfileViewModel", "Error loading default avatars: ${result.message}")
+                    // Hata olsa bile UI'ı bloklama, sadece log'la
+                }
+                is NetworkResult.Loading -> {
+                    // Loading state
                 }
             }
         }

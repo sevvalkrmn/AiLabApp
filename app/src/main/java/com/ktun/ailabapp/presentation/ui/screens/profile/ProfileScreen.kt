@@ -1,6 +1,9 @@
 package com.ktunailab.ailabapp.presentation.ui.screens.profile
 
+import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -27,7 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
-import com.ktunailab.ailabapp.presentation.ui.components.AvatarPickerDialog // ✅ EKLE
+import com.ktunailab.ailabapp.presentation.ui.components.AvatarPickerDialog
 import com.ktunailab.ailabapp.presentation.ui.components.BottomNavigationBar
 import com.ktunailab.ailabapp.presentation.ui.components.DebugButton
 import com.ktunailab.ailabapp.presentation.ui.components.FeedbackDialog
@@ -36,7 +39,6 @@ import com.ktunailab.ailabapp.presentation.ui.screens.announcement.AnnouncementV
 import com.ktunailab.ailabapp.ui.theme.PrimaryBlue
 import com.ktunailab.ailabapp.ui.theme.BackgroundLight
 import com.ktunailab.ailabapp.ui.theme.White
-import com.ktunailab.ailabapp.util.AvatarUtils
 
 @Composable
 fun ProfileScreen(
@@ -63,7 +65,18 @@ fun ProfileScreen(
     // Dialog states
     var showFeedbackDialog by remember { mutableStateOf(false) }
     var showLogoutDialog by remember { mutableStateOf(false) }
-    var showAvatarPicker by remember { mutableStateOf(false) } // ✅ EKLE
+    var showAvatarPicker by remember { mutableStateOf(false) }
+    var showPhotoSourceDialog by remember { mutableStateOf(false) } // ✅ YENİ
+
+    // ✅ YENİ: Galeri launcher
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            viewModel.uploadAndUpdateProfileImage(it)
+            Toast.makeText(context, "Fotoğraf yükleniyor...", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     // Feedback Dialog
     if (showFeedbackDialog) {
@@ -82,11 +95,7 @@ fun ProfileScreen(
             onDismiss = { showLogoutDialog = false },
             onConfirm = {
                 showLogoutDialog = false
-
-                // ✅ Önce duyuruları temizle
                 announcementViewModel.clearAnnouncements()
-
-                // Sonra logout yap
                 viewModel.logout(onSuccess = {
                     Toast.makeText(context, "Çıkış yapıldı", Toast.LENGTH_SHORT).show()
                     onLogout()
@@ -95,15 +104,56 @@ fun ProfileScreen(
         )
     }
 
-    // ✅ Avatar Picker Dialog
+    // ✅ GÜNCELLENEN Avatar Picker Dialog
     if (showAvatarPicker) {
         AvatarPickerDialog(
-            currentAvatarUrl = uiState.avatarUrl,
+            currentAvatarUrl = uiState.profileImageUrl,
+            availableAvatars = uiState.defaultAvatars,
+            isLoading = uiState.isUploadingImage,
             onDismiss = { showAvatarPicker = false },
-            onAvatarSelected = { avatar ->
-                viewModel.updateAvatar(avatar.id)
-                showAvatarPicker = false
+            onAvatarSelected = { avatarUrl ->
+                viewModel.selectDefaultAvatar(avatarUrl)
                 Toast.makeText(context, "Avatar güncelleniyor...", Toast.LENGTH_SHORT).show()
+            }
+        )
+    }
+
+    // ✅ YENİ: Fotoğraf kaynağı seçim dialog'u
+    if (showPhotoSourceDialog) {
+        AlertDialog(
+            onDismissRequest = { showPhotoSourceDialog = false },
+            title = { Text("Profil Fotoğrafı Seç") },
+            text = {
+                Column {
+                    TextButton(
+                        onClick = {
+                            showPhotoSourceDialog = false
+                            galleryLauncher.launch("image/*")
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.PhotoLibrary, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Galeriden Seç")
+                    }
+
+                    TextButton(
+                        onClick = {
+                            showPhotoSourceDialog = false
+                            showAvatarPicker = true
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.Person, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Hazır Avatar Seç")
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showPhotoSourceDialog = false }) {
+                    Text("İptal")
+                }
             }
         )
     }
@@ -116,16 +166,6 @@ fun ProfileScreen(
         ) {
             CircularProgressIndicator(color = PrimaryBlue)
         }
-    }
-
-    // ✅ DEBUG: Avatar kontrolü
-    LaunchedEffect(uiState.avatarUrl) {
-        android.util.Log.d("ProfileScreen", """
-        Avatar URL: '${uiState.avatarUrl}'
-        Is Null: ${uiState.avatarUrl == null}
-        Is Empty: ${uiState.avatarUrl?.isEmpty()}
-        Local Drawable ID: ${AvatarUtils.getAvatarDrawable(uiState.avatarUrl)}
-    """.trimIndent())
     }
 
     Scaffold(
@@ -191,27 +231,14 @@ fun ProfileScreen(
                 ) {
                     Spacer(modifier = Modifier.height(screenHeight * 0.03f))
 
-                    // Profil Fotoğrafı
+                    // ✅ GÜNCELLENEN Profil Fotoğrafı
                     Box(
                         modifier = Modifier.size(screenWidth * 0.35f)
                     ) {
-                        val localAvatarDrawable = AvatarUtils.getAvatarDrawable(uiState.avatarUrl)
-
-                        if (localAvatarDrawable != null) {
-                            // ✅ Local avatar varsa drawable'dan göster
-                            Image(
-                                painter = painterResource(id = localAvatarDrawable),
-                                contentDescription = "Profil Fotoğrafı",
-                                modifier = Modifier
-                                    .size(screenWidth * 0.35f)
-                                    .clip(CircleShape)
-                                    .border(screenWidth * 0.01f, White, CircleShape),
-                                contentScale = ContentScale.Crop
-                            )
-                        } else if (!uiState.avatarUrl.isNullOrEmpty()) {
-                            // ✅ Remote URL varsa Coil ile yükle
+                        // Profil fotoğrafı gösterimi
+                        if (!uiState.profileImageUrl.isNullOrEmpty()) {
                             AsyncImage(
-                                model = uiState.avatarUrl,
+                                model = uiState.profileImageUrl,
                                 contentDescription = "Profil Fotoğrafı",
                                 modifier = Modifier
                                     .size(screenWidth * 0.35f)
@@ -220,7 +247,7 @@ fun ProfileScreen(
                                 contentScale = ContentScale.Crop
                             )
                         } else {
-                            // ✅ Avatar yoksa placeholder göster
+                            // Avatar yoksa placeholder
                             Box(
                                 modifier = Modifier
                                     .size(screenWidth * 0.35f)
@@ -234,6 +261,22 @@ fun ProfileScreen(
                                     contentDescription = "Varsayılan Avatar",
                                     modifier = Modifier.size(screenWidth * 0.2f),
                                     tint = PrimaryBlue
+                                )
+                            }
+                        }
+
+                        // ✅ YENİ: Yükleme göstergesi
+                        if (uiState.isUploadingImage) {
+                            Box(
+                                modifier = Modifier
+                                    .size(screenWidth * 0.35f)
+                                    .clip(CircleShape)
+                                    .background(PrimaryBlue.copy(alpha = 0.7f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(
+                                    color = White,
+                                    modifier = Modifier.size(screenWidth * 0.1f)
                                 )
                             }
                         }
@@ -293,7 +336,7 @@ fun ProfileScreen(
                     ProfileMenuItem(
                         icon = Icons.Default.Person,
                         text = "Profil Fotoğrafını Değiştir",
-                        onClick = { showAvatarPicker = true }, // ✅ GÜNCELLENDI
+                        onClick = { showPhotoSourceDialog = true }, // ✅ GÜNCELLENDI
                         screenWidth = screenWidth,
                         screenHeight = screenHeight
                     )
@@ -357,6 +400,13 @@ fun ProfileScreen(
                     Spacer(modifier = Modifier.height(screenHeight * 0.03f))
                 }
             }
+        }
+    }
+
+    // ✅ YENİ: Hata mesajı gösterimi
+    LaunchedEffect(uiState.errorMessage) {
+        uiState.errorMessage?.let { error ->
+            Toast.makeText(context, error, Toast.LENGTH_LONG).show()
         }
     }
 }

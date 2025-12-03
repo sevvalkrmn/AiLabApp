@@ -32,7 +32,6 @@ import com.ktunailab.ailabapp.data.remote.dto.response.TaskResponse
 import com.ktunailab.ailabapp.presentation.ui.components.BottomNavigationBar
 import com.ktunailab.ailabapp.presentation.ui.screens.announcement.AnnouncementViewModel
 import com.ktunailab.ailabapp.ui.theme.*
-import com.ktunailab.ailabapp.util.AvatarUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -145,7 +144,7 @@ fun HomeScreen(
                     item {
                         ProfileCard(
                             totalScore = uiState.user?.totalScore ?: 0,  // ← Backend'den puan
-                            avatarUrl = uiState.user?.avatarUrl,  // ← Backend'den avatar
+                            avatarUrl = uiState.user?.profileImageUrl,  // ← Backend'den avatar
                             screenWidth = screenWidth,
                             screenHeight = screenHeight
                         )
@@ -251,8 +250,8 @@ fun LabOccupancyCard(
 
 @Composable
 fun ProfileCard(
-    totalScore: Int,  // ← Backend'den gelen puan
-    avatarUrl: String?,  // ← Backend'den gelen avatar
+    totalScore: Int,
+    avatarUrl: String?,
     screenWidth: Dp,
     screenHeight: Dp
 ) {
@@ -272,22 +271,9 @@ fun ProfileCard(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.padding(end = screenWidth * 0.04f)
             ) {
-                // ✅ Avatar - GÜNCELLENDI
-                val localAvatarDrawable = AvatarUtils.getAvatarDrawable(avatarUrl)
-
-                if (localAvatarDrawable != null) {
-                    // Local avatar
-                    Image(
-                        painter = painterResource(id = localAvatarDrawable),
-                        contentDescription = "Profil Fotoğrafı",
-                        modifier = Modifier
-                            .size(screenWidth * 0.18f)
-                            .clip(CircleShape)
-                            .background(White),
-                        contentScale = ContentScale.Crop
-                    )
-                } else if (!avatarUrl.isNullOrEmpty()) {
-                    // Remote URL
+                // ✅ GÜNCELLENEN Avatar
+                if (!avatarUrl.isNullOrEmpty()) {
+                    // Firebase URL'den yükle
                     AsyncImage(
                         model = avatarUrl,
                         contentDescription = "Profil Fotoğrafı",
@@ -319,7 +305,7 @@ fun ProfileCard(
 
                 // Puan
                 Text(
-                    text = "$totalScore",  // ← Backend'den gelen puan
+                    text = "$totalScore",
                     fontSize = (screenWidth.value * 0.08f).sp,
                     fontWeight = FontWeight.Bold,
                     color = White

@@ -1,5 +1,7 @@
 package com.ktunailab.ailabapp.data.remote.api
 
+import com.ktun.ailabapp.data.remote.dto.request.UpdateProfileImageRequest
+import com.ktun.ailabapp.data.remote.dto.response.DefaultAvatarsResponse
 import com.ktunailab.ailabapp.data.remote.dto.request.LoginRequest
 import com.ktunailab.ailabapp.data.remote.dto.request.RegisterRequest
 import com.ktunailab.ailabapp.data.remote.dto.request.RefreshTokenRequest
@@ -28,8 +30,11 @@ interface AuthApi {
     @GET("api/Profile")
     suspend fun getProfile(): Response<ProfileResponse>
 
-    @PUT("api/Profile/avatar")  // ← /users/avatar DEĞİL, /Profile/avatar
-    suspend fun updateAvatar(
-        @Body request: Map<String, String>  // {"avatarFileName": "man01.png"}
+    @PUT("api/profile/image")
+    suspend fun updateProfileImage(
+        @Body request: UpdateProfileImageRequest
     ): Response<ProfileResponse>
+
+    @GET("api/profile/avatars/defaults")
+    suspend fun getDefaultAvatars(): Response<DefaultAvatarsResponse>
 }
