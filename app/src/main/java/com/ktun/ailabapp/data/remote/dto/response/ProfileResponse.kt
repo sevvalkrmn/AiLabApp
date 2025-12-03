@@ -21,6 +21,10 @@ data class ProfileResponse(
     @SerializedName("avatarUrl")
     val avatarUrl: String?,
 
+    // ✅ YENİ: Backend artık profileImageUrl gönderiyor
+    @SerializedName("profileImageUrl")
+    val profileImageUrl: String?,
+
     @SerializedName("status")
     val status: Int,
 

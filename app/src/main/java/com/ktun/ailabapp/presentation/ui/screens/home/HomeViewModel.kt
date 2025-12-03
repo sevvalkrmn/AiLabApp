@@ -56,7 +56,7 @@ class HomeViewModel @Inject constructor(
                         android.util.Log.d("HomeViewModel", """
                             User loaded: $firstName
                             Total Score: ${profile.totalScore}
-                            Avatar URL: ${profile.avatarUrl ?: "Yok"}
+                            Avatar URL: ${profile.profileImageUrl ?: "Yok"}
                         """.trimIndent())
                     }
                 }
