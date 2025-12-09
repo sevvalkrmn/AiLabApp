@@ -21,6 +21,7 @@ import android.content.Context
 import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.google.firebase.appdistribution.gradle.ApiService
 import com.ktunailab.ailabapp.data.remote.api.AnnouncementApi
+import com.ktunailab.ailabapp.data.remote.api.RoomsApi
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -119,5 +120,11 @@ object NetworkModule {
     @Singleton
     fun provideAnnouncementApi(retrofit: Retrofit): AnnouncementApi {
         return retrofit.create(AnnouncementApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideRoomsApi(retrofit: Retrofit): RoomsApi {
+        return retrofit.create(RoomsApi::class.java)
     }
 }

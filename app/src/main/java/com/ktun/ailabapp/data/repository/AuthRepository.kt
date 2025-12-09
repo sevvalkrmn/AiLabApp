@@ -3,6 +3,7 @@ package com.ktunailab.ailabapp.data.repository
 import android.net.Uri
 import com.google.gson.Gson
 import com.ktun.ailabapp.data.remote.dto.request.UpdateProfileImageRequest
+import com.ktun.ailabapp.data.remote.dto.response.LeaderboardUserResponse
 import com.ktun.ailabapp.util.FirebaseStorageHelper
 import com.ktunailab.ailabapp.data.local.datastore.PreferencesManager
 import com.ktunailab.ailabapp.data.remote.api.AuthApi
@@ -354,4 +355,18 @@ class AuthRepository @Inject constructor(
             NetworkResult.Error(e.message ?: "Bilinmeyen bir hata oluştu")
         }
     }
+
+    suspend fun getLeaderboard(): NetworkResult<List<LeaderboardUserResponse>> {
+        return try {
+            val response = authApi.getLeaderboard()
+            if (response.isSuccessful && response.body() != null) {
+                NetworkResult.Success(response.body()!!)
+            } else {
+                NetworkResult.Error(message = response.message() ?: "Bilinmeyen hata")
+            }
+        } catch (e: Exception) {
+            NetworkResult.Error(message = e.localizedMessage ?: "Bağlantı hatası")
+        }
+    }
+
 }

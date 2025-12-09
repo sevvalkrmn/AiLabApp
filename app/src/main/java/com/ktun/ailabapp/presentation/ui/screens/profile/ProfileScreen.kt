@@ -68,12 +68,11 @@ fun ProfileScreen(
     var showAvatarPicker by remember { mutableStateOf(false) }
     var showPhotoSourceDialog by remember { mutableStateOf(false) } // ✅ YENİ
 
-    // ✅ YENİ: Galeri launcher
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
-            viewModel.uploadAndUpdateProfileImage(it)
+            viewModel.uploadAndUpdateProfileImage(context, it)  // ✅ context eklendi
             Toast.makeText(context, "Fotoğraf yükleniyor...", Toast.LENGTH_SHORT).show()
         }
     }

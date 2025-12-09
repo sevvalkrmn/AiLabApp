@@ -141,30 +141,11 @@ fun ProjectDetailScreen(
                         )
                     }
 
-                    // Üyeler Başlık
-                    item {
-                        Text(
-                            text = "Proje Üyeleri (${uiState.project!!.members.size})",
-                            fontSize = (screenWidth.value * 0.045f).sp,
-                            fontWeight = FontWeight.Bold,
-                            color = PrimaryBlue
-                        )
-                    }
-
-                    // Üyeler Listesi
-                    items(uiState.project!!.members) { member ->
-                        MemberCard(
-                            member = member,
-                            screenWidth = screenWidth,
-                            screenHeight = screenHeight
-                        )
-                    }
-
+                    // ✅ GÖREVLER ÜSTTE
                     // Görevler Başlık
                     item {
-                        Spacer(modifier = Modifier.height(screenHeight * 0.01f))
                         Text(
-                            text = "Görevler (${uiState.tasks.size})",
+                            text = "Görevler",
                             fontSize = (screenWidth.value * 0.045f).sp,
                             fontWeight = FontWeight.Bold,
                             color = PrimaryBlue
@@ -212,11 +193,43 @@ fun ProjectDetailScreen(
                             )
                         }
                     }
+
+                    // ✅ PROJE ÜYELERİ ALTTA
+                    // Proje Üyeleri Başlık
+                    item {
+                        Spacer(modifier = Modifier.height(screenHeight * 0.01f))
+                        Text(
+                            text = "Proje Üyeleri",
+                            fontSize = (screenWidth.value * 0.045f).sp,
+                            fontWeight = FontWeight.Bold,
+                            color = PrimaryBlue
+                        )
+                    }
+
+                    // ÖNCE KAPTANLAR
+                    items(uiState.project!!.captains) { captain ->
+                        MemberCard(
+                            member = captain,
+                            screenWidth = screenWidth,
+                            screenHeight = screenHeight
+                        )
+                    }
+
+                    // SONRA ÜYELER
+                    items(uiState.project!!.members) { member ->
+                        MemberCard(
+                            member = member,
+                            screenWidth = screenWidth,
+                            screenHeight = screenHeight
+                        )
+                    }
                 }
+
             }
         }
     }
 }
+
 
 // ============= COMPOSABLE KARTLAR =============
 
@@ -544,4 +557,3 @@ fun getStatusText(status: String): String {
         else -> status
     }
 }
-

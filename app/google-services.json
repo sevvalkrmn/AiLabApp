@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "1036669299032",
-    "project_id": "ailabapp-e1e31",
-    "storage_bucket": "ailabapp-e1e31.firebasestorage.app"
+    "project_number": "516702840860",
+    "project_id": "ailab-super-app",
+    "storage_bucket": "ailab-super-app.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1036669299032:android:f42f8a00beff87057a1d2d",
+        "mobilesdk_app_id": "1:516702840860:android:884385ee47806576e057d9",
         "android_client_info": {
           "package_name": "com.ktunailab.ailabapp"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyAWWBP5k9Kvsk35fyjLe91I1r__7SEsCxY"
+          "current_key": "AIzaSyC4yD4ApsXKNwDjBnjEGTlxz6QvjmpL1Zg"
         }
       ],
       "services": {

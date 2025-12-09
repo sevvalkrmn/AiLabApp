@@ -2,6 +2,7 @@ package com.ktun.ailabapp.util
 
 import android.net.Uri
 import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.storageMetadata
 import kotlinx.coroutines.tasks.await
 import java.util.UUID
 
@@ -19,8 +20,12 @@ object FirebaseStorageHelper {
     suspend fun uploadProfileImage(userId: String, imageUri: Uri): Result<String> {
         return try {
             // Benzersiz dosya adı oluştur
-            val fileName = "${userId}_${UUID.randomUUID()}.jpg"
+            val fileName = "${userId}_${UUID.randomUUID()}.webp"
             val fileRef = profileImagesRef.child(fileName)
+
+            val metadata = storageMetadata {
+                contentType = "image/webp"
+            }
 
             // Dosyayı yükle
             fileRef.putFile(imageUri).await()
