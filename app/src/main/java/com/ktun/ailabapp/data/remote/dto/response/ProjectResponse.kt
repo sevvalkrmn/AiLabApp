@@ -11,7 +11,7 @@ data class MyProjectsResponse(
     val name: String = "",
 
     @SerializedName("description")
-    val description: String? = null,  // ← Bu zaten nullable, UI'da kontrol edeceğiz
+    val description: String? = null,
 
     @SerializedName("createdAt")
     val createdAt: String = "",
@@ -39,6 +39,9 @@ data class ProjectDetailResponse(
 
     @SerializedName("taskStatistics")
     val taskStatistics: TaskStatistics = TaskStatistics(),
+
+    @SerializedName("captains")  // ✅ YENİ EKLENEN
+    val captains: List<ProjectMember> = emptyList(),
 
     @SerializedName("members")
     val members: List<ProjectMember> = emptyList()

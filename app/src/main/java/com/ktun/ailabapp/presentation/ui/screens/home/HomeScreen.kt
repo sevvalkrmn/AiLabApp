@@ -1,11 +1,8 @@
 package com.ktunailab.ailabapp.presentation.ui.screens.home
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -20,18 +17,21 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.ktunailab.ailabapp.data.remote.dto.response.TaskResponse
 import com.ktunailab.ailabapp.presentation.ui.components.BottomNavigationBar
+import com.ktunailab.ailabapp.presentation.ui.components.DebugButton
+import com.ktunailab.ailabapp.presentation.ui.components.FeedbackDialog
 import com.ktunailab.ailabapp.presentation.ui.screens.announcement.AnnouncementViewModel
 import com.ktunailab.ailabapp.ui.theme.*
+import java.text.SimpleDateFormat
+import java.util.Locale
+import java.util.TimeZone
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,12 +47,31 @@ fun HomeScreen(
     val announcementUiState by announcementViewModel.uiState.collectAsState()
     val context = LocalContext.current
 
+    var isRefreshing by remember { mutableStateOf(false) }
+    var showFeedbackDialog by remember { mutableStateOf(false) }  // ✅ YENİ EKLE
+
+    // ✅ YENİ: Feedback Dialog
+    if (showFeedbackDialog) {
+        FeedbackDialog(
+            onDismiss = { showFeedbackDialog = false },
+            onSubmit = { feedback ->
+                android.util.Log.d("HomeScreen", "📝 Feedback: $feedback")
+                android.widget.Toast.makeText(context, "Geri bildiriminiz alındı!", android.widget.Toast.LENGTH_SHORT).show()
+                showFeedbackDialog = false
+            }
+        )
+    }
+
     LaunchedEffect(Unit) {
         viewModel.loadUserData()
-
-        // ✅ Duyuruları da yükle
         android.util.Log.d("HomeScreen", "📥 Loading announcements on Home screen...")
         announcementViewModel.loadAnnouncements()
+    }
+
+    LaunchedEffect(uiState.isLoading) {
+        if (!uiState.isLoading) {
+            isRefreshing = false
+        }
     }
 
     val configuration = LocalConfiguration.current
@@ -67,12 +86,11 @@ fun HomeScreen(
         bottomBar = {
             BottomNavigationBar(
                 selectedItem = 0,
-                onHomeClick = { /* Zaten Home'dayız */ },
+                onHomeClick = { },
                 onProjectsClick = onNavigateToProjects,
                 onChatClick = onNavigateToChat,
                 onProfileClick = onNavigateToProfile,
                 unreadAnnouncementCount = unreadCount
-
             )
         },
         containerColor = PrimaryBlue
@@ -82,7 +100,6 @@ fun HomeScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // Header
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -99,23 +116,18 @@ fun HomeScreen(
                         color = White
                     )
                     Text(
-                        text = "Good Night",
+                        text = uiState.greeting,
                         fontSize = (screenWidth.value * 0.035f).sp,
                         color = White.copy(alpha = 0.8f)
                     )
                 }
 
-                IconButton(onClick = { /* Bildirimler */ }) {
-                    Icon(
-                        Icons.Default.Notifications,
-                        contentDescription = "Bildirimler",
-                        tint = White,
-                        modifier = Modifier.size(screenWidth * 0.07f)
-                    )
-                }
+                // ✅ DÜZELTME: align() kaldırıldı
+                DebugButton(
+                    onClick = { showFeedbackDialog = true }
+                )
             }
 
-            // Ana içerik - Beyaz kart
             Card(
                 modifier = Modifier
                     .fillMaxSize()
@@ -126,45 +138,56 @@ fun HomeScreen(
                     topEnd = screenWidth * 0.08f
                 )
             ) {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(screenWidth * 0.04f),
-                    verticalArrangement = Arrangement.spacedBy(screenHeight * 0.02f)
+                androidx.compose.material3.pulltorefresh.PullToRefreshBox(
+                    isRefreshing = isRefreshing,
+                    onRefresh = {
+                        isRefreshing = true
+                        viewModel.refreshUserData()
+                        android.util.Log.d("HomeScreen", "🔄 Pull-to-refresh triggered")
+                    }
                 ) {
-                    // Laboratuvar Doluluk Oranı
-                    item {
-                        LabOccupancyCard(
-                            screenWidth = screenWidth,
-                            screenHeight = screenHeight
-                        )
-                    }
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(screenWidth * 0.04f),
+                        verticalArrangement = Arrangement.spacedBy(screenHeight * 0.02f)
+                    ) {
+                        item {
+                            LabOccupancyCard(
+                                currentOccupancy = uiState.currentOccupancy,
+                                totalCapacity = uiState.totalCapacity,
+                                screenWidth = screenWidth,
+                                screenHeight = screenHeight
+                            )
+                        }
 
-                    // Profil Kartı
-                    item {
-                        ProfileCard(
-                            totalScore = uiState.user?.totalScore ?: 0,  // ← Backend'den puan
-                            avatarUrl = uiState.user?.profileImageUrl,  // ← Backend'den avatar
-                            screenWidth = screenWidth,
-                            screenHeight = screenHeight
-                        )
-                    }
+                        item {
+                            ProfileCard(
+                                totalScore = uiState.user?.totalScore ?: 0,
+                                avatarUrl = uiState.user?.profileImageUrl,
+                                lastEntryDate = uiState.lastEntryDate,
+                                teammatesInside = uiState.teammatesInside,
+                                totalTeammates = uiState.totalTeammates,
+                                screenWidth = screenWidth,
+                                screenHeight = screenHeight
+                            )
+                        }
 
-                    // Güncel Görevler
-                    item {
-                        CurrentTasksCard(
-                            tasks = uiState.currentTasks,
-                            screenWidth = screenWidth,
-                            screenHeight = screenHeight
-                        )
-                    }
+                        item {
+                            CurrentTasksCard(
+                                tasks = uiState.currentTasks,
+                                screenWidth = screenWidth,
+                                screenHeight = screenHeight
+                            )
+                        }
 
-                    // Alt kart (3 daire)
-                    item {
-                        BottomCard(
-                            screenWidth = screenWidth,
-                            screenHeight = screenHeight
-                        )
+                        item {
+                            BottomCard(
+                                topUsers = uiState.topUsers,
+                                screenWidth = screenWidth,
+                                screenHeight = screenHeight
+                            )
+                        }
                     }
                 }
             }
@@ -174,75 +197,71 @@ fun HomeScreen(
 
 @Composable
 fun LabOccupancyCard(
+    currentOccupancy: Int,
+    totalCapacity: Int,
     screenWidth: Dp,
     screenHeight: Dp
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = White),
-        shape = RoundedCornerShape(screenWidth * 0.04f)
+    val progress = if (totalCapacity > 0) {
+        (currentOccupancy.toFloat() / totalCapacity.toFloat()).coerceIn(0f, 1f)
+    } else {
+        0f
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = screenWidth * 0.02f)
     ) {
-        Column(
+        Text(
+            text = "Laboratuvar doluluğu oranı",
+            fontSize = (screenWidth.value * 0.04f).sp,
+            color = PrimaryBlue,
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier
+                .padding(bottom = screenHeight * 0.015f)
+                .padding(start = screenWidth * 0.02f)
+        )
+
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(screenWidth * 0.04f)
+                .height(screenHeight * 0.031f)
+                .background(
+                    color = Color(0xFFB8C5D6),
+                    shape = RoundedCornerShape(screenWidth * 0.08f)
+                )
         ) {
-            Text(
-                text = "Laboratuvar doluluğu oranı",
-                fontSize = (screenWidth.value * 0.035f).sp,
-                color = PrimaryBlue,
-                fontWeight = FontWeight.Medium
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(progress)
+                    .fillMaxHeight()
+                    .background(
+                        color = PrimaryBlue,
+                        shape = RoundedCornerShape(screenWidth * 0.08f)
+                    )
             )
 
-            Spacer(modifier = Modifier.height(screenHeight * 0.01f))
-
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = screenWidth * 0.035f),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Sol taraf - Mavi kapsül
-                Box(
-                    modifier = Modifier
-                        .width(screenWidth * 0.15f)
-                        .height(screenHeight * 0.04f)
-                        .background(PrimaryBlue, RoundedCornerShape(50))
-                        .padding(horizontal = screenWidth * 0.02f),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "3",
-                        color = White,
-                        fontSize = (screenWidth.value * 0.04f).sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-                // Progress bar
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(screenHeight * 0.04f)
-                        .padding(horizontal = screenWidth * 0.02f)
-                        .background(Color(0xFFE0E0E0), RoundedCornerShape(50))
+                Text(
+                    text = "$currentOccupancy",
+                    color = White,
+                    fontSize = (screenWidth.value * 0.035f).sp,
+                    fontWeight = FontWeight.Bold
                 )
 
-                // Sağ taraf - Açık gri kapsül
-                Box(
-                    modifier = Modifier
-                        .width(screenWidth * 0.15f)
-                        .height(screenHeight * 0.04f)
-                        .background(Color(0xFFE0E0E0), RoundedCornerShape(50))
-                        .padding(horizontal = screenWidth * 0.02f),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "18",
-                        color = Color.Gray,
-                        fontSize = (screenWidth.value * 0.04f).sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                Text(
+                    text = "$totalCapacity",
+                    color = White,
+                    fontSize = (screenWidth.value * 0.035f).sp,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     }
@@ -252,6 +271,9 @@ fun LabOccupancyCard(
 fun ProfileCard(
     totalScore: Int,
     avatarUrl: String?,
+    lastEntryDate: String?,
+    teammatesInside: Int,
+    totalTeammates: Int,
     screenWidth: Dp,
     screenHeight: Dp
 ) {
@@ -271,9 +293,7 @@ fun ProfileCard(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.padding(end = screenWidth * 0.04f)
             ) {
-                // ✅ GÜNCELLENEN Avatar
                 if (!avatarUrl.isNullOrEmpty()) {
-                    // Firebase URL'den yükle
                     AsyncImage(
                         model = avatarUrl,
                         contentDescription = "Profil Fotoğrafı",
@@ -284,7 +304,6 @@ fun ProfileCard(
                         contentScale = ContentScale.Crop
                     )
                 } else {
-                    // Placeholder
                     Box(
                         modifier = Modifier
                             .size(screenWidth * 0.18f)
@@ -303,7 +322,6 @@ fun ProfileCard(
 
                 Spacer(modifier = Modifier.height(screenHeight * 0.01f))
 
-                // Puan
                 Text(
                     text = "$totalScore",
                     fontSize = (screenWidth.value * 0.08f).sp,
@@ -317,7 +335,6 @@ fun ProfileCard(
                 )
             }
 
-            // Dikey çizgi
             Box(
                 modifier = Modifier
                     .width(2.dp)
@@ -331,7 +348,7 @@ fun ProfileCard(
             Column(
                 modifier = Modifier.weight(1f)
             ) {
-                // Son Giriş Tarihi
+                // Son Giriş Tarihi (Backend'den)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         Icons.Default.CalendarToday,
@@ -346,12 +363,16 @@ fun ProfileCard(
                             fontSize = (screenWidth.value * 0.03f).sp,
                             color = White.copy(alpha = 0.8f)
                         )
-                        Text(
-                            text = "14.12.2003",
-                            fontSize = (screenWidth.value * 0.04f).sp,
-                            fontWeight = FontWeight.Bold,
-                            color = White
-                        )
+                        // ✅ Direkt tarihi göster, boşsa hiçbir şey gözükmez
+                        val formattedDate = formatDate(lastEntryDate)
+                        if (formattedDate.isNotEmpty()) {  // ✅ Sadece dolu ise göster
+                            Text(
+                                text = formattedDate,
+                                fontSize = (screenWidth.value * 0.04f).sp,
+                                fontWeight = FontWeight.Bold,
+                                color = White
+                            )
+                        }
                     }
                 }
 
@@ -364,7 +385,7 @@ fun ProfileCard(
 
                 Spacer(modifier = Modifier.height(screenHeight * 0.015f))
 
-                // Takım Arkadaşları
+                // Takım Arkadaşları (Backend'den)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         Icons.Default.Group,
@@ -375,22 +396,15 @@ fun ProfileCard(
                     Spacer(modifier = Modifier.width(screenWidth * 0.02f))
                     Column {
                         Text(
-                            text = "Laboratuvardaki",
+                            text = "Lab'daki Takım Arkadaşları",
                             fontSize = (screenWidth.value * 0.03f).sp,
                             color = White.copy(alpha = 0.8f)
                         )
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = "Takım Arkadaşlarım",
-                                fontSize = (screenWidth.value * 0.04f).sp,
-                                fontWeight = FontWeight.Bold,
-                                color = White
-                            )
                             Spacer(modifier = Modifier.width(screenWidth * 0.02f))
                             Text(
-                                text = "1/5",
+                                text = "$teammatesInside / $totalTeammates",
                                 fontSize = (screenWidth.value * 0.04f).sp,
-                                fontWeight = FontWeight.Bold,
+                                fontWeight = FontWeight.Bold,  // ✅ Sadece sayılar kalın
                                 color = White
                             )
                         }
@@ -399,11 +413,11 @@ fun ProfileCard(
             }
         }
     }
-}
+
 
 @Composable
 fun CurrentTasksCard(
-    tasks: List<TaskResponse>,  // ← Backend'den gelen görevler
+    tasks: List<TaskResponse>,
     screenWidth: Dp,
     screenHeight: Dp
 ) {
@@ -426,7 +440,6 @@ fun CurrentTasksCard(
             )
 
             if (tasks.isEmpty()) {
-                // Görev yoksa
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -440,7 +453,6 @@ fun CurrentTasksCard(
                     )
                 }
             } else {
-                // Görevler varsa
                 tasks.forEachIndexed { index, task ->
                     if (index > 0) {
                         Spacer(modifier = Modifier.height(screenHeight * 0.015f))
@@ -448,8 +460,8 @@ fun CurrentTasksCard(
 
                     TaskItem(
                         icon = Icons.Default.Create,
-                        title = task.title.take(12) + if (task.title.length > 12) "..." else "",  // Max 12 karakter
-                        frequency = "Monthly",  // TODO: Backend'den gelebilir
+                        title = task.title.take(12) + if (task.title.length > 12) "..." else "",
+                        frequency = "Monthly",
                         status = when (task.status) {
                             "InProgress" -> "In Progress"
                             "Done" -> "Done"
@@ -457,9 +469,9 @@ fun CurrentTasksCard(
                             else -> task.status
                         },
                         statusColor = when (task.status) {
-                            "InProgress" -> Color(0xFFFFA726)  // Turuncu
-                            "Done" -> Color(0xFF66BB6A)  // Yeşil
-                            "Todo" -> Color(0xFF42A5F5)  // Mavi
+                            "InProgress" -> Color(0xFFFFA726)
+                            "Done" -> Color(0xFF66BB6A)
+                            "Todo" -> Color(0xFF42A5F5)
                             else -> Color.Gray
                         },
                         screenWidth = screenWidth,
@@ -488,7 +500,6 @@ fun TaskItem(
             .padding(screenWidth * 0.03f),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Icon
         Box(
             modifier = Modifier
                 .size(screenWidth * 0.12f)
@@ -505,7 +516,6 @@ fun TaskItem(
 
         Spacer(modifier = Modifier.width(screenWidth * 0.03f))
 
-        // Text
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
@@ -520,7 +530,6 @@ fun TaskItem(
             )
         }
 
-        // Status
         Text(
             text = status,
             fontSize = (screenWidth.value * 0.03f).sp,
@@ -532,71 +541,213 @@ fun TaskItem(
 
 @Composable
 fun BottomCard(
+    topUsers: List<TopUserItem>,
     screenWidth: Dp,
     screenHeight: Dp
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(screenHeight * 0.25f),
         colors = CardDefaults.cardColors(containerColor = PrimaryBlue),
         shape = RoundedCornerShape(screenWidth * 0.04f)
     ) {
-        Row(
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxSize()
                 .padding(screenWidth * 0.04f),
-            horizontalArrangement = Arrangement.SpaceEvenly
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            // Sol daire - Beyaz
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Box(
-                    modifier = Modifier
-                        .size(screenWidth * 0.15f)
-                        .background(White, CircleShape)
+            // ✅ BAŞLIK - Sadece Material Icon
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.padding(bottom = screenHeight * 0.015f)
+            ) {
+                // Sol icon
+                Icon(
+                    imageVector = Icons.Default.Star,
+                    contentDescription = null,
+                    tint = Color(0xFFFFD700),
+                    modifier = Modifier.size(screenWidth * 0.05f)
                 )
-                Spacer(modifier = Modifier.height(screenHeight * 0.01f))
-                Box(
-                    modifier = Modifier
-                        .width(screenWidth * 0.1f)
-                        .height(screenHeight * 0.01f)
-                        .background(White, RoundedCornerShape(50))
+
+                Spacer(modifier = Modifier.width(screenWidth * 0.02f))
+
+                // Başlık metni
+                Text(
+                    text = "LEADERBOARD",
+                    fontSize = (screenWidth.value * 0.04f).sp,
+                    fontWeight = FontWeight.Light,
+                    color = White,
+                    letterSpacing = 1.5.sp
+                )
+
+                Spacer(modifier = Modifier.width(screenWidth * 0.02f))
+
+                // Sağ icon
+                Icon(
+                    imageVector = Icons.Default.Star,
+                    contentDescription = null,
+                    tint = Color(0xFFFFD700),
+                    modifier = Modifier.size(screenWidth * 0.05f)
                 )
             }
 
-            // Orta daire - Sarı (Seçili)
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Box(
-                    modifier = Modifier
-                        .size(screenWidth * 0.15f)
-                        .background(Color(0xFFFFD54F), CircleShape)
-                        .padding(4.dp)
-                        .background(White, CircleShape)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.Bottom
+            ) {
+                LeaderboardUser(
+                    user = topUsers.getOrNull(1),
+                    borderColor = Color(0xFFC0C0C0),
+                    rank = 2,
+                    screenWidth = screenWidth,
+                    screenHeight = screenHeight
                 )
-                Spacer(modifier = Modifier.height(screenHeight * 0.01f))
-                Box(
-                    modifier = Modifier
-                        .width(screenWidth * 0.1f)
-                        .height(screenHeight * 0.01f)
-                        .background(Color(0xFFFFD54F), RoundedCornerShape(50))
-                )
-            }
 
-            // Sağ daire - Turuncu
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Box(
-                    modifier = Modifier
-                        .size(screenWidth * 0.15f)
-                        .background(Color(0xFFFF9800), CircleShape)
-                        .padding(4.dp)
-                        .background(White, CircleShape)
+                LeaderboardUser(
+                    user = topUsers.getOrNull(0),
+                    borderColor = Color(0xFFFFD700),
+                    rank = 1,
+                    screenWidth = screenWidth,
+                    screenHeight = screenHeight,
+                    isFirst = true
                 )
-                Spacer(modifier = Modifier.height(screenHeight * 0.01f))
-                Box(
-                    modifier = Modifier
-                        .width(screenWidth * 0.1f)
-                        .height(screenHeight * 0.01f)
-                        .background(Color(0xFFFF9800), RoundedCornerShape(50))
+
+                LeaderboardUser(
+                    user = topUsers.getOrNull(2),
+                    borderColor = Color(0xFFFF9800),
+                    rank = 3,
+                    screenWidth = screenWidth,
+                    screenHeight = screenHeight
                 )
             }
         }
+    }
+}
+
+@Composable
+fun LeaderboardUser(
+    user: TopUserItem?,
+    borderColor: Color,
+    rank: Int,
+    screenWidth: Dp,
+    screenHeight: Dp,
+    isFirst: Boolean = false
+) {
+    val avatarSize = if (isFirst) screenWidth * 0.2f else screenWidth * 0.16f
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.width(screenWidth * 0.28f)
+    ) {
+        if (user != null) {
+            Box(contentAlignment = Alignment.Center) {
+                if (!user.avatarUrl.isNullOrEmpty()) {
+                    AsyncImage(
+                        model = user.avatarUrl,
+                        contentDescription = "Avatar",
+                        modifier = Modifier
+                            .size(avatarSize)
+                            .clip(CircleShape)
+                            .background(borderColor)
+                            .padding(3.dp)
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .size(avatarSize)
+                            .background(borderColor, CircleShape)
+                            .padding(3.dp)
+                            .background(White, CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Default.Person,
+                            contentDescription = null,
+                            tint = PrimaryBlue,
+                            modifier = Modifier.size(avatarSize * 0.5f)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(screenHeight * 0.008f))
+
+            Text(
+                text = user.name.split(" ").firstOrNull() ?: user.name,
+                fontSize = (screenWidth.value * 0.032f).sp,
+                fontWeight = FontWeight.Bold,
+                color = White,
+                maxLines = 1
+            )
+
+            Spacer(modifier = Modifier.height(screenHeight * 0.005f))
+
+            Box(
+                modifier = Modifier
+                    .background(borderColor, RoundedCornerShape(50))
+                    .padding(horizontal = screenWidth * 0.025f, vertical = screenHeight * 0.004f)
+            ) {
+                Text(
+                    text = "${user.score} pts",
+                    fontSize = (screenWidth.value * 0.028f).sp,
+                    fontWeight = FontWeight.Bold,
+                    color = PrimaryBlue
+                )
+            }
+        } else {
+            Box(
+                modifier = Modifier
+                    .size(avatarSize)
+                    .background(White.copy(alpha = 0.2f), CircleShape)
+            )
+            Spacer(modifier = Modifier.height(screenHeight * 0.008f))
+            Box(
+                modifier = Modifier
+                    .width(screenWidth * 0.15f)
+                    .height(screenHeight * 0.015f)
+                    .background(White.copy(alpha = 0.2f), RoundedCornerShape(50))
+            )
+            Spacer(modifier = Modifier.height(screenHeight * 0.005f))
+            Box(
+                modifier = Modifier
+                    .width(screenWidth * 0.12f)
+                    .height(screenHeight * 0.012f)
+                    .background(White.copy(alpha = 0.2f), RoundedCornerShape(50))
+            )
+        }
+    }
+}
+
+private fun formatDate(isoDate: String?): String {
+    // ✅ Null veya boşsa boş string döndür (hiçbir şey gösterme)
+    if (isoDate.isNullOrEmpty()) return ""
+
+    return try {
+        android.util.Log.d("HomeScreen", "Parse ediliyor: $isoDate")
+
+        val parser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
+        parser.timeZone = TimeZone.getTimeZone("UTC")
+        val date = parser.parse(isoDate)
+
+        if (date == null) {
+            android.util.Log.e("HomeScreen", "Parse başarısız: $isoDate")
+            return ""  // ✅ Hata durumunda da boş
+        }
+
+        val formatter = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+        val result = formatter.format(date)
+        android.util.Log.d("HomeScreen", "Formatlanmış tarih: $result")
+        result
+
+    } catch (e: Exception) {
+        android.util.Log.e("HomeScreen", "Tarih parse hatası: ${e.message}, Gelen: $isoDate")
+        ""  // ✅ Exception durumunda da boş
     }
 }

@@ -2,6 +2,7 @@ package com.ktunailab.ailabapp.data.remote.api
 
 import com.ktun.ailabapp.data.remote.dto.request.UpdateProfileImageRequest
 import com.ktun.ailabapp.data.remote.dto.response.DefaultAvatarsResponse
+import com.ktun.ailabapp.data.remote.dto.response.LeaderboardUserResponse
 import com.ktunailab.ailabapp.data.remote.dto.request.LoginRequest
 import com.ktunailab.ailabapp.data.remote.dto.request.RegisterRequest
 import com.ktunailab.ailabapp.data.remote.dto.request.RefreshTokenRequest
@@ -37,4 +38,7 @@ interface AuthApi {
 
     @GET("api/profile/avatars/defaults")
     suspend fun getDefaultAvatars(): Response<DefaultAvatarsResponse>
+
+    @GET("api/Profile/leaderboard")
+    suspend fun getLeaderboard(): Response<List<LeaderboardUserResponse>>
 }

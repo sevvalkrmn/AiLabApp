@@ -1,10 +1,14 @@
 package com.ktunailab.ailabapp.presentation.ui.screens.profile
 
+import android.app.Application
+import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ktun.ailabapp.util.ImageCompressor
 import com.ktunailab.ailabapp.data.repository.AuthRepository
 import com.ktunailab.ailabapp.util.NetworkResult
+import dagger.hilt.android.internal.Contexts.getApplication
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -88,41 +92,64 @@ class ProfileViewModel @Inject constructor(
     }
 
     // ✅ YENİ: Kullanıcının kendi fotoğrafını yükle
-    fun uploadAndUpdateProfileImage(imageUri: Uri) {
+    fun uploadAndUpdateProfileImage(context: Context, imageUri: Uri) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(
                 isUploadingImage = true,
                 errorMessage = null
             )
 
-            android.util.Log.d("ProfileViewModel", "Uploading profile image...")
+            android.util.Log.d("ProfileViewModel", "Compressing and uploading profile image...")
 
-            val userId = _uiState.value.id
-            when (val result = authRepository.uploadAndUpdateProfileImage(userId, imageUri)) {
-                is NetworkResult.Success -> {
-                    android.util.Log.d("ProfileViewModel", "Profile image uploaded successfully")
+            try {
+                // ✅ Context parametre olarak geldi
+                val compressResult = ImageCompressor.compressToWebP(
+                    context = context,
+                    imageUri = imageUri
+                )
 
-                    result.data?.let { profile ->
-                        _uiState.value = _uiState.value.copy(
-                            profileImageUrl = profile.profileImageUrl,
-                            isUploadingImage = false,
-                            errorMessage = null
-                        )
-                    }
-
-                    // ✅ EKLE: Profili yeniden yükle
-                    loadUserProfile()
-                }
-                is NetworkResult.Error -> {
-                    android.util.Log.e("ProfileViewModel", "Profile image upload error: ${result.message}")
+                if (compressResult.isFailure) {
                     _uiState.value = _uiState.value.copy(
                         isUploadingImage = false,
-                        errorMessage = result.message ?: "Fotoğraf yüklenemedi"
+                        errorMessage = "Fotoğraf işlenemedi"
                     )
+                    return@launch
                 }
-                is NetworkResult.Loading -> {
-                    // Loading durumu zaten set edildi
+
+                val optimizedUri = compressResult.getOrNull()!!
+                android.util.Log.d("ProfileViewModel", "Image compressed to WebP successfully")
+
+                // Firebase'e yükle
+                val userId = _uiState.value.id
+                when (val result = authRepository.uploadAndUpdateProfileImage(userId, optimizedUri)) {
+                    is NetworkResult.Success -> {
+                        android.util.Log.d("ProfileViewModel", "Profile image uploaded successfully")
+
+                        result.data?.let { profile ->
+                            _uiState.value = _uiState.value.copy(
+                                profileImageUrl = profile.profileImageUrl,
+                                isUploadingImage = false,
+                                errorMessage = null
+                            )
+                        }
+
+                        loadUserProfile()
+                    }
+                    is NetworkResult.Error -> {
+                        android.util.Log.e("ProfileViewModel", "Profile image upload error: ${result.message}")
+                        _uiState.value = _uiState.value.copy(
+                            isUploadingImage = false,
+                            errorMessage = result.message ?: "Fotoğraf yüklenemedi"
+                        )
+                    }
+                    is NetworkResult.Loading -> {}
                 }
+            } catch (e: Exception) {
+                android.util.Log.e("ProfileViewModel", "Error processing image", e)
+                _uiState.value = _uiState.value.copy(
+                    isUploadingImage = false,
+                    errorMessage = "Fotoğraf işlenirken hata oluştu"
+                )
             }
         }
     }
