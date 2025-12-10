@@ -31,55 +31,100 @@ class ProjectDetailViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(ProjectDetailUiState())
     val uiState: StateFlow<ProjectDetailUiState> = _uiState.asStateFlow()
 
+    init {
+        android.util.Log.d("ProjectDetailViewModel", "🎬 ViewModel CREATED")
+    }
+
     fun loadProjectDetail(projectId: String) {
+        android.util.Log.d("ProjectDetailViewModel", "🔵 ========================================")
+        android.util.Log.d("ProjectDetailViewModel", "🔵 loadProjectDetail() ÇAĞRILDI")
+        android.util.Log.d("ProjectDetailViewModel", "🔵 ProjectID: $projectId")
+        android.util.Log.d("ProjectDetailViewModel", "🔵 ========================================")
+
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
 
-            // Proje detayını çek
+            android.util.Log.d("ProjectDetailViewModel", "📥 Proje detayı API çağrısı başlıyor...")
+
             when (val projectResult = projectRepository.getProjectDetail(projectId)) {
                 is NetworkResult.Success -> {
+                    android.util.Log.d("ProjectDetailViewModel", "✅ Proje detayı başarılı")
+
                     projectResult.data?.let { project ->
+                        android.util.Log.d("ProjectDetailViewModel", """
+                            ✅ Proje yüklendi:
+                            - Name: ${project.name}
+                            - Members: ${project.members.size}
+                            - Captains: ${project.captains.size}
+                        """.trimIndent())
+
                         _uiState.value = _uiState.value.copy(
                             project = project,
                             isLoading = false
                         )
 
-                        android.util.Log.d("ProjectDetailViewModel", """
-                            Proje yüklendi: ${project.name}
-                            Backend taskStatistics: ${project.taskStatistics}
-                        """.trimIndent())
-
-                        // ✅ Kullanıcının bu projedeki görevlerini çek
+                        android.util.Log.d("ProjectDetailViewModel", "🔄 loadProjectTasks() çağrılıyor...")
                         loadProjectTasks(projectId)
+                    } ?: run {
+                        android.util.Log.e("ProjectDetailViewModel", "❌ Project data NULL!")
                     }
                 }
                 is NetworkResult.Error -> {
-                    android.util.Log.e("ProjectDetailViewModel", "Proje yükleme hatası: ${projectResult.message}")
+                    android.util.Log.e("ProjectDetailViewModel", "❌ Proje yükleme hatası: ${projectResult.message}")
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         errorMessage = projectResult.message
                     )
                 }
-                is NetworkResult.Loading -> {}
+                is NetworkResult.Loading -> {
+                    android.util.Log.d("ProjectDetailViewModel", "⏳ Loading state")
+                }
             }
         }
     }
 
-    // ✅ GÜNCELLENMIŞ: Kullanıcının görevlerini çek ve filtrele
     private fun loadProjectTasks(projectId: String) {
         viewModelScope.launch {
-            android.util.Log.d("ProjectDetailViewModel", "🔵 loadProjectTasks() başladı - ProjectID: $projectId")
+            android.util.Log.d("ProjectDetailViewModel", "🔵 loadProjectTasks() BAŞLADI - ProjectID: $projectId")
 
-            // ✅ DOĞRU API: Kullanıcının TÜM görevlerini çek
-            when (val tasksResult = taskRepository.getMyTasks(status = null)) {
+            when (val result = taskRepository.getMyTasks(status = null)) {
                 is NetworkResult.Success -> {
-                    tasksResult.data?.let { allMyTasks ->
-                        // ✅ Sadece bu projeye ait görevleri filtrele
-                        val projectTasks = allMyTasks.filter { task ->
-                            task.projectId == projectId
+                    result.data?.let { allMyTasks ->
+                        android.util.Log.d("ProjectDetailViewModel", "📦 Toplam görev sayısı: ${allMyTasks.size}")
+
+                        // ✅ GEÇİCİ: projectName ile filtrele (projectId null olduğu için)
+                        val currentProjectName = _uiState.value.project?.name
+
+                        android.util.Log.d("ProjectDetailViewModel", "🔍 Filtreleme kriteri: projectName = '$currentProjectName'")
+
+                        allMyTasks.forEachIndexed { index, task ->
+                            android.util.Log.d("ProjectDetailViewModel", """
+                            Görev #${index + 1}:
+                            - Title: ${task.title}
+                            - ProjectID: '${task.projectId}'
+                            - ProjectName: '${task.projectName}'
+                            - Expected Name: '$currentProjectName'
+                            - Match: ${task.projectName == currentProjectName}
+                        """.trimIndent())
                         }
 
-                        // Manuel olarak istatistikleri hesapla (sadece kullanıcının görevleri)
+                        val projectTasks = if (currentProjectName != null) {
+                            // ✅ GEÇİCİ FIX: projectName ile filtrele
+                            allMyTasks.filter { task ->
+                                task.projectName == currentProjectName
+                            }
+                        } else {
+                            // projectId null ise boş liste
+                            emptyList()
+                        }
+
+                        android.util.Log.d("ProjectDetailViewModel", """
+                        ✅ Filtreleme tamamlandı:
+                        - Toplam görevim: ${allMyTasks.size}
+                        - Bu projedeki görevlerim: ${projectTasks.size}
+                    """.trimIndent())
+
+                        // İstatistikler hesapla
                         val total = projectTasks.size
                         val todo = projectTasks.count { it.status == "Todo" }
                         val inProgress = projectTasks.count { it.status == "InProgress" }
@@ -92,30 +137,19 @@ class ProjectDetailViewModel @Inject constructor(
                             done = done
                         )
 
-                        // Proje bilgisini güncelle - taskStatistics'i override et
                         _uiState.value.project?.let { project ->
                             val updatedProject = project.copy(taskStatistics = calculatedStats)
                             _uiState.value = _uiState.value.copy(
                                 project = updatedProject,
                                 tasks = projectTasks
                             )
-                        }
 
-                        android.util.Log.d("ProjectDetailViewModel", """
-                            ✅ Görevler filtrelendi:
-                            - Toplam görevim: ${allMyTasks.size}
-                            - Bu projedeki görevlerim: ${projectTasks.size}
-                            - Proje ID: $projectId
-                            Hesaplanan istatistikler (sadece benim görevlerim):
-                            - Total: $total
-                            - Todo: $todo
-                            - InProgress: $inProgress
-                            - Done: $done
-                        """.trimIndent())
+                            android.util.Log.d("ProjectDetailViewModel", "✅ UI State güncellendi - Tasks: ${projectTasks.size}")
+                        }
                     }
                 }
                 is NetworkResult.Error -> {
-                    android.util.Log.e("ProjectDetailViewModel", "❌ Görev yükleme hatası: ${tasksResult.message}")
+                    android.util.Log.e("ProjectDetailViewModel", "❌ getMyTasks() ERROR: ${result.message}")
                 }
                 is NetworkResult.Loading -> {}
             }

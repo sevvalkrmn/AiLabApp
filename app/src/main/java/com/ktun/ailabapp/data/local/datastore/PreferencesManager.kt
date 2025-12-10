@@ -3,6 +3,7 @@ package com.ktunailab.ailabapp.data.local.datastore
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -21,6 +22,7 @@ class PreferencesManager(private val context: Context) {
         private val FIRST_NAME_KEY = stringPreferencesKey("first_name")
         private val LAST_NAME_KEY = stringPreferencesKey("last_name")
         private val PHONE_KEY = stringPreferencesKey("phone")
+        private val REMEMBER_ME_KEY = booleanPreferencesKey("remember_me")
     }
 
     // Token okuma
@@ -35,6 +37,13 @@ class PreferencesManager(private val context: Context) {
         }
     }
 
+    // Token temizleme
+    suspend fun clearToken() {
+        context.dataStore.edit { preferences ->
+            preferences.remove(TOKEN_KEY)
+        }
+    }
+
     // RefreshToken okuma
     fun getRefreshToken(): Flow<String?> = context.dataStore.data.map { preferences ->
         preferences[REFRESH_TOKEN_KEY]
@@ -45,6 +54,25 @@ class PreferencesManager(private val context: Context) {
         context.dataStore.edit { preferences ->
             preferences[REFRESH_TOKEN_KEY] = refreshToken
         }
+    }
+
+    // ✅ YENİ: Refresh token temizleme
+    suspend fun clearRefreshToken() {
+        context.dataStore.edit { preferences ->
+            preferences.remove(REFRESH_TOKEN_KEY)
+        }
+    }
+
+    // Remember Me kaydetme
+    suspend fun saveRememberMe(rememberMe: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[REMEMBER_ME_KEY] = rememberMe
+        }
+    }
+
+    // Remember Me okuma
+    fun getRememberMe(): Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[REMEMBER_ME_KEY] ?: false
     }
 
     // Kullanıcı bilgilerini kaydetme

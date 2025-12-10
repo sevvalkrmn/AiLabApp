@@ -84,51 +84,26 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
 
+            android.util.Log.d("HomeViewModel", "🔵 loadUserData() başladı")
+
             when (val result = authRepository.getProfile()) {
                 is NetworkResult.Success -> {
+                    android.util.Log.d("HomeViewModel", "✅ Profile loaded successfully")
                     result.data?.let { profile ->
                         val firstName = profile.fullName.split(" ").firstOrNull() ?: "Kullanıcı"
-
                         _uiState.value = _uiState.value.copy(
                             user = profile,
                             userName = firstName,
                             isLoading = false
                         )
-
-                        android.util.Log.d("HomeViewModel", """
-                            User loaded: $firstName
-                            Total Score: ${profile.totalScore}
-                            Avatar URL: ${profile.profileImageUrl ?: "Yok"}
-                        """.trimIndent())
                     }
                 }
                 is NetworkResult.Error -> {
-                    android.util.Log.e("HomeViewModel", "Profile error: ${result.message}")
-
-                    if (result.message?.contains("Oturum süresi") == true) {
-                        android.util.Log.d("HomeViewModel", "Token expired, yenileme deneniyor...")
-
-                        when (val refreshResult = authRepository.refreshToken()) {
-                            is NetworkResult.Success -> {
-                                android.util.Log.d("HomeViewModel", "Token yenilendi, profil tekrar yükleniyor...")
-                                loadUserData()
-                            }
-                            is NetworkResult.Error -> {
-                                android.util.Log.e("HomeViewModel", "Token yenileme başarısız: ${refreshResult.message}")
-                                _uiState.value = _uiState.value.copy(
-                                    userName = "Kullanıcı",
-                                    isLoading = false,
-                                    errorMessage = "Lütfen tekrar giriş yapın"
-                                )
-                            }
-                            is NetworkResult.Loading -> {}
-                        }
-                    } else {
-                        _uiState.value = _uiState.value.copy(
-                            userName = "Kullanıcı",
-                            isLoading = false
-                        )
-                    }
+                    android.util.Log.e("HomeViewModel", "❌ Profile error: ${result.message}")
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = result.message
+                    )
                 }
                 is NetworkResult.Loading -> {}
             }
