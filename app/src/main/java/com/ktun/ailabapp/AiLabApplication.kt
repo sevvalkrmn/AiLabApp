@@ -1,4 +1,4 @@
-package com.ktunailab.ailabapp
+package com.ktun.ailabapp
 
 import android.app.Application
 import dagger.hilt.android.HiltAndroidApp

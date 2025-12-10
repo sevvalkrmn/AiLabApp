@@ -1,18 +1,18 @@
-package com.ktunailab.ailabapp.di
+package com.ktun.ailabapp.di
 
 
-import com.ktunailab.ailabapp.data.local.datastore.PreferencesManager
-import com.ktunailab.ailabapp.data.remote.api.AnnouncementApi
-import com.ktunailab.ailabapp.data.remote.api.AuthApi
-import com.ktunailab.ailabapp.data.remote.api.ProjectApi
-import com.ktunailab.ailabapp.data.remote.api.RoomsApi
-import com.ktunailab.ailabapp.data.remote.api.TaskApi
-import com.ktunailab.ailabapp.data.repository.AnnouncementRepository
-import com.ktunailab.ailabapp.data.repository.AuthRepository
-import com.ktunailab.ailabapp.data.repository.LabStatsRepository
-import com.ktunailab.ailabapp.data.repository.LabStatsRepositoryImpl
-import com.ktunailab.ailabapp.data.repository.ProjectRepository
-import com.ktunailab.ailabapp.data.repository.TaskRepository
+import com.ktun.ailabapp.data.local.datastore.PreferencesManager
+import com.ktun.ailabapp.data.remote.api.AnnouncementApi
+import com.ktun.ailabapp.data.remote.api.AuthApi
+import com.ktun.ailabapp.data.remote.api.ProjectApi
+import com.ktun.ailabapp.data.remote.api.RoomsApi
+import com.ktun.ailabapp.data.remote.api.TaskApi
+import com.ktun.ailabapp.data.repository.AnnouncementRepository
+import com.ktun.ailabapp.data.repository.AuthRepository
+import com.ktun.ailabapp.data.repository.LabStatsRepository
+import com.ktun.ailabapp.data.repository.LabStatsRepositoryImpl
+import com.ktun.ailabapp.data.repository.ProjectRepository
+import com.ktun.ailabapp.data.repository.TaskRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

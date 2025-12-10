@@ -8,15 +8,25 @@ plugins {
 }
 
 android {
-    namespace = "com.ktunailab.ailabapp"
+    namespace = "com.ktun.ailabapp"
     compileSdk = 36
 
+    // ✅ Signing Configs
+    signingConfigs {
+        create("release") {
+            storeFile = file("C:/Users/sevval/Desktop/ailab-keystore.jks")
+            storePassword = "AiLab2024#Secure"
+            keyAlias = "ailab-key"
+            keyPassword = "AiLab2024#Secure"
+        }
+    }
+
     defaultConfig {
-        applicationId = "com.ktunailab.ailabapp"
+        applicationId = "com.ktun.ailabapp"
         minSdk = 24
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "BASE_URL", "\"https://api.ailab.org.tr/\"")
@@ -24,12 +34,24 @@ android {
 
     buildTypes {
         release {
+            signingConfig = signingConfigs.getByName("release")  // ✅ Ekle
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
         }
+    }
+
+    defaultConfig {
+        applicationId = "com.ktun.ailabapp"
+        minSdk = 24
+        targetSdk = 36
+        versionCode = 2
+        versionName = "1.1.0"
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "BASE_URL", "\"https://api.ailab.org.tr/\"")
     }
 
     compileOptions {
@@ -67,8 +89,6 @@ android {
             )
         }
     }
-
-
 }
 
 dependencies {

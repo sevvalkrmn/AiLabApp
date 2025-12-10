@@ -1,4 +1,4 @@
-package com.ktunailab.ailabapp.presentation.ui.screens.home
+package com.ktun.ailabapp.presentation.ui.screens.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -23,12 +23,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
-import com.ktunailab.ailabapp.data.remote.dto.response.TaskResponse
-import com.ktunailab.ailabapp.presentation.ui.components.BottomNavigationBar
-import com.ktunailab.ailabapp.presentation.ui.components.DebugButton
-import com.ktunailab.ailabapp.presentation.ui.components.FeedbackDialog
-import com.ktunailab.ailabapp.presentation.ui.screens.announcement.AnnouncementViewModel
-import com.ktunailab.ailabapp.ui.theme.*
+import com.ktun.ailabapp.data.remote.dto.response.TaskResponse
+import com.ktun.ailabapp.presentation.ui.components.BottomNavigationBar
+import com.ktun.ailabapp.presentation.ui.components.DebugButton
+import com.ktun.ailabapp.presentation.ui.components.FeedbackDialog
+import com.ktun.ailabapp.presentation.ui.screens.announcement.AnnouncementViewModel
+import com.ktun.ailabapp.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone

@@ -1,13 +1,13 @@
-package com.ktunailab.ailabapp.presentation.ui.screens.home
+package com.ktun.ailabapp.presentation.ui.screens.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ktunailab.ailabapp.data.remote.dto.response.ProfileResponse
-import com.ktunailab.ailabapp.data.remote.dto.response.TaskResponse
-import com.ktunailab.ailabapp.data.repository.AuthRepository
-import com.ktunailab.ailabapp.data.repository.LabStatsRepository
-import com.ktunailab.ailabapp.data.repository.TaskRepository
-import com.ktunailab.ailabapp.util.NetworkResult
+import com.ktun.ailabapp.data.remote.dto.response.ProfileResponse
+import com.ktun.ailabapp.data.remote.dto.response.TaskResponse
+import com.ktun.ailabapp.data.repository.AuthRepository
+import com.ktun.ailabapp.data.repository.LabStatsRepository
+import com.ktun.ailabapp.data.repository.TaskRepository
+import com.ktun.ailabapp.util.NetworkResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow

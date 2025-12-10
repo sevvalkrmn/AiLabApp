@@ -1,11 +1,11 @@
-package com.ktunailab.ailabapp.presentation.ui.screens.projects
+package com.ktun.ailabapp.presentation.ui.screens.projects
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ktunailab.ailabapp.data.remote.dto.response.MyProjectsResponse
-import com.ktunailab.ailabapp.data.repository.AuthRepository
-import com.ktunailab.ailabapp.data.repository.ProjectRepository
-import com.ktunailab.ailabapp.util.NetworkResult
+import com.ktun.ailabapp.data.remote.dto.response.MyProjectsResponse
+import com.ktun.ailabapp.data.repository.AuthRepository
+import com.ktun.ailabapp.data.repository.ProjectRepository
+import com.ktun.ailabapp.util.NetworkResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

@@ -1,4 +1,4 @@
-package com.ktunailab.ailabapp.presentation.ui.screens.navigation
+package com.ktun.ailabapp.presentation.ui.screens.navigation
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -16,15 +16,15 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.ktunailab.ailabapp.presentation.ui.navigation.Screen
-import com.ktunailab.ailabapp.presentation.ui.screens.announcement.AnnouncementScreen
-import com.ktunailab.ailabapp.presentation.ui.screens.announcement.AnnouncementViewModel
-import com.ktunailab.ailabapp.presentation.ui.screens.home.HomeScreen
-import com.ktunailab.ailabapp.presentation.ui.screens.login.LoginScreen
-import com.ktunailab.ailabapp.presentation.ui.screens.profile.ProfileScreen
-import com.ktunailab.ailabapp.presentation.ui.screens.projects.ProjectDetailScreen
-import com.ktunailab.ailabapp.presentation.ui.screens.projects.ProjectsScreen
-import com.ktunailab.ailabapp.screens.RegisterScreen
+import com.ktun.ailabapp.presentation.ui.navigation.Screen
+import com.ktun.ailabapp.presentation.ui.screens.announcement.AnnouncementScreen
+import com.ktun.ailabapp.presentation.ui.screens.announcement.AnnouncementViewModel
+import com.ktun.ailabapp.presentation.ui.screens.home.HomeScreen
+import com.ktun.ailabapp.presentation.ui.screens.login.LoginScreen
+import com.ktun.ailabapp.presentation.ui.screens.profile.ProfileScreen
+import com.ktun.ailabapp.presentation.ui.screens.projects.ProjectDetailScreen
+import com.ktun.ailabapp.presentation.ui.screens.projects.ProjectsScreen
+import com.ktun.ailabapp.screens.RegisterScreen
 
 @Composable
 fun NavGraph(

@@ -1,11 +1,11 @@
-package com.ktunailab.ailabapp.presentation.ui.screens.announcement
+package com.ktun.ailabapp.presentation.ui.screens.announcement
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ktunailab.ailabapp.data.model.Announcement
-import com.ktunailab.ailabapp.data.model.AnnouncementFilter
-import com.ktunailab.ailabapp.data.model.AnnouncementType
-import com.ktunailab.ailabapp.data.repository.AnnouncementRepository
+import com.ktun.ailabapp.data.model.Announcement
+import com.ktun.ailabapp.data.model.AnnouncementFilter
+import com.ktun.ailabapp.data.model.AnnouncementType
+import com.ktun.ailabapp.data.repository.AnnouncementRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

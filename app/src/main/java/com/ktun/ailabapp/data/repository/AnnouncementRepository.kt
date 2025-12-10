@@ -1,8 +1,8 @@
-package com.ktunailab.ailabapp.data.repository
+package com.ktun.ailabapp.data.repository
 
-import com.ktunailab.ailabapp.data.model.Announcement
-import com.ktunailab.ailabapp.data.remote.api.AnnouncementApi
-import com.ktunailab.ailabapp.data.remote.dto.response.toAnnouncement
+import com.ktun.ailabapp.data.model.Announcement
+import com.ktun.ailabapp.data.remote.api.AnnouncementApi
+import com.ktun.ailabapp.data.remote.dto.response.toAnnouncement
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject

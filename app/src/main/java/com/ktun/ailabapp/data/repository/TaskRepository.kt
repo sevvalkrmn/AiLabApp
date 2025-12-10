@@ -1,9 +1,9 @@
-package com.ktunailab.ailabapp.data.repository
+package com.ktun.ailabapp.data.repository
 
-import com.ktunailab.ailabapp.data.remote.api.TaskApi
-import com.ktunailab.ailabapp.data.remote.dto.request.UpdateTaskStatusRequest
-import com.ktunailab.ailabapp.data.remote.dto.response.TaskResponse
-import com.ktunailab.ailabapp.util.NetworkResult
+import com.ktun.ailabapp.data.remote.api.TaskApi
+import com.ktun.ailabapp.data.remote.dto.request.UpdateTaskStatusRequest
+import com.ktun.ailabapp.data.remote.dto.response.TaskResponse
+import com.ktun.ailabapp.util.NetworkResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject

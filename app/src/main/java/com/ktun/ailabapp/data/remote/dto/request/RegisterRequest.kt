@@ -1,4 +1,4 @@
-package com.ktunailab.ailabapp.data.remote.dto.request
+package com.ktun.ailabapp.data.remote.dto.request
 
 data class RegisterRequest(
     val fullName: String,

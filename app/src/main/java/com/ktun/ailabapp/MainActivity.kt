@@ -1,4 +1,4 @@
-package com.ktunailab.ailabapp
+package com.ktun.ailabapp
 
 import android.os.Bundle
 import android.util.Log
@@ -14,11 +14,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
-import com.ktunailab.ailabapp.data.repository.AuthRepository
-import com.ktunailab.ailabapp.presentation.ui.screens.navigation.NavGraph
-import com.ktunailab.ailabapp.ui.theme.AiLabAppTheme
-import com.ktunailab.ailabapp.data.local.datastore.PreferencesManager
-import com.ktunailab.ailabapp.presentation.ui.navigation.Screen
+import com.ktun.ailabapp.data.repository.AuthRepository
+import com.ktun.ailabapp.presentation.ui.screens.navigation.NavGraph
+import com.ktun.ailabapp.ui.theme.AiLabAppTheme
+import com.ktun.ailabapp.data.local.datastore.PreferencesManager
+import com.ktun.ailabapp.presentation.ui.navigation.Screen
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch

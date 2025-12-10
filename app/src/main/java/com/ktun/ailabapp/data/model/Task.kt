@@ -1,4 +1,4 @@
-package com.ktunailab.ailabapp.data.model
+package com.ktun.ailabapp.data.model
 
 data class Task(
     val id: String,

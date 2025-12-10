@@ -1,7 +1,7 @@
-package com.ktunailab.ailabapp.di
+package com.ktun.ailabapp.di
 
 import android.content.Context
-import com.ktunailab.ailabapp.data.local.datastore.PreferencesManager
+import com.ktun.ailabapp.data.local.datastore.PreferencesManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

@@ -1,4 +1,4 @@
-package com.ktunailab.ailabapp.presentation.ui.screens.profile
+package com.ktun.ailabapp.presentation.ui.screens.profile
 
 import android.net.Uri
 import android.widget.Toast
@@ -30,15 +30,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
-import com.ktunailab.ailabapp.presentation.ui.components.AvatarPickerDialog
-import com.ktunailab.ailabapp.presentation.ui.components.BottomNavigationBar
-import com.ktunailab.ailabapp.presentation.ui.components.DebugButton
-import com.ktunailab.ailabapp.presentation.ui.components.FeedbackDialog
-import com.ktunailab.ailabapp.presentation.ui.components.LogoutDialog
-import com.ktunailab.ailabapp.presentation.ui.screens.announcement.AnnouncementViewModel
-import com.ktunailab.ailabapp.ui.theme.PrimaryBlue
-import com.ktunailab.ailabapp.ui.theme.BackgroundLight
-import com.ktunailab.ailabapp.ui.theme.White
+import com.ktun.ailabapp.presentation.ui.components.AvatarPickerDialog
+import com.ktun.ailabapp.presentation.ui.components.BottomNavigationBar
+import com.ktun.ailabapp.presentation.ui.components.DebugButton
+import com.ktun.ailabapp.presentation.ui.components.FeedbackDialog
+import com.ktun.ailabapp.presentation.ui.components.LogoutDialog
+import com.ktun.ailabapp.presentation.ui.screens.announcement.AnnouncementViewModel
+import com.ktun.ailabapp.ui.theme.PrimaryBlue
+import com.ktun.ailabapp.ui.theme.BackgroundLight
+import com.ktun.ailabapp.ui.theme.White
 
 @Composable
 fun ProfileScreen(

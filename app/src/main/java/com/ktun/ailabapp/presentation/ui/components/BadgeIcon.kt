@@ -1,4 +1,4 @@
-package com.ktunailab.ailabapp.presentation.ui.components
+package com.ktun.ailabapp.presentation.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*

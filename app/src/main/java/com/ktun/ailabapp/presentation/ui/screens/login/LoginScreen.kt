@@ -1,4 +1,4 @@
-package com.ktunailab.ailabapp.presentation.ui.screens.login
+package com.ktun.ailabapp.presentation.ui.screens.login
 
 import android.widget.Toast
 import androidx.compose.ui.platform.LocalContext
@@ -30,19 +30,19 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.ktunailab.ailabapp.R
+import com.ktun.ailabapp.R
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.text.input.ImeAction
-import com.ktunailab.ailabapp.ui.theme.PrimaryBlue
-import com.ktunailab.ailabapp.ui.theme.SecondaryBlue
-import com.ktunailab.ailabapp.ui.theme.BackgroundLight
-import com.ktunailab.ailabapp.ui.theme.TextGray
-import com.ktunailab.ailabapp.ui.theme.BorderGray
-import com.ktunailab.ailabapp.ui.theme.LabelGray
-import com.ktunailab.ailabapp.ui.theme.White
+import com.ktun.ailabapp.ui.theme.PrimaryBlue
+import com.ktun.ailabapp.ui.theme.SecondaryBlue
+import com.ktun.ailabapp.ui.theme.BackgroundLight
+import com.ktun.ailabapp.ui.theme.TextGray
+import com.ktun.ailabapp.ui.theme.BorderGray
+import com.ktun.ailabapp.ui.theme.LabelGray
+import com.ktun.ailabapp.ui.theme.White
 
 // LoginScreen fonksiyonundan ÖNCE tanımla
 private val sfProFontFamily = FontFamily(

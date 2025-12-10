@@ -1,7 +1,7 @@
-package com.ktunailab.ailabapp.data.remote.dto.response
+package com.ktun.ailabapp.data.remote.dto.response
 
 import com.google.gson.annotations.SerializedName
-import com.ktunailab.ailabapp.data.model.*
+import com.ktun.ailabapp.data.model.*
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale

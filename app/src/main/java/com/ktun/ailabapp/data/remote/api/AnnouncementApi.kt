@@ -1,8 +1,8 @@
-package com.ktunailab.ailabapp.data.remote.api
+package com.ktun.ailabapp.data.remote.api
 
-import com.ktunailab.ailabapp.data.remote.dto.request.CreateAnnouncementRequest
-import com.ktunailab.ailabapp.data.remote.dto.response.AnnouncementDetailResponse
-import com.ktunailab.ailabapp.data.remote.dto.response.AnnouncementsResponse
+import com.ktun.ailabapp.data.remote.dto.request.CreateAnnouncementRequest
+import com.ktun.ailabapp.data.remote.dto.response.AnnouncementDetailResponse
+import com.ktun.ailabapp.data.remote.dto.response.AnnouncementsResponse
 import retrofit2.Response
 import retrofit2.http.*
 

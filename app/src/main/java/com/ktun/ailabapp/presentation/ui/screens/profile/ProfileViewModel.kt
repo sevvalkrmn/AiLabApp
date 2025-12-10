@@ -1,4 +1,4 @@
-package com.ktunailab.ailabapp.presentation.ui.screens.profile
+package com.ktun.ailabapp.presentation.ui.screens.profile
 
 import android.app.Application
 import android.content.Context
@@ -6,8 +6,8 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ktun.ailabapp.util.ImageCompressor
-import com.ktunailab.ailabapp.data.repository.AuthRepository
-import com.ktunailab.ailabapp.util.NetworkResult
+import com.ktun.ailabapp.data.repository.AuthRepository
+import com.ktun.ailabapp.util.NetworkResult
 import dagger.hilt.android.internal.Contexts.getApplication
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

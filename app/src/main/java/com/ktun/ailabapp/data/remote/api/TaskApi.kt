@@ -1,10 +1,10 @@
-package com.ktunailab.ailabapp.data.remote.api
+package com.ktun.ailabapp.data.remote.api
 
-import com.ktunailab.ailabapp.data.remote.dto.request.CreateTaskRequest
-import com.ktunailab.ailabapp.data.remote.dto.request.UpdateTaskRequest
-import com.ktunailab.ailabapp.data.remote.dto.request.UpdateTaskStatusRequest
-import com.ktunailab.ailabapp.data.remote.dto.response.PaginatedResponse
-import com.ktunailab.ailabapp.data.remote.dto.response.TaskResponse
+import com.ktun.ailabapp.data.remote.dto.request.CreateTaskRequest
+import com.ktun.ailabapp.data.remote.dto.request.UpdateTaskRequest
+import com.ktun.ailabapp.data.remote.dto.request.UpdateTaskStatusRequest
+import com.ktun.ailabapp.data.remote.dto.response.PaginatedResponse
+import com.ktun.ailabapp.data.remote.dto.response.TaskResponse
 import retrofit2.Response
 import retrofit2.http.*
 
