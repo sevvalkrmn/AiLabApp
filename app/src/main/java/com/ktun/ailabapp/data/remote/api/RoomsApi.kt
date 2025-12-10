@@ -1,8 +1,8 @@
-package com.ktunailab.ailabapp.data.remote.api
+package com.ktun.ailabapp.data.remote.api
 
 import com.ktun.ailabapp.data.remote.dto.response.PersonalLabStatsResponse
-import com.ktunailab.ailabapp.data.remote.dto.response.GlobalLabStatsResponse
-import com.ktunailab.ailabapp.data.remote.dto.response.TeammatesStatsResponse
+import com.ktun.ailabapp.data.remote.dto.response.GlobalLabStatsResponse
+import com.ktun.ailabapp.data.remote.dto.response.TeammatesStatsResponse
 import retrofit2.Response
 import retrofit2.http.GET
 

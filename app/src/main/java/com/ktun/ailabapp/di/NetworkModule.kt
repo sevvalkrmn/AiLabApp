@@ -1,11 +1,11 @@
-package com.ktunailab.ailabapp.di
+package com.ktun.ailabapp.di  // ✅ Değişti
 
-import com.ktunailab.ailabapp.BuildConfig
-import com.ktunailab.ailabapp.data.local.datastore.PreferencesManager
-import com.ktunailab.ailabapp.data.remote.api.AuthApi
-import com.ktunailab.ailabapp.data.remote.api.ProjectApi
-import com.ktunailab.ailabapp.data.remote.api.TaskApi
-import com.ktunailab.ailabapp.data.remote.interceptor.AuthInterceptor
+import com.ktun.ailabapp.BuildConfig  // ✅ Değişti
+import com.ktun.ailabapp.data.local.datastore.PreferencesManager  // ✅ Değişti
+import com.ktun.ailabapp.data.remote.api.AuthApi  // ✅ Değişti
+import com.ktun.ailabapp.data.remote.api.ProjectApi  // ✅ Değişti
+import com.ktun.ailabapp.data.remote.api.TaskApi  // ✅ Değişti
+import com.ktun.ailabapp.data.remote.interceptor.AuthInterceptor  // ✅ Değişti
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -20,8 +20,8 @@ import javax.inject.Singleton
 import android.content.Context
 import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.google.firebase.appdistribution.gradle.ApiService
-import com.ktunailab.ailabapp.data.remote.api.AnnouncementApi
-import com.ktunailab.ailabapp.data.remote.api.RoomsApi
+import com.ktun.ailabapp.data.remote.api.AnnouncementApi  // ✅ Değişti
+import com.ktun.ailabapp.data.remote.api.RoomsApi
 
 @Module
 @InstallIn(SingletonComponent::class)

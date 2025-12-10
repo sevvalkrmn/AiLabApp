@@ -1,7 +1,7 @@
-package com.ktunailab.ailabapp.data.repository
+package com.ktun.ailabapp.data.repository
 
 import com.google.firebase.appdistribution.gradle.ApiService
-import com.ktunailab.ailabapp.data.local.datastore.PreferencesManager
+import com.ktun.ailabapp.data.local.datastore.PreferencesManager
 import javax.inject.Inject
 
 class UserRepository @Inject constructor(

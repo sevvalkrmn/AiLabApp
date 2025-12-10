@@ -1,4 +1,4 @@
-package com.ktunailab.ailabapp.presentation.ui.components
+package com.ktun.ailabapp.presentation.ui.components
 
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -11,8 +11,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.ktunailab.ailabapp.ui.theme.PrimaryBlue
-import com.ktunailab.ailabapp.ui.theme.White
+import com.ktun.ailabapp.ui.theme.PrimaryBlue
+import com.ktun.ailabapp.ui.theme.White
 
 @Composable
 fun BottomNavigationBar(

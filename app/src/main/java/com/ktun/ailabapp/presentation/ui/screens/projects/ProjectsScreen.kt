@@ -1,4 +1,4 @@
-package com.ktunailab.ailabapp.presentation.ui.screens.projects
+package com.ktun.ailabapp.presentation.ui.screens.projects
 
 import android.app.Application
 import android.widget.Toast
@@ -25,14 +25,14 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.ktunailab.ailabapp.data.remote.dto.response.MyProjectsResponse
-import com.ktunailab.ailabapp.presentation.ui.components.BottomNavigationBar
-import com.ktunailab.ailabapp.presentation.ui.components.DebugButton
-import com.ktunailab.ailabapp.presentation.ui.components.FeedbackDialog
-import com.ktunailab.ailabapp.presentation.ui.screens.announcement.AnnouncementViewModel
-import com.ktunailab.ailabapp.ui.theme.BackgroundLight
-import com.ktunailab.ailabapp.ui.theme.PrimaryBlue
-import com.ktunailab.ailabapp.ui.theme.White
+import com.ktun.ailabapp.data.remote.dto.response.MyProjectsResponse
+import com.ktun.ailabapp.presentation.ui.components.BottomNavigationBar
+import com.ktun.ailabapp.presentation.ui.components.DebugButton
+import com.ktun.ailabapp.presentation.ui.components.FeedbackDialog
+import com.ktun.ailabapp.presentation.ui.screens.announcement.AnnouncementViewModel
+import com.ktun.ailabapp.ui.theme.BackgroundLight
+import com.ktun.ailabapp.ui.theme.PrimaryBlue
+import com.ktun.ailabapp.ui.theme.White
 import java.text.SimpleDateFormat
 import java.util.*
 

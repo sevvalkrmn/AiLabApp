@@ -1,4 +1,4 @@
-package com.ktunailab.ailabapp.data.model
+package com.ktun.ailabapp.data.model
 
 import com.google.gson.annotations.SerializedName
 

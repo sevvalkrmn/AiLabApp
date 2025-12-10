@@ -1,4 +1,4 @@
-package com.ktunailab.ailabapp.screens
+package com.ktun.ailabapp.screens
 
 import android.widget.Toast
 import androidx.compose.foundation.Image
@@ -28,11 +28,11 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.ktunailab.ailabapp.ui.theme.TextGray
-import com.ktunailab.ailabapp.ui.theme.BorderGray
-import com.ktunailab.ailabapp.ui.theme.LabelGray
-import com.ktunailab.ailabapp.presentation.ui.screens.register.RegisterViewModel
-import com.ktunailab.ailabapp.R
+import com.ktun.ailabapp.ui.theme.TextGray
+import com.ktun.ailabapp.ui.theme.BorderGray
+import com.ktun.ailabapp.ui.theme.LabelGray
+import com.ktun.ailabapp.presentation.ui.screens.register.RegisterViewModel
+import com.ktun.ailabapp.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

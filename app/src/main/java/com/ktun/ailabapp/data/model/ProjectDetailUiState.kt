@@ -1,7 +1,7 @@
-package com.ktunailab.ailabapp.data.model
+package com.ktun.ailabapp.data.model
 
-import com.ktunailab.ailabapp.data.remote.dto.response.ProjectDetailResponse
-import com.ktunailab.ailabapp.data.remote.dto.response.TaskResponse
+import com.ktun.ailabapp.data.remote.dto.response.ProjectDetailResponse
+import com.ktun.ailabapp.data.remote.dto.response.TaskResponse
 
 data class ProjectDetailUiState(
     val project: ProjectDetailResponse? = null,

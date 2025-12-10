@@ -1,4 +1,4 @@
-package com.ktunailab.ailabapp.presentation.ui.navigation
+package com.ktun.ailabapp.presentation.ui.navigation
 
 sealed class Screen(val route: String) {
     object Login : Screen("login")

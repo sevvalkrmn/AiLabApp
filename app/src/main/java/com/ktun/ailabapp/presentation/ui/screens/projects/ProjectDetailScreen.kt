@@ -1,4 +1,4 @@
-package com.ktunailab.ailabapp.presentation.ui.screens.projects
+package com.ktun.ailabapp.presentation.ui.screens.projects
 
 import android.app.Application
 import androidx.compose.foundation.background
@@ -25,15 +25,15 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.ktunailab.ailabapp.data.remote.dto.response.ProjectDetailResponse
-import com.ktunailab.ailabapp.data.remote.dto.response.ProjectMember
-import com.ktunailab.ailabapp.data.remote.dto.response.TaskResponse
-import com.ktunailab.ailabapp.data.remote.dto.response.TaskStatistics
-import com.ktunailab.ailabapp.presentation.ui.screens.announcement.AnnouncementViewModel
-import com.ktunailab.ailabapp.ui.theme.BackgroundLight
-import com.ktunailab.ailabapp.ui.theme.PrimaryBlue
-import com.ktunailab.ailabapp.ui.theme.White
-import com.ktunailab.ailabapp.presentation.ui.util.formatDate
+import com.ktun.ailabapp.data.remote.dto.response.ProjectDetailResponse
+import com.ktun.ailabapp.data.remote.dto.response.ProjectMember
+import com.ktun.ailabapp.data.remote.dto.response.TaskResponse
+import com.ktun.ailabapp.data.remote.dto.response.TaskStatistics
+import com.ktun.ailabapp.presentation.ui.screens.announcement.AnnouncementViewModel
+import com.ktun.ailabapp.ui.theme.BackgroundLight
+import com.ktun.ailabapp.ui.theme.PrimaryBlue
+import com.ktun.ailabapp.ui.theme.White
+import com.ktun.ailabapp.presentation.ui.util.formatDate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

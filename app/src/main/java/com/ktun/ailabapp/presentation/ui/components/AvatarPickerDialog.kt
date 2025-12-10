@@ -1,4 +1,4 @@
-package com.ktunailab.ailabapp.presentation.ui.components
+package com.ktun.ailabapp.presentation.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -25,8 +25,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
-import com.ktunailab.ailabapp.R  // ✅ DOĞRU R IMPORT'U
-import com.ktunailab.ailabapp.ui.theme.PrimaryBlue
+import com.ktun.ailabapp.R  // ✅ DOĞRU R IMPORT'U
+import com.ktun.ailabapp.ui.theme.PrimaryBlue
 
 @Composable
 fun AvatarPickerDialog(

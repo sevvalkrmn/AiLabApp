@@ -1,4 +1,4 @@
-package com.ktunailab.ailabapp.ui.theme
+package com.ktun.ailabapp.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

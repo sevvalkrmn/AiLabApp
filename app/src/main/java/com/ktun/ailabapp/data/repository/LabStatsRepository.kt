@@ -1,10 +1,10 @@
-package com.ktunailab.ailabapp.data.repository
+package com.ktun.ailabapp.data.repository
 
 import com.ktun.ailabapp.data.remote.dto.response.PersonalLabStatsResponse
-import com.ktunailab.ailabapp.data.remote.api.RoomsApi
-import com.ktunailab.ailabapp.data.remote.dto.response.GlobalLabStatsResponse
-import com.ktunailab.ailabapp.data.remote.dto.response.TeammatesStatsResponse
-import com.ktunailab.ailabapp.util.NetworkResult
+import com.ktun.ailabapp.data.remote.api.RoomsApi
+import com.ktun.ailabapp.data.remote.dto.response.GlobalLabStatsResponse
+import com.ktun.ailabapp.data.remote.dto.response.TeammatesStatsResponse
+import com.ktun.ailabapp.util.NetworkResult
 import javax.inject.Inject
 
 interface LabStatsRepository {
