@@ -29,7 +29,7 @@ class AuthInterceptor(
         android.util.Log.d("AuthInterceptor", "Request URL: ${originalRequest.url}")
         android.util.Log.d("AuthInterceptor", "Is Public: $isPublicEndpoint")
 
-        return if (isPublicEndpoint) {
+        val response = if (isPublicEndpoint) {
             // Public endpoint - token eklemeden devam et
             android.util.Log.d("AuthInterceptor", "Public endpoint - No token added")
             chain.proceed(originalRequest)
@@ -55,5 +55,19 @@ class AuthInterceptor(
 
             chain.proceed(newRequest)
         }
+
+        // ✅ 401 Unauthorized kontrolü
+        if (response.code == 401) {
+            android.util.Log.e("AuthInterceptor", "🔴 401 Unauthorized - Token expired!")
+
+            // ✅ Token'ları temizle
+            runBlocking {
+                preferencesManager.clearAllData()  // ✅ clearRefreshToken() yerine
+            }
+
+            android.util.Log.d("AuthInterceptor", "✅ Tokens cleared - User will be logged out")
+        }
+
+        return response
     }
 }

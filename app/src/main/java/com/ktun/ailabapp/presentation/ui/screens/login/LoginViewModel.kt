@@ -46,16 +46,19 @@ class LoginViewModel @Inject constructor(
 
             val email = _uiState.value.email.trim()
             val password = _uiState.value.password
+            val rememberMe = _uiState.value.rememberMe  // ✅ YENİ
 
             android.util.Log.d("LoginViewModel", """
                 Login Attempt:
                 Email: $email
                 Password Length: ${password.length}
+                Remember Me: $rememberMe
             """.trimIndent())
 
-            when (val result = authRepository.login(email, password)) {
+            // ✅ rememberMe parametresi eklendi
+            when (val result = authRepository.login(email, password, rememberMe)) {
                 is NetworkResult.Success -> {
-                    android.util.Log.d("LoginViewModel", "Login Success!")
+                    android.util.Log.d("LoginViewModel", "Login Success! Remember Me: $rememberMe")
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         isLoggedIn = true,

@@ -15,6 +15,9 @@ import com.ktunailab.ailabapp.data.remote.dto.response.ErrorResponse
 import com.ktunailab.ailabapp.data.remote.dto.response.ProfileResponse
 import com.ktunailab.ailabapp.util.NetworkResult
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -26,9 +29,214 @@ class AuthRepository @Inject constructor(
     private val preferencesManager: PreferencesManager
 ) {
 
+    // ✅ YENİ: Session expired event
+    private val _sessionExpiredEvent = MutableSharedFlow<Unit>(replay = 0)
+    val sessionExpiredEvent: SharedFlow<Unit> = _sessionExpiredEvent.asSharedFlow()
+
     /**
-     * Kullanıcı Kayıt
+     * ✅ GÜNCELLEME: 401 kontrolü ile
      */
+    suspend fun getProfile(): NetworkResult<ProfileResponse> = withContext(Dispatchers.IO) {
+        try {
+            val response = authApi.getProfile()
+
+            when {
+                response.code() == 401 -> {
+                    android.util.Log.e("AuthRepository", "🔴 401 Unauthorized - Session expired")
+
+                    // Token'ları temizle
+                    preferencesManager.clearAllData()
+
+                    // ✅ Event tetikle
+                    _sessionExpiredEvent.emit(Unit)
+
+                    NetworkResult.Error("Oturum süresi doldu")
+                }
+                response.isSuccessful && response.body() != null -> {
+                    NetworkResult.Success(response.body()!!)
+                }
+                else -> {
+                    val errorMessage = when (response.code()) {
+                        404 -> "Profil bulunamadı"
+                        else -> "Profil bilgileri alınamadı"
+                    }
+                    NetworkResult.Error(errorMessage)
+                }
+            }
+        } catch (e: Exception) {
+            NetworkResult.Error(e.message ?: "Bilinmeyen hata")
+        }
+    }
+
+    /**
+     * ✅ GÜNCELLEME: 401 kontrolü ile
+     */
+    suspend fun uploadAndUpdateProfileImage(
+        userId: String,
+        imageUri: Uri
+    ): NetworkResult<ProfileResponse> = withContext(Dispatchers.IO) {
+        try {
+            android.util.Log.d("AuthRepository", "Profil fotoğrafı yükleniyor...")
+
+            val uploadResult = FirebaseStorageHelper.uploadProfileImage(userId, imageUri)
+
+            if (uploadResult.isFailure) {
+                val error = uploadResult.exceptionOrNull()
+                android.util.Log.e("AuthRepository", "Firebase yükleme hatası", error)
+                return@withContext NetworkResult.Error(
+                    error?.message ?: "Fotoğraf yüklenemedi"
+                )
+            }
+
+            val downloadUrl = uploadResult.getOrNull()!!
+            android.util.Log.d("AuthRepository", "Firebase yükleme başarılı: $downloadUrl")
+
+            val request = UpdateProfileImageRequest(profileImageUrl = downloadUrl)
+            val response = authApi.updateProfileImage(request)
+
+            when {
+                response.code() == 401 -> {
+                    android.util.Log.e("AuthRepository", "🔴 401 Unauthorized - Session expired")
+                    preferencesManager.clearAllData()
+                    _sessionExpiredEvent.emit(Unit)
+                    NetworkResult.Error("Oturum süresi doldu")
+                }
+                response.isSuccessful && response.body() != null -> {
+                    val profileResponse = response.body()!!
+                    android.util.Log.d("AuthRepository", "Profile Image Update Success: ${profileResponse.profileImageUrl}")
+                    NetworkResult.Success(profileResponse)
+                }
+                else -> {
+                    val errorBody = response.errorBody()?.string()
+                    android.util.Log.e("AuthRepository", "Profile Image Update Error: Code ${response.code()}, Body: $errorBody")
+                    val errorMessage = when (response.code()) {
+                        400 -> "Geçersiz fotoğraf URL'i"
+                        else -> "Profil fotoğrafı güncellenemedi"
+                    }
+                    NetworkResult.Error(errorMessage)
+                }
+            }
+        } catch (e: java.net.UnknownHostException) {
+            android.util.Log.e("AuthRepository", "UpdateProfileImage: İnternet bağlantısı yok", e)
+            NetworkResult.Error("İnternet bağlantısı yok")
+        } catch (e: java.net.SocketTimeoutException) {
+            android.util.Log.e("AuthRepository", "UpdateProfileImage: Bağlantı zaman aşımı", e)
+            NetworkResult.Error("Bağlantı zaman aşımına uğradı")
+        } catch (e: Exception) {
+            android.util.Log.e("AuthRepository", "UpdateProfileImage: Bilinmeyen hata", e)
+            NetworkResult.Error(e.message ?: "Bilinmeyen bir hata oluştu")
+        }
+    }
+
+    /**
+     * ✅ GÜNCELLEME: 401 kontrolü ile
+     */
+    suspend fun selectDefaultAvatar(
+        avatarUrl: String
+    ): NetworkResult<ProfileResponse> = withContext(Dispatchers.IO) {
+        try {
+            android.util.Log.d("AuthRepository", "Hazır avatar seçiliyor: $avatarUrl")
+
+            val request = UpdateProfileImageRequest(profileImageUrl = avatarUrl)
+            val response = authApi.updateProfileImage(request)
+
+            when {
+                response.code() == 401 -> {
+                    android.util.Log.e("AuthRepository", "🔴 401 Unauthorized - Session expired")
+                    preferencesManager.clearAllData()
+                    _sessionExpiredEvent.emit(Unit)
+                    NetworkResult.Error("Oturum süresi doldu")
+                }
+                response.isSuccessful && response.body() != null -> {
+                    val profileResponse = response.body()!!
+                    android.util.Log.d("AuthRepository", "Default Avatar Selection Success: ${profileResponse.profileImageUrl}")
+                    NetworkResult.Success(profileResponse)
+                }
+                else -> {
+                    val errorBody = response.errorBody()?.string()
+                    android.util.Log.e("AuthRepository", "Default Avatar Selection Error: Code ${response.code()}, Body: $errorBody")
+                    val errorMessage = when (response.code()) {
+                        400 -> "Geçersiz avatar URL'i"
+                        else -> "Avatar seçimi başarısız"
+                    }
+                    NetworkResult.Error(errorMessage)
+                }
+            }
+        } catch (e: java.net.UnknownHostException) {
+            android.util.Log.e("AuthRepository", "SelectDefaultAvatar: İnternet bağlantısı yok", e)
+            NetworkResult.Error("İnternet bağlantısı yok")
+        } catch (e: java.net.SocketTimeoutException) {
+            android.util.Log.e("AuthRepository", "SelectDefaultAvatar: Bağlantı zaman aşımı", e)
+            NetworkResult.Error("Bağlantı zaman aşımına uğradı")
+        } catch (e: Exception) {
+            android.util.Log.e("AuthRepository", "SelectDefaultAvatar: Bilinmeyen hata", e)
+            NetworkResult.Error(e.message ?: "Bilinmeyen bir hata oluştu")
+        }
+    }
+
+    /**
+     * ✅ GÜNCELLEME: 401 kontrolü ile
+     */
+    suspend fun getDefaultAvatars(): NetworkResult<List<String>> = withContext(Dispatchers.IO) {
+        try {
+            android.util.Log.d("AuthRepository", "Varsayılan avatarlar çekiliyor...")
+
+            val response = authApi.getDefaultAvatars()
+
+            when {
+                response.code() == 401 -> {
+                    android.util.Log.e("AuthRepository", "🔴 401 Unauthorized - Session expired")
+                    preferencesManager.clearAllData()
+                    _sessionExpiredEvent.emit(Unit)
+                    NetworkResult.Error("Oturum süresi doldu")
+                }
+                response.isSuccessful && response.body() != null -> {
+                    val avatarUrls = response.body()!!.avatarUrls
+                    android.util.Log.d("AuthRepository", "Default Avatars Success: Count ${avatarUrls.size}")
+                    NetworkResult.Success(avatarUrls)
+                }
+                else -> {
+                    val errorBody = response.errorBody()?.string()
+                    android.util.Log.e("AuthRepository", "Get Default Avatars Error: Code ${response.code()}, Body: $errorBody")
+                    NetworkResult.Error("Avatarlar yüklenemedi")
+                }
+            }
+        } catch (e: java.net.UnknownHostException) {
+            android.util.Log.e("AuthRepository", "GetDefaultAvatars: İnternet bağlantısı yok", e)
+            NetworkResult.Error("İnternet bağlantısı yok")
+        } catch (e: java.net.SocketTimeoutException) {
+            android.util.Log.e("AuthRepository", "GetDefaultAvatars: Bağlantı zaman aşımı", e)
+            NetworkResult.Error("Bağlantı zaman aşımına uğradı")
+        } catch (e: Exception) {
+            android.util.Log.e("AuthRepository", "GetDefaultAvatars: Bilinmeyen hata", e)
+            NetworkResult.Error(e.message ?: "Bilinmeyen bir hata oluştu")
+        }
+    }
+
+    suspend fun getLeaderboard(): NetworkResult<List<LeaderboardUserResponse>> {
+        return try {
+            val response = authApi.getLeaderboard()
+
+            when {
+                response.code() == 401 -> {
+                    android.util.Log.e("AuthRepository", "🔴 401 Unauthorized - Session expired")
+                    preferencesManager.clearAllData()
+                    _sessionExpiredEvent.emit(Unit)
+                    NetworkResult.Error("Oturum süresi doldu")
+                }
+                response.isSuccessful && response.body() != null -> {
+                    NetworkResult.Success(response.body()!!)
+                }
+                else -> {
+                    NetworkResult.Error(message = response.message() ?: "Bilinmeyen hata")
+                }
+            }
+        } catch (e: Exception) {
+            NetworkResult.Error(message = e.localizedMessage ?: "Bağlantı hatası")
+        }
+    }
+
+    // ✅ Diğer fonksiyonlar aynı kalacak...
     suspend fun register(
         fullName: String,
         username: String,
@@ -82,12 +290,10 @@ class AuthRepository @Inject constructor(
         }
     }
 
-    /**
-     * Kullanıcı Girişi
-     */
     suspend fun login(
         email: String,
-        password: String
+        password: String,
+        rememberMe: Boolean
     ): NetworkResult<AuthResponse> = withContext(Dispatchers.IO) {
         try {
             val request = LoginRequest(
@@ -100,14 +306,28 @@ class AuthRepository @Inject constructor(
             if (response.isSuccessful && response.body() != null) {
                 val authResponse = response.body()!!
 
+                android.util.Log.d("AuthRepository", """
+                ✅ Login Success:
+                - RememberMe: $rememberMe
+                - Token received: ${authResponse.token != null}
+                - RefreshToken received: ${authResponse.refreshToken != null}
+            """.trimIndent())
+
+                // ✅ RememberMe durumunu kaydet
+                preferencesManager.saveRememberMe(rememberMe)
+
+                // ✅ Token'ları kaydet (rememberMe durumuna bakılmaksızın)
                 authResponse.token?.let { token ->
                     preferencesManager.saveToken(token)
+                    android.util.Log.d("AuthRepository", "Token saved: ${token.take(20)}...")
                 }
 
                 authResponse.refreshToken?.let { refreshToken ->
                     preferencesManager.saveRefreshToken(refreshToken)
+                    android.util.Log.d("AuthRepository", "RefreshToken saved")
                 }
 
+                // User data kaydet
                 preferencesManager.saveUserData(
                     userId = authResponse.user.id,
                     email = authResponse.user.email,
@@ -130,31 +350,6 @@ class AuthRepository @Inject constructor(
         }
     }
 
-    /**
-     * Kullanıcı Profil Bilgilerini Getir
-     */
-    suspend fun getProfile(): NetworkResult<ProfileResponse> = withContext(Dispatchers.IO) {
-        try {
-            val response = authApi.getProfile()
-
-            if (response.isSuccessful && response.body() != null) {
-                NetworkResult.Success(response.body()!!)
-            } else {
-                val errorMessage = when (response.code()) {
-                    401 -> "Oturum süresi dolmuş"
-                    404 -> "Profil bulunamadı"
-                    else -> "Profil bilgileri alınamadı"
-                }
-                NetworkResult.Error(errorMessage)
-            }
-        } catch (e: Exception) {
-            NetworkResult.Error(e.message ?: "Bilinmeyen hata")
-        }
-    }
-
-    /**
-     * Çıkış Yap
-     */
     suspend fun logout() {
         try {
             authApi.logout()
@@ -165,9 +360,6 @@ class AuthRepository @Inject constructor(
         }
     }
 
-    /**
-     * Token Yenile
-     */
     suspend fun refreshToken(): NetworkResult<AuthResponse> = withContext(Dispatchers.IO) {
         try {
             val refreshToken = preferencesManager.getRefreshToken().first()
@@ -198,175 +390,4 @@ class AuthRepository @Inject constructor(
             NetworkResult.Error("Token yenilenemedi")
         }
     }
-
-    /**
-     * ✅ YENİ: Profil Fotoğrafını Güncelle (Firebase + Backend)
-     */
-    suspend fun uploadAndUpdateProfileImage(
-        userId: String,
-        imageUri: Uri
-    ): NetworkResult<ProfileResponse> = withContext(Dispatchers.IO) {
-        try {
-            android.util.Log.d("AuthRepository", "Profil fotoğrafı yükleniyor...")
-
-            val uploadResult = FirebaseStorageHelper.uploadProfileImage(userId, imageUri)
-
-            if (uploadResult.isFailure) {
-                val error = uploadResult.exceptionOrNull()
-                android.util.Log.e("AuthRepository", "Firebase yükleme hatası", error)
-                return@withContext NetworkResult.Error(
-                    error?.message ?: "Fotoğraf yüklenemedi"
-                )
-            }
-
-            val downloadUrl = uploadResult.getOrNull()!!
-            android.util.Log.d("AuthRepository", "Firebase yükleme başarılı: $downloadUrl")
-
-            val request = UpdateProfileImageRequest(profileImageUrl = downloadUrl)
-            val response = authApi.updateProfileImage(request)
-
-            if (response.isSuccessful && response.body() != null) {
-                val profileResponse = response.body()!!
-
-                android.util.Log.d("AuthRepository", """
-                    Profile Image Update Success:
-                    New Image URL: ${profileResponse.profileImageUrl}
-                """.trimIndent())
-
-                NetworkResult.Success(profileResponse)
-            } else {
-                val errorBody = response.errorBody()?.string()
-
-                android.util.Log.e("AuthRepository", """
-                    Profile Image Update Error:
-                    Code: ${response.code()}
-                    Error Body: $errorBody
-                """.trimIndent())
-
-                val errorMessage = when (response.code()) {
-                    400 -> "Geçersiz fotoğraf URL'i"
-                    401 -> "Oturum süresi dolmuş. Lütfen tekrar giriş yapın."
-                    else -> "Profil fotoğrafı güncellenemedi"
-                }
-                NetworkResult.Error(errorMessage)
-            }
-        } catch (e: java.net.UnknownHostException) {
-            android.util.Log.e("AuthRepository", "UpdateProfileImage: İnternet bağlantısı yok", e)
-            NetworkResult.Error("İnternet bağlantısı yok")
-        } catch (e: java.net.SocketTimeoutException) {
-            android.util.Log.e("AuthRepository", "UpdateProfileImage: Bağlantı zaman aşımı", e)
-            NetworkResult.Error("Bağlantı zaman aşımına uğradı")
-        } catch (e: Exception) {
-            android.util.Log.e("AuthRepository", "UpdateProfileImage: Bilinmeyen hata", e)
-            NetworkResult.Error(e.message ?: "Bilinmeyen bir hata oluştu")
-        }
-    }
-
-    /**
-     * ✅ YENİ: Hazır Avatar Seç
-     */
-    suspend fun selectDefaultAvatar(
-        avatarUrl: String
-    ): NetworkResult<ProfileResponse> = withContext(Dispatchers.IO) {
-        try {
-            android.util.Log.d("AuthRepository", "Hazır avatar seçiliyor: $avatarUrl")
-
-            val request = UpdateProfileImageRequest(profileImageUrl = avatarUrl)
-            val response = authApi.updateProfileImage(request)
-
-            if (response.isSuccessful && response.body() != null) {
-                val profileResponse = response.body()!!
-
-                android.util.Log.d("AuthRepository", """
-                    Default Avatar Selection Success:
-                    New Avatar URL: ${profileResponse.profileImageUrl}
-                """.trimIndent())
-
-                NetworkResult.Success(profileResponse)
-            } else {
-                val errorBody = response.errorBody()?.string()
-
-                android.util.Log.e("AuthRepository", """
-                    Default Avatar Selection Error:
-                    Code: ${response.code()}
-                    Error Body: $errorBody
-                """.trimIndent())
-
-                val errorMessage = when (response.code()) {
-                    400 -> "Geçersiz avatar URL'i"
-                    401 -> "Oturum süresi dolmuş. Lütfen tekrar giriş yapın."
-                    else -> "Avatar seçimi başarısız"
-                }
-                NetworkResult.Error(errorMessage)
-            }
-        } catch (e: java.net.UnknownHostException) {
-            android.util.Log.e("AuthRepository", "SelectDefaultAvatar: İnternet bağlantısı yok", e)
-            NetworkResult.Error("İnternet bağlantısı yok")
-        } catch (e: java.net.SocketTimeoutException) {
-            android.util.Log.e("AuthRepository", "SelectDefaultAvatar: Bağlantı zaman aşımı", e)
-            NetworkResult.Error("Bağlantı zaman aşımına uğradı")
-        } catch (e: Exception) {
-            android.util.Log.e("AuthRepository", "SelectDefaultAvatar: Bilinmeyen hata", e)
-            NetworkResult.Error(e.message ?: "Bilinmeyen bir hata oluştu")
-        }
-    }
-
-    /**
-     * ✅ YENİ: Varsayılan Avatarları Getir
-     */
-    suspend fun getDefaultAvatars(): NetworkResult<List<String>> = withContext(Dispatchers.IO) {
-        try {
-            android.util.Log.d("AuthRepository", "Varsayılan avatarlar çekiliyor...")
-
-            val response = authApi.getDefaultAvatars()
-
-            if (response.isSuccessful && response.body() != null) {
-                val avatarUrls = response.body()!!.avatarUrls
-
-                android.util.Log.d("AuthRepository", """
-                    Default Avatars Success:
-                    Count: ${avatarUrls.size}
-                """.trimIndent())
-
-                NetworkResult.Success(avatarUrls)
-            } else {
-                val errorBody = response.errorBody()?.string()
-
-                android.util.Log.e("AuthRepository", """
-                    Get Default Avatars Error:
-                    Code: ${response.code()}
-                    Error Body: $errorBody
-                """.trimIndent())
-
-                val errorMessage = when (response.code()) {
-                    401 -> "Oturum süresi dolmuş. Lütfen tekrar giriş yapın."
-                    else -> "Avatarlar yüklenemedi"
-                }
-                NetworkResult.Error(errorMessage)
-            }
-        } catch (e: java.net.UnknownHostException) {
-            android.util.Log.e("AuthRepository", "GetDefaultAvatars: İnternet bağlantısı yok", e)
-            NetworkResult.Error("İnternet bağlantısı yok")
-        } catch (e: java.net.SocketTimeoutException) {
-            android.util.Log.e("AuthRepository", "GetDefaultAvatars: Bağlantı zaman aşımı", e)
-            NetworkResult.Error("Bağlantı zaman aşımına uğradı")
-        } catch (e: Exception) {
-            android.util.Log.e("AuthRepository", "GetDefaultAvatars: Bilinmeyen hata", e)
-            NetworkResult.Error(e.message ?: "Bilinmeyen bir hata oluştu")
-        }
-    }
-
-    suspend fun getLeaderboard(): NetworkResult<List<LeaderboardUserResponse>> {
-        return try {
-            val response = authApi.getLeaderboard()
-            if (response.isSuccessful && response.body() != null) {
-                NetworkResult.Success(response.body()!!)
-            } else {
-                NetworkResult.Error(message = response.message() ?: "Bilinmeyen hata")
-            }
-        } catch (e: Exception) {
-            NetworkResult.Error(message = e.localizedMessage ?: "Bağlantı hatası")
-        }
-    }
-
 }

@@ -12,13 +12,16 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
+import com.ktunailab.ailabapp.data.repository.AuthRepository
 import com.ktunailab.ailabapp.presentation.ui.screens.navigation.NavGraph
 import com.ktunailab.ailabapp.ui.theme.AiLabAppTheme
 import com.ktunailab.ailabapp.data.local.datastore.PreferencesManager
 import com.ktunailab.ailabapp.presentation.ui.navigation.Screen
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -27,8 +30,28 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var preferencesManager: PreferencesManager
 
+    @Inject
+    lateinit var authRepository: AuthRepository
+
+    private var isHandlingSessionExpired = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        lifecycleScope.launch {
+            authRepository.sessionExpiredEvent.collect {
+                if (isHandlingSessionExpired) {
+                    Log.d("MainActivity", "⏭️ Already handling session expired, skipping")
+                    return@collect
+                }
+
+                isHandlingSessionExpired = true
+                Log.e("MainActivity", "🔴 Session expired event received - Restarting app")
+
+                preferencesManager.clearAllData()
+                recreate()
+            }
+        }
 
         setContent {
             AiLabAppTheme {
@@ -38,30 +61,33 @@ class MainActivity : ComponentActivity() {
                 ) {
                     val navController = rememberNavController()
                     var startDestination by remember { mutableStateOf<String?>(null) }
-                    var isLoading by remember { mutableStateOf(true) }
 
                     LaunchedEffect(Unit) {
-                        Log.d("AILAB_DEBUG", "LaunchedEffect başlıyor...")
+                        Log.d("AILAB_DEBUG", "=== APP STARTING ===")
+
+                        val rememberMe = preferencesManager.getRememberMe().first()
                         val token = preferencesManager.getToken().first()
-                        Log.d("AILAB_DEBUG", "Token alındı: $token")
-                        startDestination = if (token.isNullOrEmpty()) {
-                            Screen.Login.route
-                        } else {
+
+                        Log.d("AILAB_DEBUG", """
+                            RememberMe: $rememberMe
+                            Token exists: ${!token.isNullOrEmpty()}
+                        """.trimIndent())
+
+                        startDestination = if (!token.isNullOrEmpty()) {
+                            Log.d("AILAB_DEBUG", "Token found - Going to HOME")
                             Screen.Home.route
+                        } else {
+                            Log.d("AILAB_DEBUG", "No token - Going to LOGIN")
+                            Screen.Login.route
                         }
-                        isLoading = false
-                        Log.d("AILAB_DEBUG", "startDestination ayarlandı: $startDestination")
                     }
 
                     if (startDestination != null) {
-                        // Hedef rota belliyse NavGraph'ı göster
-                        Log.d("AILAB_DEBUG", "NavGraph çiziliyor. Rota: $startDestination")
                         NavGraph(
                             navController = navController,
                             startDestination = startDestination!!
                         )
                     } else {
-                        // Hedef rota henüz belirlenmediyse yüklenme ekranını göster
                         Box(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
@@ -70,6 +96,25 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    // ✅ GÜNCELLEME: onStop() kullan (uygulama arka plana gidince)
+    override fun onStop() {
+        super.onStop()
+
+        lifecycleScope.launch {
+            val rememberMe = preferencesManager.getRememberMe().first()
+
+            Log.d("MainActivity", "📱 App going to background - RememberMe: $rememberMe")
+
+            if (!rememberMe) {
+                Log.d("MainActivity", "🧹 RememberMe is FALSE - Clearing tokens")
+                preferencesManager.clearToken()
+                preferencesManager.clearRefreshToken()
+            } else {
+                Log.d("MainActivity", "💾 RememberMe is TRUE - Tokens preserved")
             }
         }
     }
