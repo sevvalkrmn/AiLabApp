@@ -9,9 +9,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,7 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.ktun.ailabapp.data.model.User
-
+import com.ktun.ailabapp.presentation.ui.screens.admin.users.score.AdjustScoreDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -35,6 +32,9 @@ fun UserDetailBottomSheet(
     onSendAnnouncement: (String, String) -> Unit,
     onManageRoles: (String) -> Unit
 ) {
+    // ✅ STATE TANIMLA
+    var showAdjustScoreDialog by remember { mutableStateOf(false) }
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
@@ -61,16 +61,16 @@ fun UserDetailBottomSheet(
             ProjectsSection(user = user)
             Spacer(modifier = Modifier.height(16.dp))
 
-            // ✅ onSendAnnouncement callback'i aktar
             ActionButtonsSection(
                 onSendAnnouncement = {
-                    onSendAnnouncement(user.id, user.fullName) // ✅ DEĞİŞTİR
+                    onSendAnnouncement(user.id, user.fullName)
                 },
-
                 onSendNotification = {
-                    onManageRoles(user.id) // ✅ DEĞİŞTİR
+                    onManageRoles(user.id)
                 },
-                onViewProfile = { /* TODO */ },
+                onViewProfile = {
+                    showAdjustScoreDialog = true // ✅ Dialog aç
+                },
                 onEditPhoto = onEditClick,
                 onViewActivity = { /* TODO */ },
                 onChangeRFID = { /* TODO */ },
@@ -81,26 +81,16 @@ fun UserDetailBottomSheet(
             Spacer(modifier = Modifier.height(32.dp))
         }
     }
-}
 
-@Composable
-private fun UserDetailHeader(
-    user: User,
-    onEditClick: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    // ✅ Sadece kullanıcı ismi - icon'lar kaldırıldı
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 16.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = user.fullName,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFF1A237E)
+    // ✅ Dialog
+    if (showAdjustScoreDialog) {
+        AdjustScoreDialog(
+            userId = user.id,
+            userName = user.fullName,
+            currentScore = user.points ?: 0,
+            onDismiss = {
+                showAdjustScoreDialog = false
+            }
         )
     }
 }
@@ -204,9 +194,8 @@ private fun RolesSection(user: User) {
                 color = Color.Gray
             )
         } else {
-            // ✅ Rolleri virgülle ayrılmış şekilde göster
             Text(
-                text = user.roles.joinToString(", "), // "Captain, Member"
+                text = user.roles.joinToString(", "),
                 fontSize = 12.sp,
                 color = Color.Gray
             )
@@ -244,19 +233,18 @@ private fun ProjectsSection(user: User) {
                         modifier = Modifier.weight(1f)
                     )
 
-                    // ✅ Rol badge'i
                     project.role?.let { role ->
                         Surface(
                             shape = RoundedCornerShape(12.dp),
                             color = if (role.equals("Captain", ignoreCase = true)) {
-                                Color(0xFFFFD700).copy(alpha = 0.2f) // Altın (açık)
+                                Color(0xFFFFD700).copy(alpha = 0.2f)
                             } else {
-                                Color(0xFFE0E0E0) // Gri
+                                Color(0xFFE0E0E0)
                             },
                             border = BorderStroke(
                                 width = 1.dp,
                                 color = if (role.equals("Captain", ignoreCase = true)) {
-                                    Color(0xFFFFD700) // Altın
+                                    Color(0xFFFFD700)
                                 } else {
                                     Color.Gray.copy(alpha = 0.5f)
                                 }
@@ -267,7 +255,7 @@ private fun ProjectsSection(user: User) {
                                 text = role,
                                 fontSize = 10.sp,
                                 color = if (role.equals("Captain", ignoreCase = true)) {
-                                    Color(0xFFB8860B) // Koyu altın
+                                    Color(0xFFB8860B)
                                 } else {
                                     Color.Gray
                                 },
@@ -360,13 +348,13 @@ private fun ActionButtonsSection(
                 text = "Deactive Duruma Getir",
                 onClick = onDeactivate,
                 modifier = Modifier.weight(1f),
-                color = Color(0xFFFF9800) // Turuncu
+                color = Color(0xFFFF9800)
             )
             ActionButton(
                 text = "Sistemden Sil",
                 onClick = onDeleteAccount,
                 modifier = Modifier.weight(1f),
-                color = Color(0xFFD32F2F) // Kırmızı
+                color = Color(0xFFD32F2F)
             )
         }
     }
