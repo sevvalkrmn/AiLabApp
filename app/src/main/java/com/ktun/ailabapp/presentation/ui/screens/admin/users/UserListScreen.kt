@@ -34,6 +34,7 @@ fun UsersListScreen(
     onNavigateBack: () -> Unit,
     onNavigateToSendAnnouncement: (String, String) -> Unit,
     onNavigateToManageRoles: (String) -> Unit,
+    onNavigateToTaskHistory: (String, String) -> Unit,
     viewModel: UsersListViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -51,6 +52,9 @@ fun UsersListScreen(
                 }
                 is AdminNavigationEvent.ToManageRoles -> {
                     onNavigateToManageRoles(event.userId)
+                }
+                is AdminNavigationEvent.ToTaskHistory -> { // ✅ EKLE
+                    onNavigateToTaskHistory(event.userId, event.userName)
                 }
             }
         }
@@ -212,6 +216,11 @@ fun UsersListScreen(
                 showBottomSheet = false
                 // ✅ selectedUser'ı null YAPMA - refresh için gerekli
                 // selectedUser = null // ← BUNU KALDIRDIM
+            },
+            // 👇 YENİ EKLENEN KISIM BURASI 👇
+            onViewTaskHistory = { userId, userName ->
+                viewModel.onTaskHistoryClick(userId, userName)
+                showBottomSheet = false
             }
         )
     }

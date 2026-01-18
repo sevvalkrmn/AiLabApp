@@ -19,6 +19,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.ktun.ailabapp.data.model.User
 import com.ktun.ailabapp.presentation.ui.screens.admin.users.score.AdjustScoreDialog
@@ -30,7 +31,8 @@ fun UserDetailBottomSheet(
     onDismiss: () -> Unit,
     onEditClick: () -> Unit,
     onSendAnnouncement: (String, String) -> Unit,
-    onManageRoles: (String) -> Unit
+    onManageRoles: (String) -> Unit,
+    onViewTaskHistory: (String, String) -> Unit
 ) {
     // ✅ STATE TANIMLA
     var showAdjustScoreDialog by remember { mutableStateOf(false) }
@@ -71,8 +73,11 @@ fun UserDetailBottomSheet(
                 onViewProfile = {
                     showAdjustScoreDialog = true // ✅ Dialog aç
                 },
+                onViewActivity = {
+                    onViewTaskHistory(user.id, user.fullName)
+                    onDismiss()
+                },
                 onEditPhoto = onEditClick,
-                onViewActivity = { /* TODO */ },
                 onChangeRFID = { /* TODO */ },
                 onDeactivate = { /* TODO */ },
                 onDeleteAccount = { /* TODO */ }

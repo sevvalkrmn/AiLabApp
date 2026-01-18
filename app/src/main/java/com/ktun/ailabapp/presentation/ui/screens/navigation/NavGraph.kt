@@ -24,6 +24,7 @@ import com.ktun.ailabapp.screens.RegisterScreen
 import com.ktun.ailabapp.presentation.ui.screens.admin.users.UsersListScreen
 import com.ktun.ailabapp.presentation.ui.screens.admin.users.personalAnnouncement.SendAnnouncementScreen
 import com.ktun.ailabapp.presentation.ui.screens.admin.users.roles.ManageRolesScreen
+import com.ktun.ailabapp.presentation.ui.screens.admin.users.tasks.TaskHistoryScreen
 
 @Composable
 fun NavGraph(
@@ -179,14 +180,15 @@ fun NavGraph(
 
         composable(Screen.UsersList.route) {
             UsersListScreen(
-                onNavigateBack = {
-                    navController.popBackStack()
-                },
+                onNavigateBack = { navController.popBackStack() },
                 onNavigateToSendAnnouncement = { userId, userName ->
                     navController.navigate(Screen.SendAnnouncement.createRoute(userId, userName))
                 },
-                onNavigateToManageRoles = { userId -> // ✅ Sadece userId
+                onNavigateToManageRoles = { userId ->
                     navController.navigate(Screen.ManageRoles.createRoute(userId))
+                },
+                onNavigateToTaskHistory = { userId, userName ->
+                    navController.navigate(Screen.TaskHistory.createRoute(userId, userName))
                 }
             )
         }
@@ -227,6 +229,23 @@ fun NavGraph(
                 onNavigateBack = {
                     navController.popBackStack()
                 }
+            )
+        }
+
+        composable(
+            route = Screen.TaskHistory.route,
+            arguments = listOf(
+                navArgument("userId") { type = NavType.StringType },
+                navArgument("userName") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val userId = backStackEntry.arguments?.getString("userId") ?: ""
+            val userName = backStackEntry.arguments?.getString("userName") ?: ""
+
+            TaskHistoryScreen(
+                userId = userId,
+                userName = userName,
+                onNavigateBack = { navController.popBackStack() }
             )
         }
     }

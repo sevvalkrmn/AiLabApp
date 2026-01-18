@@ -4,6 +4,7 @@ import com.ktun.ailabapp.data.remote.dto.request.CreateTaskRequest
 import com.ktun.ailabapp.data.remote.dto.request.UpdateTaskRequest
 import com.ktun.ailabapp.data.remote.dto.request.UpdateTaskStatusRequest
 import com.ktun.ailabapp.data.remote.dto.response.PaginatedResponse
+import com.ktun.ailabapp.data.remote.dto.response.TaskHistoryItem
 import com.ktun.ailabapp.data.remote.dto.response.TaskResponse
 import retrofit2.Response
 import retrofit2.http.*
@@ -76,4 +77,9 @@ interface TaskApi {
     suspend fun deleteTask(
         @Path("id") taskId: String
     ): Response<Unit>
+
+    @GET("api/Tasks/user/{userId}/history")
+    suspend fun getUserTaskHistory(
+        @Path("userId") userId: String
+    ): Response<List<TaskHistoryItem>>
 }
