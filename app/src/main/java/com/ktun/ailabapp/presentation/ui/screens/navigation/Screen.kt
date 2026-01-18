@@ -1,3 +1,5 @@
+// presentation/ui/navigation/Screen.kt
+
 package com.ktun.ailabapp.presentation.ui.navigation
 
 sealed class Screen(val route: String) {
@@ -8,6 +10,17 @@ sealed class Screen(val route: String) {
     object ProjectDetail : Screen("project_detail/{projectId}") {
         fun createRoute(projectId: String) = "project_detail/$projectId"
     }
+
+    object ManageRoles : Screen("manage_roles/{userId}") {
+        fun createRoute(userId: String) = "manage_roles/$userId"
+    }
     object Announcements : Screen("announcements")
     object Profile : Screen("profile")
+    object AdminPanel : Screen("admin_panel")
+    object UsersList : Screen("users_list")
+
+    // ✅ YENİ ROUTE
+    object SendAnnouncement : Screen("send_announcement/{userId}/{userName}") {
+        fun createRoute(userId: String, userName: String) = "send_announcement/$userId/$userName"
+    }
 }

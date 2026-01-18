@@ -1,35 +1,22 @@
+// screens/profile/ProfileViewModel.kt
+
 package com.ktun.ailabapp.presentation.ui.screens.profile
 
-import android.app.Application
 import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ktun.ailabapp.util.ImageCompressor
+import com.ktun.ailabapp.data.model.ProfileUiState // ✅ YENİ IMPORT
 import com.ktun.ailabapp.data.repository.AuthRepository
+import com.ktun.ailabapp.util.ImageCompressor
 import com.ktun.ailabapp.util.NetworkResult
-import dagger.hilt.android.internal.Contexts.getApplication
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import com.ktun.ailabapp.util.Logger
 import javax.inject.Inject
-
-data class ProfileUiState(
-    val id: String = "",
-    val fullName: String = "",
-    val email: String = "",
-    val schoolNumber: String = "",
-    val phone: String = "",
-    val profileImageUrl: String? = null, // ✅ Sadece profileImageUrl
-    val totalScore: Int = 0,
-    val roles: List<String> = emptyList(),
-    val isLoading: Boolean = true,
-    val errorMessage: String? = null,
-    val isUploadingImage: Boolean = false,
-    val defaultAvatars: List<String> = emptyList()
-)
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
@@ -51,38 +38,39 @@ class ProfileViewModel @Inject constructor(
             when (val result = authRepository.getProfile()) {
                 is NetworkResult.Success -> {
                     result.data?.let { profile ->
+
+                        // ✅ BÜYÜK/KÜÇÜK HARF DUYARSIZ KONTROL
+                        val isAdminUser = profile.roles.any { role ->
+                            role.equals("admin", ignoreCase = true)
+                        }
+
                         _uiState.value = _uiState.value.copy(
                             id = profile.id,
                             fullName = profile.fullName,
                             email = profile.email,
                             schoolNumber = profile.schoolNumber,
                             phone = profile.phone,
-                            profileImageUrl = profile.profileImageUrl, // ✅ Sadece profileImageUrl
+                            profileImageUrl = profile.profileImageUrl,
                             totalScore = profile.totalScore,
                             roles = profile.roles,
+                            isAdmin = isAdminUser, // ✅ Doğru kontrol
                             isLoading = false,
                             errorMessage = null
                         )
 
-                        android.util.Log.d("ProfileViewModel", "Profile loaded: ${profile.fullName}")
-                    } ?: run {
-                        android.util.Log.e("ProfileViewModel", "Profile data is null")
-                        _uiState.value = _uiState.value.copy(
-                            isLoading = false,
-                            errorMessage = "Profil bilgileri alınamadı"
-                        )
+                        Logger.d("✅ Profile loaded: ${profile.fullName}", "ProfileVM")
+                        Logger.d("  - Roles: ${profile.roles}", "ProfileVM")
+                        Logger.d("  - isAdmin: $isAdminUser", "ProfileVM")
                     }
                 }
                 is NetworkResult.Error -> {
-                    android.util.Log.e("ProfileViewModel", "Profile error: ${result.message}")
+                    Logger.e("❌ Profile error: ${result.message}", tag = "ProfileVM")
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         errorMessage = result.message
                     )
                 }
-                is NetworkResult.Loading -> {
-                    // Loading durumu zaten set edildi
-                }
+                is NetworkResult.Loading -> {}
             }
         }
     }
@@ -91,7 +79,6 @@ class ProfileViewModel @Inject constructor(
         loadUserProfile()
     }
 
-    // ✅ YENİ: Kullanıcının kendi fotoğrafını yükle
     fun uploadAndUpdateProfileImage(context: Context, imageUri: Uri) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(
@@ -99,10 +86,9 @@ class ProfileViewModel @Inject constructor(
                 errorMessage = null
             )
 
-            android.util.Log.d("ProfileViewModel", "Compressing and uploading profile image...")
+            Logger.d("📤 Compressing and uploading profile image...", "ProfileVM")
 
             try {
-                // ✅ Context parametre olarak geldi
                 val compressResult = ImageCompressor.compressToWebP(
                     context = context,
                     imageUri = imageUri
@@ -117,13 +103,12 @@ class ProfileViewModel @Inject constructor(
                 }
 
                 val optimizedUri = compressResult.getOrNull()!!
-                android.util.Log.d("ProfileViewModel", "Image compressed to WebP successfully")
+                Logger.d("✅ Image compressed to WebP successfully", "ProfileVM")
 
-                // Firebase'e yükle
                 val userId = _uiState.value.id
                 when (val result = authRepository.uploadAndUpdateProfileImage(userId, optimizedUri)) {
                     is NetworkResult.Success -> {
-                        android.util.Log.d("ProfileViewModel", "Profile image uploaded successfully")
+                        Logger.d("✅ Profile image uploaded successfully", "ProfileVM")
 
                         result.data?.let { profile ->
                             _uiState.value = _uiState.value.copy(
@@ -136,7 +121,7 @@ class ProfileViewModel @Inject constructor(
                         loadUserProfile()
                     }
                     is NetworkResult.Error -> {
-                        android.util.Log.e("ProfileViewModel", "Profile image upload error: ${result.message}")
+                        Logger.e("❌ Profile image upload error: ${result.message}", tag = "ProfileVM")
                         _uiState.value = _uiState.value.copy(
                             isUploadingImage = false,
                             errorMessage = result.message ?: "Fotoğraf yüklenemedi"
@@ -145,7 +130,7 @@ class ProfileViewModel @Inject constructor(
                     is NetworkResult.Loading -> {}
                 }
             } catch (e: Exception) {
-                android.util.Log.e("ProfileViewModel", "Error processing image", e)
+                Logger.e("❌ Error processing image: ${e.message}", e, "ProfileVM")
                 _uiState.value = _uiState.value.copy(
                     isUploadingImage = false,
                     errorMessage = "Fotoğraf işlenirken hata oluştu"
@@ -154,7 +139,6 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
-    // ✅ YENİ: Hazır avatar seç
     fun selectDefaultAvatar(avatarUrl: String) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(
@@ -162,11 +146,11 @@ class ProfileViewModel @Inject constructor(
                 errorMessage = null
             )
 
-            android.util.Log.d("ProfileViewModel", "Selecting default avatar: $avatarUrl")
+            Logger.d("🖼️ Selecting default avatar: $avatarUrl", "ProfileVM")
 
             when (val result = authRepository.selectDefaultAvatar(avatarUrl)) {
                 is NetworkResult.Success -> {
-                    android.util.Log.d("ProfileViewModel", "Default avatar selected successfully")
+                    Logger.d("✅ Default avatar selected successfully", "ProfileVM")
 
                     result.data?.let { profile ->
                         _uiState.value = _uiState.value.copy(
@@ -176,27 +160,23 @@ class ProfileViewModel @Inject constructor(
                         )
                     }
 
-                    // ✅ EKLE: Profili yeniden yükle
                     loadUserProfile()
                 }
                 is NetworkResult.Error -> {
-                    android.util.Log.e("ProfileViewModel", "Default avatar selection error: ${result.message}")
+                    Logger.e("❌ Default avatar selection error: ${result.message}", tag = "ProfileVM")
                     _uiState.value = _uiState.value.copy(
                         isUploadingImage = false,
                         errorMessage = result.message ?: "Avatar seçimi başarısız"
                     )
                 }
-                is NetworkResult.Loading -> {
-                    // Loading durumu zaten set edildi
-                }
+                is NetworkResult.Loading -> {}
             }
         }
     }
 
-    // ✅ YENİ: Hazır avatarları yükle
     private fun loadDefaultAvatars() {
         viewModelScope.launch {
-            android.util.Log.d("ProfileViewModel", "Loading default avatars...")
+            Logger.d("📥 Loading default avatars...", "ProfileVM")
 
             when (val result = authRepository.getDefaultAvatars()) {
                 is NetworkResult.Success -> {
@@ -204,16 +184,13 @@ class ProfileViewModel @Inject constructor(
                         _uiState.value = _uiState.value.copy(
                             defaultAvatars = avatars
                         )
-                        android.util.Log.d("ProfileViewModel", "Default avatars loaded: ${avatars.size}")
+                        Logger.d("✅ Default avatars loaded: ${avatars.size}", "ProfileVM")
                     }
                 }
                 is NetworkResult.Error -> {
-                    android.util.Log.e("ProfileViewModel", "Error loading default avatars: ${result.message}")
-                    // Hata olsa bile UI'ı bloklama, sadece log'la
+                    Logger.e("❌ Error loading default avatars: ${result.message}", tag = "ProfileVM")
                 }
-                is NetworkResult.Loading -> {
-                    // Loading state
-                }
+                is NetworkResult.Loading -> {}
             }
         }
     }
@@ -223,14 +200,14 @@ class ProfileViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(isLoading = true)
 
             try {
-                android.util.Log.d("ProfileViewModel", "Logout started")
+                Logger.d("🚪 Logout started", "ProfileVM")
                 authRepository.logout()
-                android.util.Log.d("ProfileViewModel", "Logout successful")
+                Logger.d("✅ Logout successful", "ProfileVM")
 
                 _uiState.value = _uiState.value.copy(isLoading = false)
                 onSuccess()
             } catch (e: Exception) {
-                android.util.Log.e("ProfileViewModel", "Logout error", e)
+                Logger.e("❌ Logout error: ${e.message}", e, "ProfileVM")
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     errorMessage = "Çıkış yapılırken hata oluştu"

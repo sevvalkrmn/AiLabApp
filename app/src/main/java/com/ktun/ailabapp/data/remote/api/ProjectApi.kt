@@ -1,3 +1,5 @@
+// data/remote/api/ProjectApi.kt
+
 package com.ktun.ailabapp.data.remote.api
 
 import com.ktun.ailabapp.data.remote.dto.request.AddMemberRequest
@@ -20,6 +22,16 @@ interface ProjectApi {
     suspend fun getMyProjects(
         @Query("role") role: String? = null  // "Captain" veya "Member" filtresi
     ): Response<List<MyProjectsResponse>>
+
+    // ✅ YENİ ENDPOINT - Belirli bir kullanıcının projelerini getir
+    /**
+     * Belirli bir kullanıcının projelerini getir (Admin)
+     * GET /api/projects/user/{userId}
+     */
+    @GET("api/projects/user/{userId}")
+    suspend fun getUserProjects(
+        @Path("userId") userId: String
+    ): Response<List<ProjectDetailResponse>>
 
     /**
      * Belirli bir projenin detaylarını getir

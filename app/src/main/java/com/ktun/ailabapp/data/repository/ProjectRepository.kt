@@ -1,11 +1,13 @@
+// data/repository/ProjectRepository.kt
+
 package com.ktun.ailabapp.data.repository
 
+import com.ktun.ailabapp.data.model.UserProject
 import com.ktun.ailabapp.data.remote.api.ProjectApi
-import com.ktun.ailabapp.data.remote.dto.request.CreateProjectRequest
-import com.ktun.ailabapp.data.remote.dto.request.UpdateProjectRequest
 import com.ktun.ailabapp.data.remote.dto.response.MyProjectsResponse
 import com.ktun.ailabapp.data.remote.dto.response.ProjectDetailResponse
 import com.ktun.ailabapp.data.remote.dto.response.ProjectMember
+import com.ktun.ailabapp.data.remote.dto.response.toUserProject
 import com.ktun.ailabapp.util.NetworkResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -16,224 +18,159 @@ import javax.inject.Singleton
 class ProjectRepository @Inject constructor(
     private val projectApi: ProjectApi
 ) {
-
     /**
-     * Kullanıcının projelerini getir
+     * Kullanıcının kendi projelerini çeker
+     * GET /api/projects/my-projects
      */
-    suspend fun getMyProjects(role: String? = null): NetworkResult<List<MyProjectsResponse>> =
-        withContext(Dispatchers.IO) {
-            try {
-                android.util.Log.d("ProjectRepository", "Projeler çekiliyor... Role: $role")
+    suspend fun getMyProjects(roleFilter: String? = null): NetworkResult<List<MyProjectsResponse>> = withContext(Dispatchers.IO) {
+        try {
+            android.util.Log.d("ProjectRepository", "🔍 Fetching my projects with role filter: $roleFilter")
 
-                val response = projectApi.getMyProjects(role)
+            val response = projectApi.getMyProjects(roleFilter)
 
-                if (response.isSuccessful && response.body() != null) {
+            when {
+                response.code() == 401 -> {
+                    NetworkResult.Error("Oturum süresi doldu")
+                }
+                response.isSuccessful && response.body() != null -> {
                     val projects = response.body()!!
 
-                    android.util.Log.d("ProjectRepository", "Proje sayısı: ${projects.size}")
-
-                    // HER PROJENİN ROLÜNÜ LOGLA
-                    projects.forEachIndexed { index, project ->
-                        android.util.Log.d("ProjectRepository", "Proje $index: ${project.name} - Role: '${project.userRole}'")
-                    }
+                    android.util.Log.d("ProjectRepository", "✅ Loaded ${projects.size} projects")
 
                     NetworkResult.Success(projects)
-                } else {
-                    val errorBody = response.errorBody()?.string()
-
-                    android.util.Log.e("ProjectRepository", """
-                        Projeler Error:
-                        Code: ${response.code()}
-                        Error: $errorBody
-                    """.trimIndent())
-
-                    val errorMessage = when (response.code()) {
-                        401 -> "Oturum süresi dolmuş. Lütfen tekrar giriş yapın."
-                        403 -> "Bu işlem için yetkiniz yok."
-                        404 -> "Proje bulunamadı."
-                        else -> "Projeler yüklenemedi."
-                    }
-                    NetworkResult.Error(errorMessage)
                 }
-            } catch (e: Exception) {
-                android.util.Log.e("ProjectRepository", "Projeler Exception", e)
-                NetworkResult.Error(e.message ?: "Bilinmeyen hata")
+                response.isSuccessful && response.body() == null -> {
+                    android.util.Log.d("ProjectRepository", "⚠️ No projects found")
+                    NetworkResult.Success(emptyList())
+                }
+                else -> {
+                    android.util.Log.e("ProjectRepository", "❌ Error: ${response.code()}")
+                    NetworkResult.Error("Projeler yüklenemedi: ${response.code()}")
+                }
             }
+        } catch (e: Exception) {
+            android.util.Log.e("ProjectRepository", "❌ Exception: ${e.message}", e)
+            NetworkResult.Error(e.message ?: "Bilinmeyen hata")
         }
+    }
 
     /**
-     * Proje detayını getir
+     * Belirli bir kullanıcının projelerini çeker
+     * GET /api/projects/user/{userId}
      */
-    suspend fun getProjectDetail(projectId: String): NetworkResult<ProjectDetailResponse> =
-        withContext(Dispatchers.IO) {
-            try {
-                android.util.Log.d("ProjectRepository", "Proje detayı çekiliyor: $projectId")
+    suspend fun getUserProjects(userId: String): NetworkResult<List<UserProject>> = withContext(Dispatchers.IO) {
+        try {
+            android.util.Log.d("ProjectRepository", "🔍 Fetching projects for userId: $userId")
 
-                val response = projectApi.getProjectDetail(projectId)
+            val response = projectApi.getUserProjects(userId)
 
-                if (response.isSuccessful && response.body() != null) {
+            when {
+                response.code() == 401 -> {
+                    NetworkResult.Error("Oturum süresi doldu")
+                }
+                response.code() == 404 -> {
+                    android.util.Log.d("ProjectRepository", "⚠️ User has no projects (404)")
+                    NetworkResult.Success(emptyList())
+                }
+                response.isSuccessful && response.body() != null -> {
+                    val projects = response.body()!!.map { it.toUserProject(userId) }
+
+                    android.util.Log.d("ProjectRepository", "✅ Loaded ${projects.size} projects")
+
+                    NetworkResult.Success(projects)
+                }
+                response.isSuccessful && response.body() == null -> {
+                    android.util.Log.d("ProjectRepository", "⚠️ User has no projects (empty body)")
+                    NetworkResult.Success(emptyList())
+                }
+                else -> {
+                    android.util.Log.e("ProjectRepository", "❌ Error: ${response.code()}")
+                    NetworkResult.Error("Projeler yüklenemedi: ${response.code()}")
+                }
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("ProjectRepository", "❌ Exception: ${e.message}", e)
+            NetworkResult.Error(e.message ?: "Bilinmeyen hata")
+        }
+    }
+
+    /**
+     * Belirli bir projenin detaylarını getirir
+     * GET /api/projects/{id}
+     */
+    suspend fun getProjectDetail(projectId: String): NetworkResult<ProjectDetailResponse> = withContext(Dispatchers.IO) {
+        try {
+            android.util.Log.d("ProjectRepository", "🔍 Fetching project detail: $projectId")
+
+            val response = projectApi.getProjectDetail(projectId)
+
+            when {
+                response.code() == 401 -> {
+                    NetworkResult.Error("Oturum süresi doldu")
+                }
+                response.code() == 403 -> {
+                    NetworkResult.Error("Bu projeyi görme yetkiniz yok")
+                }
+                response.code() == 404 -> {
+                    NetworkResult.Error("Proje bulunamadı")
+                }
+                response.isSuccessful && response.body() != null -> {
                     val project = response.body()!!
 
-                    android.util.Log.d("ProjectRepository", "Proje: ${project.name}")
+                    android.util.Log.d("ProjectRepository", "✅ Loaded project: ${project.name}")
 
                     NetworkResult.Success(project)
-                } else {
-                    val errorBody = response.errorBody()?.string()
-
-                    android.util.Log.e("ProjectRepository", """
-                        Proje Detay Error:
-                        Code: ${response.code()}
-                        Error: $errorBody
-                    """.trimIndent())
-
-                    val errorMessage = when (response.code()) {
-                        401 -> "Oturum süresi dolmuş."
-                        403 -> "Bu projeyi görüntüleme yetkiniz yok."
-                        404 -> "Proje bulunamadı."
-                        else -> "Proje detayı yüklenemedi."
-                    }
-                    NetworkResult.Error(errorMessage)
                 }
-            } catch (e: Exception) {
-                android.util.Log.e("ProjectRepository", "Proje Detay Exception", e)
-                NetworkResult.Error(e.message ?: "Bilinmeyen hata")
-            }
-        }
-
-    /**
-     * Yeni proje oluştur
-     */
-    suspend fun createProject(
-        name: String,
-        description: String?
-    ): NetworkResult<ProjectDetailResponse> = withContext(Dispatchers.IO) {
-        try {
-            android.util.Log.d("ProjectRepository", "Proje oluşturuluyor: $name")
-
-            val request = CreateProjectRequest(name, description)
-            val response = projectApi.createProject(request)
-
-            if (response.isSuccessful && response.body() != null) {
-                val project = response.body()!!
-
-                android.util.Log.d("ProjectRepository", "Proje oluşturuldu: ${project.id}")
-
-                NetworkResult.Success(project)
-            } else {
-                val errorBody = response.errorBody()?.string()
-
-                android.util.Log.e("ProjectRepository", "Proje oluşturma hatası: $errorBody")
-
-                val errorMessage = when (response.code()) {
-                    400 -> "Geçersiz proje bilgileri."
-                    403 -> "Proje oluşturma yetkiniz yok."
-                    else -> "Proje oluşturulamadı."
+                else -> {
+                    android.util.Log.e("ProjectRepository", "❌ Error: ${response.code()}")
+                    NetworkResult.Error("Proje yüklenemedi: ${response.code()}")
                 }
-                NetworkResult.Error(errorMessage)
             }
         } catch (e: Exception) {
-            android.util.Log.e("ProjectRepository", "Proje oluşturma exception", e)
+            android.util.Log.e("ProjectRepository", "❌ Exception: ${e.message}", e)
             NetworkResult.Error(e.message ?: "Bilinmeyen hata")
         }
     }
 
     /**
-     * Projeyi güncelle
+     * Proje üyelerini listele
+     * GET /api/projects/{id}/members
      */
-    suspend fun updateProject(
-        projectId: String,
-        name: String?,
-        description: String?
-    ): NetworkResult<ProjectDetailResponse> = withContext(Dispatchers.IO) {
+    suspend fun getProjectMembers(projectId: String): NetworkResult<List<ProjectMember>> = withContext(Dispatchers.IO) {
         try {
-            android.util.Log.d("ProjectRepository", "Proje güncelleniyor: $projectId")
+            android.util.Log.d("ProjectRepository", "🔍 Fetching members for project: $projectId")
 
-            val request = UpdateProjectRequest(name, description)
-            val response = projectApi.updateProject(projectId, request)
+            val response = projectApi.getProjectMembers(projectId)
 
-            if (response.isSuccessful && response.body() != null) {
-                val project = response.body()!!
-
-                android.util.Log.d("ProjectRepository", "Proje güncellendi")
-
-                NetworkResult.Success(project)
-            } else {
-                val errorBody = response.errorBody()?.string()
-
-                android.util.Log.e("ProjectRepository", "Proje güncelleme hatası: $errorBody")
-
-                val errorMessage = when (response.code()) {
-                    400 -> "En az bir alan güncellenmelidir."
-                    403 -> "Bu projeyi güncelleme yetkiniz yok."
-                    404 -> "Proje bulunamadı."
-                    else -> "Proje güncellenemedi."
+            when {
+                response.code() == 401 -> {
+                    NetworkResult.Error("Oturum süresi doldu")
                 }
-                NetworkResult.Error(errorMessage)
-            }
-        } catch (e: Exception) {
-            android.util.Log.e("ProjectRepository", "Proje güncelleme exception", e)
-            NetworkResult.Error(e.message ?: "Bilinmeyen hata")
-        }
-    }
-
-    /**
-     * Projeyi sil
-     */
-    suspend fun deleteProject(projectId: String): NetworkResult<Unit> =
-        withContext(Dispatchers.IO) {
-            try {
-                android.util.Log.d("ProjectRepository", "Proje siliniyor: $projectId")
-
-                val response = projectApi.deleteProject(projectId)
-
-                if (response.isSuccessful) {
-                    android.util.Log.d("ProjectRepository", "Proje silindi")
-                    NetworkResult.Success(Unit)
-                } else {
-                    val errorBody = response.errorBody()?.string()
-
-                    android.util.Log.e("ProjectRepository", "Proje silme hatası: $errorBody")
-
-                    val errorMessage = when (response.code()) {
-                        400 -> "Aktif görevleri olan proje silinemez."
-                        403 -> "Proje silme yetkiniz yok."
-                        404 -> "Proje bulunamadı."
-                        else -> "Proje silinemedi."
-                    }
-                    NetworkResult.Error(errorMessage)
+                response.code() == 403 -> {
+                    NetworkResult.Error("Bu projenin üyelerini görme yetkiniz yok")
                 }
-            } catch (e: Exception) {
-                android.util.Log.e("ProjectRepository", "Proje silme exception", e)
-                NetworkResult.Error(e.message ?: "Bilinmeyen hata")
-            }
-        }
-
-    /**
-     * Proje üyelerini getir
-     */
-    suspend fun getProjectMembers(projectId: String): NetworkResult<List<ProjectMember>> =
-        withContext(Dispatchers.IO) {
-            try {
-                android.util.Log.d("ProjectRepository", "Proje üyeleri çekiliyor: $projectId")
-
-                val response = projectApi.getProjectMembers(projectId)
-
-                if (response.isSuccessful && response.body() != null) {
+                response.code() == 404 -> {
+                    NetworkResult.Error("Proje bulunamadı")
+                }
+                response.isSuccessful && response.body() != null -> {
                     val members = response.body()!!
 
-                    android.util.Log.d("ProjectRepository", "Üye sayısı: ${members.size}")
+                    android.util.Log.d("ProjectRepository", "✅ Loaded ${members.size} members")
 
                     NetworkResult.Success(members)
-                } else {
-                    val errorBody = response.errorBody()?.string()
-
-                    android.util.Log.e("ProjectRepository", "Üyeler error: $errorBody")
-
-                    NetworkResult.Error("Üyeler yüklenemedi.")
                 }
-            } catch (e: Exception) {
-                android.util.Log.e("ProjectRepository", "Üyeler exception", e)
-                NetworkResult.Error(e.message ?: "Bilinmeyen hata")
+                response.isSuccessful && response.body() == null -> {
+                    android.util.Log.d("ProjectRepository", "⚠️ No members found")
+                    NetworkResult.Success(emptyList())
+                }
+                else -> {
+                    android.util.Log.e("ProjectRepository", "❌ Error: ${response.code()}")
+                    NetworkResult.Error("Üyeler yüklenemedi: ${response.code()}")
+                }
             }
+        } catch (e: Exception) {
+            android.util.Log.e("ProjectRepository", "❌ Exception: ${e.message}", e)
+            NetworkResult.Error(e.message ?: "Bilinmeyen hata")
         }
+    }
 }

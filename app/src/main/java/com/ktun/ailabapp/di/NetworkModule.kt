@@ -21,7 +21,9 @@ import android.content.Context
 import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.google.firebase.appdistribution.gradle.ApiService
 import com.ktun.ailabapp.data.remote.api.AnnouncementApi  // ✅ Değişti
+import com.ktun.ailabapp.data.remote.api.RoleApi
 import com.ktun.ailabapp.data.remote.api.RoomsApi
+import com.ktun.ailabapp.data.remote.api.UsersApi
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -126,5 +128,17 @@ object NetworkModule {
     @Singleton
     fun provideRoomsApi(retrofit: Retrofit): RoomsApi {
         return retrofit.create(RoomsApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideUsersApi(retrofit: Retrofit): UsersApi {
+        return retrofit.create(UsersApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideRoleApi(retrofit: Retrofit): RoleApi {
+        return retrofit.create(RoleApi::class.java)
     }
 }
