@@ -1,42 +1,24 @@
+// data/remote/dto/response/ProfileResponse.kt
+
 package com.ktun.ailabapp.data.remote.dto.response
 
 import com.google.gson.annotations.SerializedName
 
 data class ProfileResponse(
-    @SerializedName("id")
     val id: String,
-
-    @SerializedName("email")
     val email: String,
-
     @SerializedName("schoolNumber")
     val schoolNumber: String,
-
     @SerializedName("fullName")
     val fullName: String,
-
-    @SerializedName("phone")
     val phone: String,
-
-    @SerializedName("avatarUrl")
-    val avatarUrl: String?,
-
-    // ✅ YENİ: Backend artık profileImageUrl gönderiyor
     @SerializedName("profileImageUrl")
     val profileImageUrl: String?,
-
-    @SerializedName("status")
-    val status: Int,
-
     @SerializedName("totalScore")
     val totalScore: Int,
-
-    @SerializedName("createdAt")
-    val createdAt: String,
-
-    @SerializedName("updatedAt")
-    val updatedAt: String,
-
-    @SerializedName("roles")
-    val roles: List<String>
+    val status: Int? = null,
+    val createdAt: String? = null,
+    val updatedAt: String? = null,
+    @SerializedName("roles") // ✅ YENİ FIELD EKLE
+    val roles: List<String> = emptyList()
 )

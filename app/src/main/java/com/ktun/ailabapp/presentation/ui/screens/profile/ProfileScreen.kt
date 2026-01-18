@@ -4,7 +4,6 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -20,24 +19,21 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
-import com.ktun.ailabapp.presentation.ui.components.AvatarPickerDialog
-import com.ktun.ailabapp.presentation.ui.components.BottomNavigationBar
-import com.ktun.ailabapp.presentation.ui.components.DebugButton
-import com.ktun.ailabapp.presentation.ui.components.FeedbackDialog
-import com.ktun.ailabapp.presentation.ui.components.LogoutDialog
+import com.ktun.ailabapp.presentation.ui.components.*
 import com.ktun.ailabapp.presentation.ui.screens.announcement.AnnouncementViewModel
-import com.ktun.ailabapp.ui.theme.PrimaryBlue
 import com.ktun.ailabapp.ui.theme.BackgroundLight
+import com.ktun.ailabapp.ui.theme.PrimaryBlue
 import com.ktun.ailabapp.ui.theme.White
 
 @Composable
@@ -48,47 +44,44 @@ fun ProfileScreen(
     onNavigateToProjects: () -> Unit = {},
     onNavigateToChat: () -> Unit = {},
     onNavigateToProfile: () -> Unit = {},
+    onNavigateToAdminPanel: () -> Unit = {},
     onLogout: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     val announcementUiState by announcementViewModel.uiState.collectAsState()
 
-    // Ekran boyutlarını al
     val configuration = LocalConfiguration.current
     val screenHeight = configuration.screenHeightDp.dp
     val screenWidth = configuration.screenWidthDp.dp
+
     val unreadCount = remember(announcementUiState.announcements) {
         announcementUiState.announcements.count { !it.isRead }
     }
 
-    // Dialog states
     var showFeedbackDialog by remember { mutableStateOf(false) }
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showAvatarPicker by remember { mutableStateOf(false) }
-    var showPhotoSourceDialog by remember { mutableStateOf(false) } // ✅ YENİ
+    var showPhotoSourceDialog by remember { mutableStateOf(false) }
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
-            viewModel.uploadAndUpdateProfileImage(context, it)  // ✅ context eklendi
+            viewModel.uploadAndUpdateProfileImage(context, it)
             Toast.makeText(context, "Fotoğraf yükleniyor...", Toast.LENGTH_SHORT).show()
         }
     }
 
-    // Feedback Dialog
     if (showFeedbackDialog) {
         FeedbackDialog(
             onDismiss = { showFeedbackDialog = false },
             onSubmit = { feedback ->
-                println("📝 Feedback: $feedback")
                 showFeedbackDialog = false
             }
         )
     }
 
-    // Logout Dialog
     if (showLogoutDialog) {
         LogoutDialog(
             onDismiss = { showLogoutDialog = false },
@@ -103,7 +96,6 @@ fun ProfileScreen(
         )
     }
 
-    // ✅ GÜNCELLENEN Avatar Picker Dialog
     if (showAvatarPicker) {
         AvatarPickerDialog(
             currentAvatarUrl = uiState.profileImageUrl,
@@ -117,7 +109,6 @@ fun ProfileScreen(
         )
     }
 
-    // ✅ YENİ: Fotoğraf kaynağı seçim dialog'u
     if (showPhotoSourceDialog) {
         AlertDialog(
             onDismissRequest = { showPhotoSourceDialog = false },
@@ -157,7 +148,6 @@ fun ProfileScreen(
         )
     }
 
-    // Loading indicator
     if (uiState.isLoading) {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -186,7 +176,6 @@ fun ProfileScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // ÜST KISIM - Koyu mavi header
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -213,7 +202,6 @@ fun ProfileScreen(
                 }
             }
 
-            // İÇERİK ALANI
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -230,11 +218,9 @@ fun ProfileScreen(
                 ) {
                     Spacer(modifier = Modifier.height(screenHeight * 0.03f))
 
-                    // ✅ GÜNCELLENEN Profil Fotoğrafı
                     Box(
                         modifier = Modifier.size(screenWidth * 0.35f)
                     ) {
-                        // Profil fotoğrafı gösterimi
                         if (!uiState.profileImageUrl.isNullOrEmpty()) {
                             AsyncImage(
                                 model = uiState.profileImageUrl,
@@ -246,7 +232,6 @@ fun ProfileScreen(
                                 contentScale = ContentScale.Crop
                             )
                         } else {
-                            // Avatar yoksa placeholder
                             Box(
                                 modifier = Modifier
                                     .size(screenWidth * 0.35f)
@@ -264,7 +249,6 @@ fun ProfileScreen(
                             }
                         }
 
-                        // ✅ YENİ: Yükleme göstergesi
                         if (uiState.isUploadingImage) {
                             Box(
                                 modifier = Modifier
@@ -300,12 +284,9 @@ fun ProfileScreen(
 
                     Spacer(modifier = Modifier.height(screenHeight * 0.03f))
 
-                    // Puan Kartı
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = White
-                        ),
+                        colors = CardDefaults.cardColors(containerColor = White),
                         shape = RoundedCornerShape(screenWidth * 0.04f),
                         elevation = CardDefaults.cardElevation(screenWidth * 0.005f)
                     ) {
@@ -331,11 +312,10 @@ fun ProfileScreen(
 
                     Spacer(modifier = Modifier.height(screenHeight * 0.04f))
 
-                    // Menü Öğeleri
                     ProfileMenuItem(
                         icon = Icons.Default.Person,
                         text = "Profil Fotoğrafını Değiştir",
-                        onClick = { showPhotoSourceDialog = true }, // ✅ GÜNCELLENDI
+                        onClick = { showPhotoSourceDialog = true },
                         screenWidth = screenWidth,
                         screenHeight = screenHeight
                     )
@@ -370,9 +350,21 @@ fun ProfileScreen(
                         screenHeight = screenHeight
                     )
 
+                    // ✅ ADMIN PANEL BUTONU
+                    if (uiState.isAdmin) {
+                        Spacer(modifier = Modifier.height(screenHeight * 0.015f))
+
+                        ProfileMenuItem(
+                            icon = Icons.Default.AdminPanelSettings,
+                            text = "Admin Panele Git",
+                            onClick = onNavigateToAdminPanel,
+                            screenWidth = screenWidth,
+                            screenHeight = screenHeight
+                        )
+                    }
+
                     Spacer(modifier = Modifier.height(screenHeight * 0.04f))
 
-                    // ÇIKIŞ YAP BUTONU
                     Button(
                         onClick = { showLogoutDialog = true },
                         modifier = Modifier
@@ -402,7 +394,6 @@ fun ProfileScreen(
         }
     }
 
-    // ✅ YENİ: Hata mesajı gösterimi
     LaunchedEffect(uiState.errorMessage) {
         uiState.errorMessage?.let { error ->
             Toast.makeText(context, error, Toast.LENGTH_LONG).show()
@@ -416,16 +407,14 @@ fun ProfileMenuItem(
     text: String,
     onClick: () -> Unit,
     isDestructive: Boolean = false,
-    screenWidth: androidx.compose.ui.unit.Dp,
-    screenHeight: androidx.compose.ui.unit.Dp
+    screenWidth: Dp,
+    screenHeight: Dp
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() },
-        colors = CardDefaults.cardColors(
-            containerColor = White
-        ),
+        colors = CardDefaults.cardColors(containerColor = White),
         shape = RoundedCornerShape(screenWidth * 0.03f),
         elevation = CardDefaults.cardElevation(screenWidth * 0.0025f)
     ) {

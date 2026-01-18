@@ -1,6 +1,10 @@
+// data/remote/dto/response/ProjectDetailResponse.kt
+
 package com.ktun.ailabapp.data.remote.dto.response
 
 import com.google.gson.annotations.SerializedName
+import com.ktun.ailabapp.data.model.UserProject
+
 
 // GET /api/projects/my-projects için basit liste
 data class MyProjectsResponse(
@@ -40,7 +44,7 @@ data class ProjectDetailResponse(
     @SerializedName("taskStatistics")
     val taskStatistics: TaskStatistics = TaskStatistics(),
 
-    @SerializedName("captains")  // ✅ YENİ EKLENEN
+    @SerializedName("captains")
     val captains: List<ProjectMember> = emptyList(),
 
     @SerializedName("members")
@@ -77,3 +81,41 @@ data class ProjectMember(
     @SerializedName("role")
     val role: String = "Member"
 )
+
+// ✅ MAPPING FONKSIYONLARI
+
+/**
+ * ProjectDetailResponse → UserProject mapping
+ * Kullanıcının bu projedeki rolünü belirler
+ */
+fun ProjectDetailResponse.toUserProject(userId: String): UserProject {
+    // Kullanıcı captain'lar listesinde mi?
+    val isCaptain = captains.any { it.userId == userId }
+
+    // Kullanıcı members listesinde mi?
+    val isMember = members.any { it.userId == userId }
+
+    val role = when {
+        isCaptain -> "Captain"
+        isMember -> "Member"
+        else -> null
+    }
+
+    return UserProject(
+        id = id,
+        name = name,
+        role = role
+    )
+}
+
+/**
+ * MyProjectsResponse → UserProject mapping
+ * Backend zaten userRole döndürüyor
+ */
+fun MyProjectsResponse.toUserProject(): UserProject {
+    return UserProject(
+        id = id,
+        name = name,
+        role = userRole
+    )
+}

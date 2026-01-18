@@ -1,22 +1,18 @@
+
+
 package com.ktun.ailabapp.presentation.ui.screens.navigation
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.ktun.ailabapp.data.model.User
 import com.ktun.ailabapp.presentation.ui.navigation.Screen
+import com.ktun.ailabapp.presentation.ui.screens.admin.AdminPanelScreen // ✅ IMPORT EKLE
 import com.ktun.ailabapp.presentation.ui.screens.announcement.AnnouncementScreen
 import com.ktun.ailabapp.presentation.ui.screens.announcement.AnnouncementViewModel
 import com.ktun.ailabapp.presentation.ui.screens.home.HomeScreen
@@ -25,6 +21,9 @@ import com.ktun.ailabapp.presentation.ui.screens.profile.ProfileScreen
 import com.ktun.ailabapp.presentation.ui.screens.projects.ProjectDetailScreen
 import com.ktun.ailabapp.presentation.ui.screens.projects.ProjectsScreen
 import com.ktun.ailabapp.screens.RegisterScreen
+import com.ktun.ailabapp.presentation.ui.screens.admin.users.UsersListScreen
+import com.ktun.ailabapp.presentation.ui.screens.admin.users.personalAnnouncement.SendAnnouncementScreen
+import com.ktun.ailabapp.presentation.ui.screens.admin.users.roles.ManageRolesScreen
 
 @Composable
 fun NavGraph(
@@ -34,7 +33,6 @@ fun NavGraph(
 
     val sharedAnnouncementViewModel: AnnouncementViewModel = hiltViewModel()
 
-    // ✅ ViewModel oluşunca bir kez yükle
     LaunchedEffect(sharedAnnouncementViewModel) {
         android.util.Log.d("NavGraph", "SharedViewModel created: ${sharedAnnouncementViewModel.hashCode()}")
         android.util.Log.d("NavGraph", "📥 Loading announcements...")
@@ -45,7 +43,6 @@ fun NavGraph(
         navController = navController,
         startDestination = startDestination
     ) {
-        // Login Screen
         composable(route = Screen.Login.route) {
             LoginScreen(
                 onLoginSuccess = {
@@ -60,12 +57,11 @@ fun NavGraph(
             )
         }
 
-        // Register Screen
         composable(Screen.Register.route) {
             RegisterScreen(
                 navController = navController,
                 onRegisterSuccess = {
-                    android.util.Log.d("NavGraph", "📥 Login successful - Reloading announcements...")
+                    android.util.Log.d("NavGraph", "📥 Register successful - Reloading announcements...")
                     navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Register.route) { inclusive = true }
                     }
@@ -73,7 +69,6 @@ fun NavGraph(
             )
         }
 
-        // Home Screen
         composable(route = Screen.Home.route) {
             HomeScreen(
                 onNavigateToProjects = {
@@ -89,7 +84,6 @@ fun NavGraph(
             )
         }
 
-        // Projects Screen
         composable(route = Screen.Projects.route) {
             ProjectsScreen(
                 onNavigateToHome = {
@@ -106,11 +100,10 @@ fun NavGraph(
                 onNavigateToProjectDetail = { projectId ->
                     navController.navigate(Screen.ProjectDetail.createRoute(projectId))
                 },
-                announcementViewModel = sharedAnnouncementViewModel // ✅ Aynı instance
+                announcementViewModel = sharedAnnouncementViewModel
             )
         }
 
-        // ProjectDetail Screen
         composable(
             route = Screen.ProjectDetail.route,
             arguments = listOf(
@@ -127,7 +120,6 @@ fun NavGraph(
             )
         }
 
-        // Announcements Screen
         composable(Screen.Announcements.route) {
             AnnouncementScreen(
                 onNavigateToHome = {
@@ -136,7 +128,7 @@ fun NavGraph(
                 onNavigateToProjects = {
                     navController.navigate(Screen.Projects.route)
                 },
-                onNavigateToChat = { /* Zaten announcements'tayız */ },
+                onNavigateToChat = { },
                 onNavigateToProfile = {
                     navController.navigate(Screen.Profile.route)
                 },
@@ -145,7 +137,6 @@ fun NavGraph(
             )
         }
 
-        // Profile Screen
         composable(Screen.Profile.route) {
             ProfileScreen(
                 onNavigateToHome = {
@@ -157,13 +148,85 @@ fun NavGraph(
                 onNavigateToChat = {
                     navController.navigate(Screen.Announcements.route)
                 },
-                onNavigateToProfile = { /* Zaten profile'dayız */ },
+                onNavigateToProfile = { },
+                onNavigateToAdminPanel = { // ✅ PARAMETRE EKLE
+                    android.util.Log.d("NavGraph", "🔵 Navigating to Admin Panel")
+                    navController.navigate(Screen.AdminPanel.route)
+                },
                 onLogout = {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(0) { inclusive = true }
                     }
                 },
-                announcementViewModel = sharedAnnouncementViewModel // ✅ Aynı instance
+                announcementViewModel = sharedAnnouncementViewModel
+            )
+        }
+
+        // ✅ YENİ ROUTE - ADMIN PANEL
+        composable(Screen.AdminPanel.route) {
+            android.util.Log.d("NavGraph", "🟢 AdminPanelScreen displayed")
+            AdminPanelScreen(
+                onNavigateBack = {
+                    android.util.Log.d("NavGraph", "🔙 Back from Admin Panel")
+                    navController.popBackStack()
+                },
+                onNavigateToUsersList = { // ✅ YENİ
+                    android.util.Log.d("NavGraph", "🔵 Navigating to Users List")
+                    navController.navigate(Screen.UsersList.route)
+                }
+            )
+        }
+
+        composable(Screen.UsersList.route) {
+            UsersListScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToSendAnnouncement = { userId, userName ->
+                    navController.navigate(Screen.SendAnnouncement.createRoute(userId, userName))
+                },
+                onNavigateToManageRoles = { userId -> // ✅ Sadece userId
+                    navController.navigate(Screen.ManageRoles.createRoute(userId))
+                }
+            )
+        }
+
+// ✅ YENİ ROUTE EKLE (en alta)
+        composable(
+            route = Screen.SendAnnouncement.route,
+            arguments = listOf(
+                navArgument("userId") { type = NavType.StringType },
+                navArgument("userName") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val userId = backStackEntry.arguments?.getString("userId") ?: ""
+            val userName = backStackEntry.arguments?.getString("userName") ?: ""
+
+            android.util.Log.d("NavGraph", "🟢 SendAnnouncementScreen displayed for user: $userName")
+
+            SendAnnouncementScreen(
+                userId = userId,
+                userName = userName,
+                onNavigateBack = {
+                    android.util.Log.d("NavGraph", "🔙 Back from Send Announcement")
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(
+            route = Screen.ManageRoles.route,
+            arguments = listOf(
+                navArgument("userId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val userId = backStackEntry.arguments?.getString("userId") ?: ""
+
+            ManageRolesScreen(
+                userId = userId, // ✅ userId gönder
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
             )
         }
     }
