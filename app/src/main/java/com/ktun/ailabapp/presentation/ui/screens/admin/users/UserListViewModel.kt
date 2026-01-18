@@ -28,7 +28,8 @@ data class UsersListUiState(
 // ✅ YENİ - Sealed interface
 sealed interface AdminNavigationEvent {
     data class ToSendAnnouncement(val userId: String, val userName: String) : AdminNavigationEvent
-    data class ToManageRoles(val userId: String) : AdminNavigationEvent // ✅ YENİ
+    data class ToManageRoles(val userId: String) : AdminNavigationEvent
+    data class ToTaskHistory(val userId: String, val userName: String) : AdminNavigationEvent
 }
 
 @HiltViewModel
@@ -128,6 +129,14 @@ class UsersListViewModel @Inject constructor(
         viewModelScope.launch {
             _navigationEvent.emit(
                 AdminNavigationEvent.ToManageRoles(userId)
+            )
+        }
+    }
+
+    fun onTaskHistoryClick(userId: String, userName: String) {
+        viewModelScope.launch {
+            _navigationEvent.emit(
+                AdminNavigationEvent.ToTaskHistory(userId, userName)
             )
         }
     }
