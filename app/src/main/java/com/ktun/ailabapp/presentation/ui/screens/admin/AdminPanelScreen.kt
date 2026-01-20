@@ -15,7 +15,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -30,7 +29,9 @@ fun AdminPanelScreen(
     onNavigateBack: () -> Unit,
     onNavigateToUsersList: () -> Unit = {},
     onNavigateToCreateProject: () -> Unit,
-    onNavigateToAllProjects: () -> Unit
+    onNavigateToAllProjects: () -> Unit,
+    onNavigateToLabPeople: () -> Unit = {},
+    onNavigateToPendingTasks: () -> Unit = {} // ✅ YENİ PARAMETRE
 ) {
     val configuration = LocalConfiguration.current
     val screenHeight = configuration.screenHeightDp.dp
@@ -130,14 +131,14 @@ fun AdminPanelScreen(
                     AdminPanelItem(
                         title = "Lab'da Bulunan Kişileri Listele",
                         subtitle = "Anlık Olarak Lab İçerisinde Bulunan Kişileri Gösterir.",
-                        onClick = { /* TODO */ },
+                        onClick = onNavigateToLabPeople, 
                         screenWidth = screenWidth
                     )
 
                     AdminPanelItem(
                         title = "Mevcut Görevleri Puanlandır",
                         subtitle = "Üyelere Atanan Görevlerin Önem Derecesini Belirle",
-                        onClick = { /* TODO */ },
+                        onClick = onNavigateToPendingTasks, // ✅ BAĞLANDI
                         screenWidth = screenWidth
                     )
 

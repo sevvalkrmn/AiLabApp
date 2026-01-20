@@ -13,47 +13,47 @@ interface TaskApi {
 
     /**
      * Belirli bir projenin tüm görevlerini listele
-     * GET /api/tasks/project/{projectId}
+     * GET /api/Tasks/project/{projectId}
      */
-    @GET("api/tasks/project/{projectId}")
+    @GET("api/Tasks/project/{projectId}")
     suspend fun getProjectTasks(
         @Path("projectId") projectId: String,
         @Query("page") page: Int? = null,
         @Query("pageSize") pageSize: Int? = null
-    ): Response<PaginatedResponse<TaskResponse>>  // ← DEĞİŞTİ: List yerine PaginatedResponse
+    ): Response<PaginatedResponse<TaskResponse>>
 
     /**
      * Belirli bir görevin detaylarını getir
-     * GET /api/tasks/{id}
+     * GET /api/Tasks/{id}
      */
-    @GET("api/tasks/{id}")
+    @GET("api/Tasks/{id}")
     suspend fun getTaskDetail(
         @Path("id") taskId: String
-    ): Response<List<TaskResponse>>
+    ): Response<TaskResponse>
 
     /**
      * Kullanıcıya atanan görevleri listele
-     * GET /api/tasks/my-tasks
+     * GET /api/Tasks/my-tasks
      */
-    @GET("api/tasks/my-tasks")
+    @GET("api/Tasks/my-tasks")
     suspend fun getMyTasks(
-        @Query("status") status: String? = null
+        @Query("status") status: Int? = null
     ): Response<List<TaskResponse>>
 
     /**
      * Yeni görev oluştur (Admin veya Captain)
-     * POST /api/tasks
+     * POST /api/Tasks
      */
-    @POST("api/tasks")
+    @POST("api/Tasks")
     suspend fun createTask(
         @Body request: CreateTaskRequest
     ): Response<TaskResponse>
 
     /**
      * Görevi güncelle (Admin veya Captain)
-     * PUT /api/tasks/{id}
+     * PUT /api/Tasks/{id}
      */
-    @PUT("api/tasks/{id}")
+    @PUT("api/Tasks/{id}")
     suspend fun updateTask(
         @Path("id") taskId: String,
         @Body request: UpdateTaskRequest
@@ -61,9 +61,9 @@ interface TaskApi {
 
     /**
      * Görev durumunu değiştir (Atanan kişi, Admin veya Captain)
-     * PUT /api/tasks/{id}/status
+     * PUT /api/Tasks/{id}/status
      */
-    @PUT("api/tasks/{id}/status")
+    @PUT("api/Tasks/{id}/status")
     suspend fun updateTaskStatus(
         @Path("id") taskId: String,
         @Body request: UpdateTaskStatusRequest
@@ -71,9 +71,9 @@ interface TaskApi {
 
     /**
      * Görevi sil (Admin veya Captain)
-     * DELETE /api/tasks/{id}
+     * DELETE /api/Tasks/{id}
      */
-    @DELETE("api/tasks/{id}")
+    @DELETE("api/Tasks/{id}")
     suspend fun deleteTask(
         @Path("id") taskId: String
     ): Response<Unit>

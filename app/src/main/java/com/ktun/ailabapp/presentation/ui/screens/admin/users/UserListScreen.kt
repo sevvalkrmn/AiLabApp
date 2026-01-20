@@ -200,8 +200,6 @@ fun UsersListScreen(
             user = selectedUser!!,
             onDismiss = {
                 showBottomSheet = false
-                // ✅ Bottom sheet kapanınca user'ı null yapma - refresh için gerekli
-                // selectedUser = null // ← BUNU KALDIRDIM
             },
             onEditClick = {
                 android.util.Log.d("UsersListScreen", "✏️ Edit: ${selectedUser?.id}")
@@ -214,13 +212,30 @@ fun UsersListScreen(
             onManageRoles = { userId ->
                 viewModel.onManageRolesClick(userId)
                 showBottomSheet = false
-                // ✅ selectedUser'ı null YAPMA - refresh için gerekli
-                // selectedUser = null // ← BUNU KALDIRDIM
             },
-            // 👇 YENİ EKLENEN KISIM BURASI 👇
             onViewTaskHistory = { userId, userName ->
                 viewModel.onTaskHistoryClick(userId, userName)
                 showBottomSheet = false
+            },
+            onImageUpdated = {
+                // ✅ Fotoğraf güncellendiğinde hem detayı hem listeyi yenile
+                selectedUser?.let { user ->
+                    android.util.Log.d("UsersListScreen", "🔄 Refreshing user after image update: ${user.id}")
+                    viewModel.loadUserDetail(user.id) { updatedUser ->
+                        selectedUser = updatedUser
+                    }
+                    viewModel.loadUsers()
+                }
+            },
+            onScoreUpdated = {
+                // ✅ Puan güncellendiğinde hem detayı hem listeyi yenile
+                selectedUser?.let { user ->
+                    android.util.Log.d("UsersListScreen", "🔄 Refreshing user after score adjustment: ${user.id}")
+                    viewModel.loadUserDetail(user.id) { updatedUser ->
+                        selectedUser = updatedUser
+                    }
+                    viewModel.loadUsers()
+                }
             }
         )
     }

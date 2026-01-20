@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "user_preferences")
@@ -56,7 +57,7 @@ class PreferencesManager(private val context: Context) {
         }
     }
 
-    // ✅ YENİ: Refresh token temizleme
+    // Refresh token temizleme
     suspend fun clearRefreshToken() {
         context.dataStore.edit { preferences ->
             preferences.remove(REFRESH_TOKEN_KEY)
@@ -97,5 +98,17 @@ class PreferencesManager(private val context: Context) {
         context.dataStore.edit { preferences ->
             preferences.clear()
         }
+    }
+
+    // ✅ YENİ - User ID Flow (Asenkron)
+    fun getUserIdFlow(): Flow<String?> = context.dataStore.data.map { preferences ->
+        preferences[USER_ID_KEY]
+    }
+
+    // ✅ YENİ - User ID Suspend (Tek değer)
+    suspend fun getUserId(): String? {
+        return context.dataStore.data.map { preferences ->
+            preferences[USER_ID_KEY]
+        }.first()
     }
 }

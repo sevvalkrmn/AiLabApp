@@ -1,5 +1,3 @@
-
-
 package com.ktun.ailabapp.presentation.ui.screens.navigation
 
 import androidx.compose.runtime.Composable
@@ -10,9 +8,8 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.ktun.ailabapp.data.model.User
 import com.ktun.ailabapp.presentation.ui.navigation.Screen
-import com.ktun.ailabapp.presentation.ui.screens.admin.AdminPanelScreen // ✅ IMPORT EKLE
+import com.ktun.ailabapp.presentation.ui.screens.admin.AdminPanelScreen
 import com.ktun.ailabapp.presentation.ui.screens.admin.createproject.AllProjectsScreen
 import com.ktun.ailabapp.presentation.ui.screens.admin.createproject.CreateProjectScreen
 import com.ktun.ailabapp.presentation.ui.screens.announcement.AnnouncementScreen
@@ -27,6 +24,8 @@ import com.ktun.ailabapp.presentation.ui.screens.admin.users.UsersListScreen
 import com.ktun.ailabapp.presentation.ui.screens.admin.users.personalAnnouncement.SendAnnouncementScreen
 import com.ktun.ailabapp.presentation.ui.screens.admin.users.roles.ManageRolesScreen
 import com.ktun.ailabapp.presentation.ui.screens.admin.users.tasks.TaskHistoryScreen
+import com.ktun.ailabapp.presentation.ui.screens.admin.lab.LabPeopleScreen
+import com.ktun.ailabapp.presentation.ui.screens.admin.pendingtasks.PendingTasksScreen // ✅ IMPORT
 
 @Composable
 fun NavGraph(
@@ -152,7 +151,7 @@ fun NavGraph(
                     navController.navigate(Screen.Announcements.route)
                 },
                 onNavigateToProfile = { },
-                onNavigateToAdminPanel = { // ✅ PARAMETRE EKLE
+                onNavigateToAdminPanel = {
                     android.util.Log.d("NavGraph", "🔵 Navigating to Admin Panel")
                     navController.navigate(Screen.AdminPanel.route)
                 },
@@ -165,7 +164,6 @@ fun NavGraph(
             )
         }
 
-        // ✅ YENİ ROUTE - ADMIN PANEL
         composable(Screen.AdminPanel.route) {
             android.util.Log.d("NavGraph", "🟢 AdminPanelScreen displayed")
             AdminPanelScreen(
@@ -173,15 +171,21 @@ fun NavGraph(
                     android.util.Log.d("NavGraph", "🔙 Back from Admin Panel")
                     navController.popBackStack()
                 },
-                onNavigateToUsersList = { // ✅ YENİ
+                onNavigateToUsersList = {
                     android.util.Log.d("NavGraph", "🔵 Navigating to Users List")
                     navController.navigate(Screen.UsersList.route)
                 },
                 onNavigateToCreateProject = {
                     navController.navigate(Screen.CreateProject.route)
                 },
-                onNavigateToAllProjects = {  // ✅ YENİ
+                onNavigateToAllProjects = {
                     navController.navigate(Screen.AllProjects.route)
+                },
+                onNavigateToLabPeople = {
+                    navController.navigate(Screen.LabPeople.route)
+                },
+                onNavigateToPendingTasks = { // ✅ YENİ
+                    navController.navigate(Screen.PendingTasks.route)
                 }
             )
         }
@@ -210,7 +214,6 @@ fun NavGraph(
             )
         }
 
-// ✅ YENİ ROUTE EKLE (en alta)
         composable(
             route = Screen.SendAnnouncement.route,
             arguments = listOf(
@@ -242,7 +245,7 @@ fun NavGraph(
             val userId = backStackEntry.arguments?.getString("userId") ?: ""
 
             ManageRolesScreen(
-                userId = userId, // ✅ userId gönder
+                userId = userId,
                 onNavigateBack = {
                     navController.popBackStack()
                 }
@@ -268,6 +271,18 @@ fun NavGraph(
 
         composable(Screen.CreateProject.route) {
             CreateProjectScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.LabPeople.route) {
+            LabPeopleScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.PendingTasks.route) { // ✅ YENİ EKRAN
+            PendingTasksScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }

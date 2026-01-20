@@ -87,8 +87,7 @@ interface ProjectApi {
     suspend fun addMember(
         @Path("id") projectId: String,
         @Body request: AddMemberRequest
-    ): Response<Unit>
-
+    ): Response<ProjectMember>
     /**
      * Projeden üye çıkar (Admin veya Captain)
      * DELETE /api/projects/{id}/members/{userId}

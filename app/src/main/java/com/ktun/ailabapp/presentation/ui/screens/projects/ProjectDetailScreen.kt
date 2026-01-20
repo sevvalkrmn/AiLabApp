@@ -1,6 +1,7 @@
 package com.ktun.ailabapp.presentation.ui.screens.projects
 
-import android.app.Application
+import android.app.DatePickerDialog
+import android.widget.DatePicker
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -23,17 +24,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.ktun.ailabapp.data.model.User
 import com.ktun.ailabapp.data.remote.dto.response.ProjectDetailResponse
 import com.ktun.ailabapp.data.remote.dto.response.ProjectMember
 import com.ktun.ailabapp.data.remote.dto.response.TaskResponse
 import com.ktun.ailabapp.data.remote.dto.response.TaskStatistics
-import com.ktun.ailabapp.presentation.ui.screens.announcement.AnnouncementViewModel
+import com.ktun.ailabapp.presentation.ui.util.formatDate
 import com.ktun.ailabapp.ui.theme.BackgroundLight
 import com.ktun.ailabapp.ui.theme.PrimaryBlue
 import com.ktun.ailabapp.ui.theme.White
-import com.ktun.ailabapp.presentation.ui.util.formatDate
+import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,9 +42,7 @@ fun ProjectDetailScreen(
     projectId: String,
     onNavigateBack: () -> Unit = {},
     viewModel: ProjectDetailViewModel = hiltViewModel()
-
 ) {
-
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     val configuration = LocalConfiguration.current
@@ -89,6 +88,7 @@ fun ProjectDetailScreen(
                     CircularProgressIndicator(color = PrimaryBlue)
                 }
             }
+
             uiState.errorMessage != null -> {
                 Box(
                     modifier = Modifier
@@ -115,6 +115,7 @@ fun ProjectDetailScreen(
                     }
                 }
             }
+
             uiState.project != null -> {
                 LazyColumn(
                     modifier = Modifier
@@ -141,15 +142,30 @@ fun ProjectDetailScreen(
                         )
                     }
 
-                    // ✅ GÖREVLER ÜSTTE
-                    // Görevler Başlık
+                    // Görevler Başlık ve Ekle Butonu
                     item {
-                        Text(
-                            text = "Görevler",
-                            fontSize = (screenWidth.value * 0.045f).sp,
-                            fontWeight = FontWeight.Bold,
-                            color = PrimaryBlue
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Görevler",
+                                fontSize = (screenWidth.value * 0.045f).sp,
+                                fontWeight = FontWeight.Bold,
+                                color = PrimaryBlue
+                            )
+
+                            if (uiState.canEdit) {
+                                IconButton(onClick = { viewModel.showCreateTaskDialog() }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Add,
+                                        contentDescription = "Görev Ekle",
+                                        tint = PrimaryBlue
+                                    )
+                                }
+                            }
+                        }
                     }
 
                     // Görevler Listesi
@@ -194,7 +210,6 @@ fun ProjectDetailScreen(
                         }
                     }
 
-                    // ✅ PROJE ÜYELERİ ALTTA
                     // Proje Üyeleri Başlık
                     item {
                         Spacer(modifier = Modifier.height(screenHeight * 0.01f))
@@ -206,7 +221,7 @@ fun ProjectDetailScreen(
                         )
                     }
 
-                    // ÖNCE KAPTANLAR
+                    // Kaptanlar
                     items(uiState.project!!.captains) { captain ->
                         MemberCard(
                             member = captain,
@@ -215,7 +230,7 @@ fun ProjectDetailScreen(
                         )
                     }
 
-                    // SONRA ÜYELER
+                    // Üyeler
                     items(uiState.project!!.members) { member ->
                         MemberCard(
                             member = member,
@@ -223,13 +238,180 @@ fun ProjectDetailScreen(
                             screenHeight = screenHeight
                         )
                     }
-                }
 
+                    // ✅ YENİ - Admin ve Kaptan Butonları
+                    if (uiState.canEdit) {
+                        item {
+                            AdminActionsSection(
+                                onAddMember = { viewModel.showAddMemberDialog() },
+                                onRemoveMember = { viewModel.showRemoveMemberDialog() },
+                                onDeleteProject = { viewModel.showDeleteProjectDialog() },
+                                screenWidth = screenWidth,
+                                screenHeight = screenHeight,
+                                isCaptain = uiState.isCaptain, // ✅ Parametre ekle
+                                isAdmin = uiState.isAdmin      // ✅ Parametre ekle
+                            )
+                        }
+                    }
+                }
             }
         }
     }
+
+    // ✅ YENİ - Görev Ekle Dialog
+    if (uiState.showCreateTaskDialog) {
+        CreateTaskDialog(
+            members = (uiState.project?.captains.orEmpty() + uiState.project?.members.orEmpty()),
+            onDismiss = { viewModel.hideCreateTaskDialog() },
+            onConfirm = { title, description, assigneeId, dueDate ->
+                viewModel.createTask(title, description, assigneeId, dueDate)
+            }
+        )
+    }
+
+    // ✅ YENİ - Dialog'lar
+    if (uiState.showAddMemberDialog) {
+        AddMemberDialog(
+            availableUsers = uiState.availableUsers,
+            onDismiss = { viewModel.hideAddMemberDialog() },
+            onConfirm = { userId, role ->
+                viewModel.addMember(userId, role)
+            }
+        )
+    }
+
+    if (uiState.showRemoveMemberDialog) {
+        RemoveMemberDialog(
+            members = uiState.project?.members ?: emptyList(),  // ✅ Sadece members
+            onDismiss = { viewModel.hideRemoveMemberDialog() },
+            onConfirm = { userId ->
+                viewModel.removeMember(userId)
+            }
+        )
+    }
+
+    if (uiState.showDeleteProjectDialog) {
+        DeleteProjectDialog(
+            projectName = uiState.project?.name ?: "",
+            onDismiss = { viewModel.hideDeleteProjectDialog() },
+            onConfirm = {
+                viewModel.deleteProject(onSuccess = onNavigateBack)
+            }
+        )
+    }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CreateTaskDialog(
+    members: List<ProjectMember>,
+    onDismiss: () -> Unit,
+    onConfirm: (String, String?, String?, String?) -> Unit
+) {
+    var title by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
+    var selectedAssignee by remember { mutableStateOf<ProjectMember?>(null) }
+    var dueDate by remember { mutableStateOf("") }
+    var assigneeExpanded by remember { mutableStateOf(false) }
+
+    // Date Picker Logic
+    val context = LocalContext.current
+    val calendar = Calendar.getInstance()
+    
+    val datePickerDialog = DatePickerDialog(
+        context,
+        { _: DatePicker, year: Int, month: Int, dayOfMonth: Int ->
+            // ISO 8601 Format: 2026-01-20T13:17:38.291Z
+            val formattedDate = String.format("%04d-%02d-%02dT23:59:59Z", year, month + 1, dayOfMonth)
+            dueDate = formattedDate
+        },
+        calendar.get(Calendar.YEAR),
+        calendar.get(Calendar.MONTH),
+        calendar.get(Calendar.DAY_OF_MONTH)
+    )
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Yeni Görev Oluştur") },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedTextField(
+                    value = title,
+                    onValueChange = { title = it },
+                    label = { Text("Başlık") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    label = { Text("Açıklama (Opsiyonel)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    maxLines = 3
+                )
+
+                // Assignee Dropdown
+                ExposedDropdownMenuBox(
+                    expanded = assigneeExpanded,
+                    onExpandedChange = { assigneeExpanded = it }
+                ) {
+                    OutlinedTextField(
+                        value = selectedAssignee?.fullName ?: "Atanacak Kişi Seç",
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Kime Atanacak?") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = assigneeExpanded) },
+                        modifier = Modifier.fillMaxWidth().menuAnchor()
+                    )
+
+                    ExposedDropdownMenu(
+                        expanded = assigneeExpanded,
+                        onDismissRequest = { assigneeExpanded = false }
+                    ) {
+                        members.forEach { member ->
+                            DropdownMenuItem(
+                                text = { Text(member.fullName) },
+                                onClick = {
+                                    selectedAssignee = member
+                                    assigneeExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                // Date Picker Button
+                OutlinedButton(
+                    onClick = { datePickerDialog.show() },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.DateRange, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text(text = if (dueDate.isNotEmpty()) dueDate.take(10) else "Bitiş Tarihi Seç")
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (title.isNotBlank()) {
+                        onConfirm(title, description.ifBlank { null }, selectedAssignee?.userId, dueDate.ifBlank { null })
+                    }
+                },
+                enabled = title.isNotBlank()
+            ) {
+                Text("Oluştur")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("İptal")
+            }
+        }
+    )
+}
 
 // ============= COMPOSABLE KARTLAR =============
 
@@ -267,9 +449,7 @@ fun ProjectInfoCard(
 
             Spacer(modifier = Modifier.height(screenHeight * 0.015f))
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     Icons.Default.DateRange,
                     contentDescription = null,
@@ -512,7 +692,7 @@ fun TaskCard(
                 Spacer(modifier = Modifier.height(screenHeight * 0.01f))
                 Text(
                     text = task.description,
-                    fontSize = (screenWidth.value * 0.035f).sp,
+                    fontSize = (screenWidth.value * 0.03f).sp,
                     color = PrimaryBlue.copy(alpha = 0.7f)
                 )
             }
@@ -536,6 +716,338 @@ fun TaskCard(
             }
         }
     }
+}
+
+// ============= YENİ - ADMIN BUTONLARI =============
+
+@Composable
+fun AdminActionsSection(
+    onAddMember: () -> Unit,
+    onRemoveMember: () -> Unit,
+    onDeleteProject: () -> Unit,
+    screenWidth: androidx.compose.ui.unit.Dp,
+    screenHeight: androidx.compose.ui.unit.Dp,
+    isCaptain: Boolean,
+    isAdmin: Boolean
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = screenHeight * 0.02f)
+    ) {
+        Text(
+            text = if (isCaptain) "🔧 Proje Yönetimi (Kaptan)" else "🔧 Proje Yönetimi (Admin)",
+            fontSize = (screenWidth.value * 0.045f).sp,
+            fontWeight = FontWeight.Bold,
+            color = PrimaryBlue
+        )
+
+        Spacer(Modifier.height(screenHeight * 0.015f))
+
+        // Üye Ekle
+        Button(
+            onClick = onAddMember,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(screenHeight * 0.06f),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = PrimaryBlue
+            )
+        ) {
+            Icon(Icons.Default.PersonAdd, contentDescription = null)
+            Spacer(Modifier.width(screenWidth * 0.02f))
+            Text("Üye Ekle", fontSize = (screenWidth.value * 0.04f).sp)
+        }
+
+        Spacer(Modifier.height(screenHeight * 0.01f))
+
+        // Üye Çıkar
+        Button(
+            onClick = onRemoveMember,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(screenHeight * 0.06f),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFFFF9800)
+            )
+        ) {
+            Icon(Icons.Default.PersonRemove, contentDescription = null)
+            Spacer(Modifier.width(screenWidth * 0.02f))
+            Text("Üye Çıkar", fontSize = (screenWidth.value * 0.04f).sp)
+        }
+
+        // ✅ Kural 6: Sadece Admin silebilir
+        if (isAdmin) {
+            Spacer(Modifier.height(screenHeight * 0.01f))
+
+            // Projeyi Sil
+            Button(
+                onClick = onDeleteProject,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(screenHeight * 0.06f),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Red
+                )
+            ) {
+                Icon(Icons.Default.Delete, contentDescription = null)
+                Spacer(Modifier.width(screenWidth * 0.02f))
+                Text("Projeyi Sil", fontSize = (screenWidth.value * 0.04f).sp)
+            }
+        }
+    }
+}
+
+// ============= YENİ - DIALOG'LAR =============
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AddMemberDialog(
+    availableUsers: List<User>,
+    onDismiss: () -> Unit,
+    onConfirm: (userId: String, role: String) -> Unit
+) {
+    var selectedUser by remember { mutableStateOf<User?>(null) }
+    var selectedRole by remember { mutableStateOf("Member") }
+    var dropdownExpanded by remember { mutableStateOf(false) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Üye Ekle") },
+        text = {
+            Column {
+                // Kullanıcı Seçimi
+                ExposedDropdownMenuBox(
+                    expanded = dropdownExpanded,
+                    onExpandedChange = { dropdownExpanded = it }
+                ) {
+                    OutlinedTextField(
+                        value = selectedUser?.fullName ?: "",
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Kullanıcı Seç") },
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = dropdownExpanded)
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor()
+                    )
+
+                    ExposedDropdownMenu(
+                        expanded = dropdownExpanded,
+                        onDismissRequest = { dropdownExpanded = false }
+                    ) {
+                        if (availableUsers.isEmpty()) {
+                            DropdownMenuItem(
+                                text = { Text("Kullanıcı bulunamadı") },
+                                onClick = {},
+                                enabled = false
+                            )
+                        } else {
+                            availableUsers.forEach { user ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Column {
+                                            Text(user.fullName, style = MaterialTheme.typography.bodyMedium)
+                                            Text(
+                                                user.email,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    },
+                                    onClick = {
+                                        selectedUser = user
+                                        dropdownExpanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(16.dp))
+
+                // Rol Seçimi
+                Text("Rol:", style = MaterialTheme.typography.labelMedium)
+                Spacer(Modifier.height(8.dp))
+
+                Row {
+                    FilterChip(
+                        selected = selectedRole == "Member",
+                        onClick = { selectedRole = "Member" },
+                        label = { Text("Member") }
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    FilterChip(
+                        selected = selectedRole == "Captain",
+                        onClick = { selectedRole = "Captain" },
+                        label = { Text("Captain") }
+                    )
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                if (selectedRole == "Captain") {
+                    Text(
+                        "⚠️ Projede zaten Captain varsa eklenemez",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Red
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    selectedUser?.let { user ->
+                        onConfirm(user.id, selectedRole)
+                    }
+                },
+                enabled = selectedUser != null
+            ) {
+                Text("Ekle")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("İptal")
+            }
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun RemoveMemberDialog(
+    members: List<ProjectMember>,
+    onDismiss: () -> Unit,
+    onConfirm: (userId: String) -> Unit
+) {
+    var selectedMember by remember { mutableStateOf<ProjectMember?>(null) }
+    var dropdownExpanded by remember { mutableStateOf(false) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Üye Çıkar") },
+        text = {
+            Column {
+                Text(
+                    "⚠️ Captain çıkarılamaz",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Red
+                )
+
+                Spacer(Modifier.height(16.dp))
+
+                ExposedDropdownMenuBox(
+                    expanded = dropdownExpanded,
+                    onExpandedChange = { dropdownExpanded = it }
+                ) {
+                    OutlinedTextField(
+                        value = selectedMember?.fullName ?: "",
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Üye Seç") },
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = dropdownExpanded)
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor()
+                    )
+
+                    ExposedDropdownMenu(
+                        expanded = dropdownExpanded,
+                        onDismissRequest = { dropdownExpanded = false }
+                    ) {
+                        // ✅ FİLTRELEMEYİ KALDIR - members listesi zaten sadece Member'ları içeriyor
+                        // Backend 'members' ve 'captains' listelerini ayrı gönderiyor.
+                        // Dolayısıyla bu liste zaten temiz.
+                        
+                        if (members.isEmpty()) {
+                            DropdownMenuItem(
+                                text = { Text("Çıkarılabilir üye yok") },
+                                onClick = {},
+                                enabled = false
+                            )
+                        } else {
+                            members.forEach { member ->
+                                DropdownMenuItem(
+                                    text = { Text("${member.fullName}") },
+                                    onClick = {
+                                        selectedMember = member
+                                        dropdownExpanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    selectedMember?.let { member ->
+                        onConfirm(member.userId)
+                    }
+                },
+                enabled = selectedMember != null,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Red
+                )
+            ) {
+                Text("Çıkar")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("İptal")
+            }
+        }
+    )
+}
+
+@Composable
+fun DeleteProjectDialog(
+    projectName: String,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Projeyi Sil") },
+        text = {
+            Column {
+                Text("⚠️ Bu işlem geri alınamaz!", color = Color.Red, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(8.dp))
+                Text("\"$projectName\" projesini silmek istediğinizden emin misiniz?")
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    "Not: Aktif görevler varsa silme işlemi engellenecektir.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Red
+                )
+            ) {
+                Text("Sil")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("İptal")
+            }
+        }
+    )
 }
 
 // ============= HELPER FUNCTIONS =============
