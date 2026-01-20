@@ -4,6 +4,7 @@ package com.ktun.ailabapp.data.repository
 
 import com.ktun.ailabapp.data.model.UserProject
 import com.ktun.ailabapp.data.remote.api.ProjectApi
+import com.ktun.ailabapp.data.remote.dto.request.CreateProjectRequest
 import com.ktun.ailabapp.data.remote.dto.response.MyProjectsResponse
 import com.ktun.ailabapp.data.remote.dto.response.ProjectDetailResponse
 import com.ktun.ailabapp.data.remote.dto.response.ProjectMember
@@ -11,6 +12,7 @@ import com.ktun.ailabapp.data.remote.dto.response.toUserProject
 import com.ktun.ailabapp.util.NetworkResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import retrofit2.HttpException
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -28,15 +30,13 @@ class ProjectRepository @Inject constructor(
 
             val response = projectApi.getMyProjects(roleFilter)
 
-            when {
+            return@withContext when {
                 response.code() == 401 -> {
                     NetworkResult.Error("Oturum süresi doldu")
                 }
                 response.isSuccessful && response.body() != null -> {
                     val projects = response.body()!!
-
                     android.util.Log.d("ProjectRepository", "✅ Loaded ${projects.size} projects")
-
                     NetworkResult.Success(projects)
                 }
                 response.isSuccessful && response.body() == null -> {
@@ -50,7 +50,7 @@ class ProjectRepository @Inject constructor(
             }
         } catch (e: Exception) {
             android.util.Log.e("ProjectRepository", "❌ Exception: ${e.message}", e)
-            NetworkResult.Error(e.message ?: "Bilinmeyen hata")
+            return@withContext NetworkResult.Error(e.message ?: "Bilinmeyen hata")
         }
     }
 
@@ -64,7 +64,7 @@ class ProjectRepository @Inject constructor(
 
             val response = projectApi.getUserProjects(userId)
 
-            when {
+            return@withContext when {
                 response.code() == 401 -> {
                     NetworkResult.Error("Oturum süresi doldu")
                 }
@@ -74,9 +74,7 @@ class ProjectRepository @Inject constructor(
                 }
                 response.isSuccessful && response.body() != null -> {
                     val projects = response.body()!!.map { it.toUserProject(userId) }
-
                     android.util.Log.d("ProjectRepository", "✅ Loaded ${projects.size} projects")
-
                     NetworkResult.Success(projects)
                 }
                 response.isSuccessful && response.body() == null -> {
@@ -90,7 +88,7 @@ class ProjectRepository @Inject constructor(
             }
         } catch (e: Exception) {
             android.util.Log.e("ProjectRepository", "❌ Exception: ${e.message}", e)
-            NetworkResult.Error(e.message ?: "Bilinmeyen hata")
+            return@withContext NetworkResult.Error(e.message ?: "Bilinmeyen hata")
         }
     }
 
@@ -104,7 +102,7 @@ class ProjectRepository @Inject constructor(
 
             val response = projectApi.getProjectDetail(projectId)
 
-            when {
+            return@withContext when {
                 response.code() == 401 -> {
                     NetworkResult.Error("Oturum süresi doldu")
                 }
@@ -116,9 +114,7 @@ class ProjectRepository @Inject constructor(
                 }
                 response.isSuccessful && response.body() != null -> {
                     val project = response.body()!!
-
                     android.util.Log.d("ProjectRepository", "✅ Loaded project: ${project.name}")
-
                     NetworkResult.Success(project)
                 }
                 else -> {
@@ -128,7 +124,7 @@ class ProjectRepository @Inject constructor(
             }
         } catch (e: Exception) {
             android.util.Log.e("ProjectRepository", "❌ Exception: ${e.message}", e)
-            NetworkResult.Error(e.message ?: "Bilinmeyen hata")
+            return@withContext NetworkResult.Error(e.message ?: "Bilinmeyen hata")
         }
     }
 
@@ -142,7 +138,7 @@ class ProjectRepository @Inject constructor(
 
             val response = projectApi.getProjectMembers(projectId)
 
-            when {
+            return@withContext when {
                 response.code() == 401 -> {
                     NetworkResult.Error("Oturum süresi doldu")
                 }
@@ -154,9 +150,7 @@ class ProjectRepository @Inject constructor(
                 }
                 response.isSuccessful && response.body() != null -> {
                     val members = response.body()!!
-
                     android.util.Log.d("ProjectRepository", "✅ Loaded ${members.size} members")
-
                     NetworkResult.Success(members)
                 }
                 response.isSuccessful && response.body() == null -> {
@@ -170,7 +164,47 @@ class ProjectRepository @Inject constructor(
             }
         } catch (e: Exception) {
             android.util.Log.e("ProjectRepository", "❌ Exception: ${e.message}", e)
-            NetworkResult.Error(e.message ?: "Bilinmeyen hata")
+            return@withContext NetworkResult.Error(e.message ?: "Bilinmeyen hata")
+        }
+    }
+
+    /**
+     * ✅ YENİ - Proje oluştur
+     * POST /api/projects
+     */
+    suspend fun createProject(request: CreateProjectRequest): NetworkResult<ProjectDetailResponse> = withContext(Dispatchers.IO) {
+        try {
+            android.util.Log.d("ProjectRepository", "🔍 Creating project: ${request.name}")
+
+            // ProjectApi'deki createProject muhtemelen Response<ProjectDetailResponse> dönüyor
+            val response = projectApi.createProject(request)
+
+            return@withContext when {
+                response.code() == 401 -> {
+                    NetworkResult.Error("Oturum süresi doldu")
+                }
+                response.code() == 400 -> {
+                    NetworkResult.Error("Geçersiz bilgiler girildi")
+                }
+                response.code() == 404 -> {
+                    NetworkResult.Error("Seçilen kullanıcı bulunamadı")
+                }
+                response.isSuccessful && response.body() != null -> {
+                    val project = response.body()!!
+                    android.util.Log.d("ProjectRepository", "✅ Project created: ${project.name}")
+                    NetworkResult.Success(project)
+                }
+                else -> {
+                    android.util.Log.e("ProjectRepository", "❌ Error: ${response.code()}")
+                    NetworkResult.Error("Proje oluşturulamadı: ${response.code()}")
+                }
+            }
+        } catch (e: HttpException) {
+            android.util.Log.e("ProjectRepository", "❌ HTTP Exception: ${e.code()}", e)
+            return@withContext NetworkResult.Error("HTTP ${e.code()}: ${e.message()}")
+        } catch (e: Exception) {
+            android.util.Log.e("ProjectRepository", "❌ Exception: ${e.message}", e)
+            return@withContext NetworkResult.Error(e.message ?: "Bilinmeyen hata")
         }
     }
 }

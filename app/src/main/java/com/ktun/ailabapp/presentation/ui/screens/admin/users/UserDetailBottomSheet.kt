@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.ktun.ailabapp.data.model.User
+import com.ktun.ailabapp.presentation.ui.screens.admin.users.profile.UpdateProfileImageDialog
 import com.ktun.ailabapp.presentation.ui.screens.admin.users.score.AdjustScoreDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,6 +37,7 @@ fun UserDetailBottomSheet(
 ) {
     // ✅ STATE TANIMLA
     var showAdjustScoreDialog by remember { mutableStateOf(false) }
+    var showUpdateImageDialog by remember { mutableStateOf(false) }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -77,7 +79,9 @@ fun UserDetailBottomSheet(
                     onViewTaskHistory(user.id, user.fullName)
                     onDismiss()
                 },
-                onEditPhoto = onEditClick,
+                onEditPhoto = {
+                    showUpdateImageDialog = true // ✅ DEĞİŞTİR
+                },
                 onChangeRFID = { /* TODO */ },
                 onDeactivate = { /* TODO */ },
                 onDeleteAccount = { /* TODO */ }
@@ -95,6 +99,17 @@ fun UserDetailBottomSheet(
             currentScore = user.points ?: 0,
             onDismiss = {
                 showAdjustScoreDialog = false
+            }
+        )
+    }
+
+    if (showUpdateImageDialog) {
+        UpdateProfileImageDialog(
+            userId = user.id,
+            userName = user.fullName,
+            currentImageUrl = user.profileImageUrl,
+            onDismiss = {
+                showUpdateImageDialog = false
             }
         )
     }

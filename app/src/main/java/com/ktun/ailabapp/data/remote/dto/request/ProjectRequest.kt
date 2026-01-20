@@ -3,18 +3,6 @@ package com.ktun.ailabapp.data.remote.dto.request
 import com.google.gson.annotations.SerializedName
 
 /**
- * POST /api/projects için
- * Yeni proje oluşturma
- */
-data class CreateProjectRequest(
-    @SerializedName("name")
-    val name: String,
-
-    @SerializedName("description")
-    val description: String?
-)
-
-/**
  * PUT /api/projects/{id} için
  * Proje güncelleme
  */

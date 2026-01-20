@@ -1,11 +1,11 @@
-package com.ktun.ailabapp.di  // ✅ Değişti
+package com.ktun.ailabapp.di
 
-import com.ktun.ailabapp.BuildConfig  // ✅ Değişti
-import com.ktun.ailabapp.data.local.datastore.PreferencesManager  // ✅ Değişti
-import com.ktun.ailabapp.data.remote.api.AuthApi  // ✅ Değişti
-import com.ktun.ailabapp.data.remote.api.ProjectApi  // ✅ Değişti
-import com.ktun.ailabapp.data.remote.api.TaskApi  // ✅ Değişti
-import com.ktun.ailabapp.data.remote.interceptor.AuthInterceptor  // ✅ Değişti
+import com.ktun.ailabapp.BuildConfig
+import com.ktun.ailabapp.data.local.datastore.PreferencesManager
+import com.ktun.ailabapp.data.remote.api.AuthApi
+import com.ktun.ailabapp.data.remote.api.ProjectApi
+import com.ktun.ailabapp.data.remote.api.TaskApi
+import com.ktun.ailabapp.data.remote.interceptor.AuthInterceptor
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -19,9 +19,8 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 import android.content.Context
 import com.chuckerteam.chucker.api.ChuckerInterceptor
-import com.google.firebase.appdistribution.gradle.ApiService
 import com.ktun.ailabapp.data.remote.api.AdminScoreApi
-import com.ktun.ailabapp.data.remote.api.AnnouncementApi  // ✅ Değişti
+import com.ktun.ailabapp.data.remote.api.AnnouncementApi
 import com.ktun.ailabapp.data.remote.api.RoleApi
 import com.ktun.ailabapp.data.remote.api.RoomsApi
 import com.ktun.ailabapp.data.remote.api.UsersApi
@@ -87,13 +86,14 @@ object NetworkModule {
             .build()
     }
 
-    @Provides
-    @Singleton
-    fun provideApiService(
-        retrofit: Retrofit
-    ): ApiService {
-        return retrofit.create(ApiService::class.java)
-    }
+    // ❌ BU METODU SİL - Kullanılmıyor ve yanlış import var
+    // @Provides
+    // @Singleton
+    // fun provideApiService(
+    //     retrofit: Retrofit
+    // ): ApiService {
+    //     return retrofit.create(ApiService::class.java)
+    // }
 
     @Provides
     @Singleton

@@ -295,7 +295,7 @@ fun ProjectCard(
                 shape = RoundedCornerShape(screenWidth * 0.02f)
             ) {
                 Text(
-                    text = project.userRole,
+                    text = project.userRole ?: "Member",  // ✅ NULL CHECK
                     color = if (project.userRole == "Captain") White else PrimaryBlue,
                     fontSize = (screenWidth.value * 0.03f).sp,
                     fontWeight = FontWeight.Medium,
