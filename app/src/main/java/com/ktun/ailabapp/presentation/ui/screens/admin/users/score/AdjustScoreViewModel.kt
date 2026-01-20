@@ -34,7 +34,7 @@ class AdjustScoreViewModel @Inject constructor(
     val uiState: StateFlow<AdjustScoreUiState> = _uiState.asStateFlow()
 
     fun onScoreInputChange(input: String) {
-        if (input.isEmpty() || input.matches(Regex("^\\d+$"))) { // ✅ Sadece integer
+        if (input.isEmpty() || input.matches(Regex("^\\d*\\.?\\d*$"))) { // ✅ Decimal regex
             _uiState.update {
                 it.copy(
                     scoreInput = input,
@@ -60,6 +60,11 @@ class AdjustScoreViewModel @Inject constructor(
         }
     }
 
+    // ✅ YENİ: State'i sıfırla (Dialog açıldığında çağrılmalı)
+    fun resetState() {
+        _uiState.value = AdjustScoreUiState()
+    }
+
     fun adjustScore(userId: String) {
         val scoreInput = _uiState.value.scoreInput
         val reasonInput = _uiState.value.reasonInput.trim()
@@ -79,7 +84,7 @@ class AdjustScoreViewModel @Inject constructor(
 
         if (hasError) return
 
-        val scoreValue = scoreInput.toIntOrNull()
+        val scoreValue = scoreInput.toDoubleOrNull() // ✅ toIntOrNull -> toDoubleOrNull
         if (scoreValue == null || scoreValue <= 0) {
             _uiState.update { it.copy(inputError = "Geçerli bir puan giriniz") }
             return

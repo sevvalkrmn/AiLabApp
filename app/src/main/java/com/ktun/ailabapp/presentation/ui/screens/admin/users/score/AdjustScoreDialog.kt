@@ -26,11 +26,16 @@ import com.ktun.ailabapp.presentation.ui.screens.admin.score.AdjustScoreViewMode
 fun AdjustScoreDialog(
     userId: String,
     userName: String,
-    currentScore: Int,
+    currentScore: Double, // ✅ Int -> Double
     onDismiss: () -> Unit,
     viewModel: AdjustScoreViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    // ✅ Dialog açıldığında veya userId değiştiğinde state'i sıfırla
+    LaunchedEffect(userId) {
+        viewModel.resetState()
+    }
 
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) {
@@ -50,7 +55,7 @@ fun AdjustScoreDialog(
             Column(
                 modifier = Modifier
                     .padding(24.dp)
-                    .verticalScroll(rememberScrollState()), // ✅ Scrollable
+                    .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 // Header
@@ -115,7 +120,7 @@ fun AdjustScoreDialog(
                     value = uiState.scoreInput,
                     onValueChange = { viewModel.onScoreInputChange(it) },
                     label = { Text("Puan Miktarı") },
-                    placeholder = { Text("Örn: 5 veya 100") },
+                    placeholder = { Text("Örn: 5.5 veya 100") },
                     modifier = Modifier.fillMaxWidth(),
                     isError = uiState.inputError != null,
                     supportingText = {
@@ -124,7 +129,7 @@ fun AdjustScoreDialog(
                         }
                     },
                     keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Number
+                        keyboardType = KeyboardType.Decimal // ✅ Number -> Decimal
                     ),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color(0xFF071372),
@@ -132,7 +137,7 @@ fun AdjustScoreDialog(
                     )
                 )
 
-                // ✅ Reason Input - YENİ
+                // ✅ Reason Input
                 OutlinedTextField(
                     value = uiState.reasonInput,
                     onValueChange = { viewModel.onReasonInputChange(it) },
@@ -157,7 +162,7 @@ fun AdjustScoreDialog(
 
                 // Preview
                 if (uiState.scoreInput.isNotEmpty()) {
-                    val previewScore = uiState.scoreInput.toIntOrNull()
+                    val previewScore = uiState.scoreInput.toDoubleOrNull() // ✅ toIntOrNull -> toDoubleOrNull
                     if (previewScore != null && previewScore > 0) {
                         val change = if (uiState.isAdding) previewScore else -previewScore
                         val newScore = currentScore + change

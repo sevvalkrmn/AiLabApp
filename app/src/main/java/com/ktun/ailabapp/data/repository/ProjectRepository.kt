@@ -56,6 +56,32 @@ class ProjectRepository @Inject constructor(
     }
 
     /**
+     * Sistemdeki TÜM projeleri çeker (Admin)
+     * GET /api/Projects
+     */
+    suspend fun getAllProjects(): NetworkResult<List<MyProjectsResponse>> = withContext(Dispatchers.IO) {
+        try {
+            android.util.Log.d("ProjectRepository", "🔍 Fetching ALL projects (Admin)")
+
+            val response = projectApi.getAllProjects()
+
+            return@withContext when {
+                response.code() == 401 -> NetworkResult.Error("Oturum süresi doldu")
+                response.code() == 403 -> NetworkResult.Error("Yetkisiz erişim (Sadece Admin)")
+                response.isSuccessful && response.body() != null -> {
+                    // ✅ PaginatedResponse içinden items listesini al
+                    val projects = response.body()!!.items 
+                    android.util.Log.d("ProjectRepository", "✅ Loaded ${projects.size} total projects")
+                    NetworkResult.Success(projects)
+                }
+                else -> NetworkResult.Error("Projeler yüklenemedi: ${response.code()}")
+            }
+        } catch (e: Exception) {
+            NetworkResult.Error(e.message ?: "Bilinmeyen hata")
+        }
+    }
+
+    /**
      * Belirli bir kullanıcının projelerini çeker
      * GET /api/projects/user/{userId}
      */
@@ -228,13 +254,9 @@ class ProjectRepository @Inject constructor(
                     android.util.Log.e("ProjectRepository", "Add Member 400 Error Body: $errorBody")
                     
                     if (!errorBody.isNullOrEmpty()) {
-                        if (errorBody.contains("An error occurred while saving the entity changes", ignoreCase = true)) {
-                            NetworkResult.Error("Ekleme başarısız: Kullanıcı daha önce eklenip çıkarılmış olabilir. Sistem tekrar eklemeye izin vermiyor (Backend Kısıtlaması).")
-                        } else {
-                            NetworkResult.Error("Ekleme başarısız: $errorBody")
-                        }
+                        NetworkResult.Error("Ekleme başarısız (400): $errorBody")
                     } else {
-                        NetworkResult.Error("Bu projede zaten bir Captain var veya geçersiz istek (400)")
+                        NetworkResult.Error("İşlem başarısız veya geçersiz istek (400)")
                     }
                 }
                 response.isSuccessful && response.body() != null -> {

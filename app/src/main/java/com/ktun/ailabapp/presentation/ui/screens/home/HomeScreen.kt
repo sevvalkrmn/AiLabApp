@@ -48,9 +48,8 @@ fun HomeScreen(
     val context = LocalContext.current
 
     var isRefreshing by remember { mutableStateOf(false) }
-    var showFeedbackDialog by remember { mutableStateOf(false) }  // ✅ YENİ EKLE
+    var showFeedbackDialog by remember { mutableStateOf(false) }
 
-    // ✅ YENİ: Feedback Dialog
     if (showFeedbackDialog) {
         FeedbackDialog(
             onDismiss = { showFeedbackDialog = false },
@@ -122,7 +121,6 @@ fun HomeScreen(
                     )
                 }
 
-                // ✅ DÜZELTME: align() kaldırıldı
                 DebugButton(
                     onClick = { showFeedbackDialog = true }
                 )
@@ -163,7 +161,7 @@ fun HomeScreen(
 
                         item {
                             ProfileCard(
-                                totalScore = uiState.user?.totalScore ?: 0,
+                                totalScore = uiState.user?.totalScore ?: 0.0, // ✅ Double
                                 avatarUrl = uiState.user?.profileImageUrl,
                                 lastEntryDate = uiState.lastEntryDate,
                                 teammatesInside = uiState.teammatesInside,
@@ -269,7 +267,7 @@ fun LabOccupancyCard(
 
 @Composable
 fun ProfileCard(
-    totalScore: Int,
+    totalScore: Double, // ✅ Double
     avatarUrl: String?,
     lastEntryDate: String?,
     teammatesInside: Int,
@@ -288,7 +286,6 @@ fun ProfileCard(
                 .padding(screenWidth * 0.04f),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Sol taraf - Avatar + Puan
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.padding(end = screenWidth * 0.04f)
@@ -323,7 +320,7 @@ fun ProfileCard(
                 Spacer(modifier = Modifier.height(screenHeight * 0.01f))
 
                 Text(
-                    text = "$totalScore",
+                    text = "${totalScore.toInt()}", // ✅ Gösterirken Int'e çevir
                     fontSize = (screenWidth.value * 0.08f).sp,
                     fontWeight = FontWeight.Bold,
                     color = White
@@ -344,11 +341,9 @@ fun ProfileCard(
 
             Spacer(modifier = Modifier.width(screenWidth * 0.04f))
 
-            // Sağ taraf - Bilgiler
             Column(
                 modifier = Modifier.weight(1f)
             ) {
-                // Son Giriş Tarihi (Backend'den)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         Icons.Default.CalendarToday,
@@ -363,9 +358,8 @@ fun ProfileCard(
                             fontSize = (screenWidth.value * 0.03f).sp,
                             color = White.copy(alpha = 0.8f)
                         )
-                        // ✅ Direkt tarihi göster, boşsa hiçbir şey gözükmez
                         val formattedDate = formatDate(lastEntryDate)
-                        if (formattedDate.isNotEmpty()) {  // ✅ Sadece dolu ise göster
+                        if (formattedDate.isNotEmpty()) {
                             Text(
                                 text = formattedDate,
                                 fontSize = (screenWidth.value * 0.04f).sp,
@@ -385,7 +379,6 @@ fun ProfileCard(
 
                 Spacer(modifier = Modifier.height(screenHeight * 0.015f))
 
-                // Takım Arkadaşları (Backend'den)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         Icons.Default.Group,
@@ -400,20 +393,18 @@ fun ProfileCard(
                             fontSize = (screenWidth.value * 0.03f).sp,
                             color = White.copy(alpha = 0.8f)
                         )
-                            Spacer(modifier = Modifier.width(screenWidth * 0.02f))
-                            Text(
-                                text = "$teammatesInside / $totalTeammates",
-                                fontSize = (screenWidth.value * 0.04f).sp,
-                                fontWeight = FontWeight.Bold,  // ✅ Sadece sayılar kalın
-                                color = White
-                            )
-                        }
+                        Text(
+                            text = "$teammatesInside / $totalTeammates",
+                            fontSize = (screenWidth.value * 0.04f).sp,
+                            fontWeight = FontWeight.Bold,
+                            color = White
+                        )
                     }
                 }
             }
         }
     }
-
+}
 
 @Composable
 fun CurrentTasksCard(
@@ -559,13 +550,11 @@ fun BottomCard(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // ✅ BAŞLIK - Sadece Material Icon
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center,
                 modifier = Modifier.padding(bottom = screenHeight * 0.015f)
             ) {
-                // Sol icon
                 Icon(
                     imageVector = Icons.Default.Star,
                     contentDescription = null,
@@ -575,7 +564,6 @@ fun BottomCard(
 
                 Spacer(modifier = Modifier.width(screenWidth * 0.02f))
 
-                // Başlık metni
                 Text(
                     text = "LEADERBOARD",
                     fontSize = (screenWidth.value * 0.04f).sp,
@@ -586,7 +574,6 @@ fun BottomCard(
 
                 Spacer(modifier = Modifier.width(screenWidth * 0.02f))
 
-                // Sağ icon
                 Icon(
                     imageVector = Icons.Default.Star,
                     contentDescription = null,
@@ -695,7 +682,7 @@ fun LeaderboardUser(
                     .padding(horizontal = screenWidth * 0.025f, vertical = screenHeight * 0.004f)
             ) {
                 Text(
-                    text = "${user.score} pts",
+                    text = "${user.score.toInt()} pts", // ✅ Double -> Int dönüşümü
                     fontSize = (screenWidth.value * 0.028f).sp,
                     fontWeight = FontWeight.Bold,
                     color = PrimaryBlue
@@ -726,28 +713,19 @@ fun LeaderboardUser(
 }
 
 private fun formatDate(isoDate: String?): String {
-    // ✅ Null veya boşsa boş string döndür (hiçbir şey gösterme)
     if (isoDate.isNullOrEmpty()) return ""
 
     return try {
-        android.util.Log.d("HomeScreen", "Parse ediliyor: $isoDate")
-
         val parser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
         parser.timeZone = TimeZone.getTimeZone("UTC")
         val date = parser.parse(isoDate)
 
-        if (date == null) {
-            android.util.Log.e("HomeScreen", "Parse başarısız: $isoDate")
-            return ""  // ✅ Hata durumunda da boş
-        }
+        if (date == null) return ""
 
         val formatter = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
-        val result = formatter.format(date)
-        android.util.Log.d("HomeScreen", "Formatlanmış tarih: $result")
-        result
+        formatter.format(date)
 
     } catch (e: Exception) {
-        android.util.Log.e("HomeScreen", "Tarih parse hatası: ${e.message}, Gelen: $isoDate")
-        ""  // ✅ Exception durumunda da boş
+        ""
     }
 }

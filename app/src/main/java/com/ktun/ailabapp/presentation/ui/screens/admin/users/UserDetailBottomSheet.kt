@@ -4,6 +4,7 @@ package com.ktun.ailabapp.presentation.ui.screens.admin.users
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -35,7 +36,8 @@ fun UserDetailBottomSheet(
     onManageRoles: (String) -> Unit,
     onViewTaskHistory: (String, String) -> Unit,
     onImageUpdated: () -> Unit = {},
-    onScoreUpdated: () -> Unit = {} // ✅ EKLE
+    onScoreUpdated: () -> Unit = {},
+    onProjectClick: (String) -> Unit = {} // ✅ EKLE
 ) {
     // ✅ STATE TANIMLA
     var showAdjustScoreDialog by remember { mutableStateOf(false) }
@@ -64,7 +66,7 @@ fun UserDetailBottomSheet(
             RolesSection(user = user)
             Spacer(modifier = Modifier.height(16.dp))
 
-            ProjectsSection(user = user)
+            ProjectsSection(user = user, onProjectClick = onProjectClick) // ✅ Parametre geç
             Spacer(modifier = Modifier.height(16.dp))
 
             ActionButtonsSection(
@@ -98,7 +100,7 @@ fun UserDetailBottomSheet(
         AdjustScoreDialog(
             userId = user.id,
             userName = user.fullName,
-            currentScore = user.points ?: 0,
+            currentScore = user.points ?: 0.0, // ✅ 0 -> 0.0 (Double mismatch fix)
             onDismiss = {
                 showAdjustScoreDialog = false
                 onScoreUpdated() // ✅ Puan değişince haber ver
@@ -158,7 +160,7 @@ private fun UserInfoCard(user: User) {
                 Spacer(modifier = Modifier.height(4.dp))
                 InfoRow(label = "Status", value = if (user.isActive) "Active" else "Inactive")
                 Spacer(modifier = Modifier.height(4.dp))
-                InfoRow(label = "Point", value = "${user.points ?: 0}")
+                InfoRow(label = "Point", value = "${user.points ?: 0.0}") // ✅ 0 -> 0.0
             }
         }
     }
@@ -228,7 +230,10 @@ private fun RolesSection(user: User) {
 }
 
 @Composable
-private fun ProjectsSection(user: User) {
+private fun ProjectsSection(
+    user: User,
+    onProjectClick: (String) -> Unit // ✅ EKLE
+) {
     Column {
         Text(
             text = "Projects:",
@@ -247,7 +252,10 @@ private fun ProjectsSection(user: User) {
         } else {
             user.projects.forEach { project ->
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onProjectClick(project.id) } // ✅ Tıklanabilir yap
+                        .padding(vertical = 4.dp), // Biraz padding ekle
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(

@@ -11,7 +11,7 @@ data class User(
     val username: String? = null,
     val profileImageUrl: String? = null,
     val isActive: Boolean = true,
-    val points: Int? = 0,
+    val points: Double? = 0.0,
     val lastLabEntry: String? = null,
     val roles: List<String>? = null,
     val projects: List<UserProject>? = null

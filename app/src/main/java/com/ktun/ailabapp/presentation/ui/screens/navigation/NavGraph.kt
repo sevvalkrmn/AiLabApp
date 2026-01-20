@@ -26,6 +26,7 @@ import com.ktun.ailabapp.presentation.ui.screens.admin.users.roles.ManageRolesSc
 import com.ktun.ailabapp.presentation.ui.screens.admin.users.tasks.TaskHistoryScreen
 import com.ktun.ailabapp.presentation.ui.screens.admin.lab.LabPeopleScreen
 import com.ktun.ailabapp.presentation.ui.screens.admin.pendingtasks.PendingTasksScreen // ✅ IMPORT
+import com.ktun.ailabapp.presentation.ui.screens.admin.announcement.SendGlobalAnnouncementScreen // ✅ IMPORT
 
 @Composable
 fun NavGraph(
@@ -186,6 +187,9 @@ fun NavGraph(
                 },
                 onNavigateToPendingTasks = { // ✅ YENİ
                     navController.navigate(Screen.PendingTasks.route)
+                },
+                onNavigateToSendAnnouncement = { // ✅ YENİ
+                    navController.navigate(Screen.SendGlobalAnnouncement.route)
                 }
             )
         }
@@ -281,8 +285,14 @@ fun NavGraph(
             )
         }
 
-        composable(Screen.PendingTasks.route) { // ✅ YENİ EKRAN
+        composable(Screen.PendingTasks.route) {
             PendingTasksScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.SendGlobalAnnouncement.route) { // ✅ YENİ EKRAN
+            SendGlobalAnnouncementScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }
