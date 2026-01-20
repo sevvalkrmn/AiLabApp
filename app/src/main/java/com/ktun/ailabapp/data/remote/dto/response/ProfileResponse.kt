@@ -15,7 +15,7 @@ data class ProfileResponse(
     @SerializedName("profileImageUrl")
     val profileImageUrl: String?,
     @SerializedName("totalScore")
-    val totalScore: Int,
+    val totalScore: Double,
     val status: Int? = null,
     val createdAt: String? = null,
     val updatedAt: String? = null,

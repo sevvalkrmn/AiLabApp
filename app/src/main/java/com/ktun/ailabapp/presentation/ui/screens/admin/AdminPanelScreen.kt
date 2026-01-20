@@ -29,126 +29,126 @@ fun AdminPanelScreen(
     onNavigateBack: () -> Unit,
     onNavigateToUsersList: () -> Unit = {},
     onNavigateToCreateProject: () -> Unit,
-    onNavigateToAllProjects: () -> Unit,
-    onNavigateToLabPeople: () -> Unit = {},
-    onNavigateToPendingTasks: () -> Unit = {} // ✅ YENİ PARAMETRE
-) {
-    val configuration = LocalConfiguration.current
-    val screenHeight = configuration.screenHeightDp.dp
-    val screenWidth = configuration.screenWidthDp.dp
-
-    Scaffold(
-        containerColor = PrimaryBlue,
-        contentWindowInsets = WindowInsets.systemBars
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            // ✅ ÜST KISIM - Koyu Mavi Header (Home gibi)
+        onNavigateToAllProjects: () -> Unit,
+        onNavigateToLabPeople: () -> Unit = {},
+        onNavigateToPendingTasks: () -> Unit = {},
+        onNavigateToSendAnnouncement: () -> Unit = {} // ✅ YENİ PARAMETRE
+    ) {
+        val configuration = LocalConfiguration.current
+        val screenHeight = configuration.screenHeightDp.dp
+        val screenWidth = configuration.screenWidthDp.dp
+    
+        Scaffold(
+            containerColor = PrimaryBlue,
+            contentWindowInsets = WindowInsets.systemBars
+        ) { paddingValues ->
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .background(PrimaryBlue)
-                    .padding(screenWidth * 0.04f)
-            ) {
-                // Back Button + Title
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = screenHeight * 0.02f),
-                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
-                ) {
-                    IconButton(
-                        onClick = onNavigateBack,
-                        modifier = Modifier.size(screenWidth * 0.08f)
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Geri",
-                            tint = White,
-                            modifier = Modifier.size(screenWidth * 0.06f)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(screenWidth * 0.02f))
-
-                    Column {
-                        Text(
-                            text = "Admin Control Panel",
-                            fontSize = (screenWidth.value * 0.05f).sp,
-                            fontWeight = FontWeight.Bold,
-                            color = White
-                        )
-                        Text(
-                            text = "Welcome back to your panel",
-                            fontSize = (screenWidth.value * 0.035f).sp,
-                            color = White.copy(alpha = 0.8f)
-                        )
-                    }
-                }
-            }
-
-            // ✅ İÇERİK KISMI - Beyaz Card (Home gibi)
-            Card(
-                modifier = Modifier
                     .fillMaxSize()
-                    .padding(top = screenHeight * 0.02f),
-                colors = CardDefaults.cardColors(containerColor = BackgroundLight),
-                shape = RoundedCornerShape(
-                    topStart = screenWidth * 0.08f,
-                    topEnd = screenWidth * 0.08f
-                )
+                    .padding(paddingValues)
             ) {
+                // ✅ ÜST KISIM - Koyu Mavi Header (Home gibi)
                 Column(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                        .padding(horizontal = screenWidth * 0.04f, vertical = screenHeight * 0.03f),
-                    verticalArrangement = Arrangement.spacedBy(screenHeight * 0.015f)
+                        .fillMaxWidth()
+                        .background(PrimaryBlue)
+                        .padding(screenWidth * 0.04f)
                 ) {
-                    AdminPanelItem(
-                        title = "Tüm Kullanıcıları Listele",
-                        subtitle = "Tüm Kullanıcıları Sayfalar Bir Şekilde Listeler.",
-                        onClick = onNavigateToUsersList,
-                        screenWidth = screenWidth
+                    // Back Button + Title
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = screenHeight * 0.02f),
+                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                    ) {
+                        IconButton(
+                            onClick = onNavigateBack,
+                            modifier = Modifier.size(screenWidth * 0.08f)
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Geri",
+                                tint = White,
+                                modifier = Modifier.size(screenWidth * 0.06f)
+                            )
+                        }
+    
+                        Spacer(modifier = Modifier.width(screenWidth * 0.02f))
+    
+                        Column {
+                            Text(
+                                text = "Admin Control Panel",
+                                fontSize = (screenWidth.value * 0.05f).sp,
+                                fontWeight = FontWeight.Bold,
+                                color = White
+                            )
+                            Text(
+                                text = "Welcome back to your panel",
+                                fontSize = (screenWidth.value * 0.035f).sp,
+                                color = White.copy(alpha = 0.8f)
+                            )
+                        }
+                    }
+                }
+    
+                // ✅ İÇERİK KISMI - Beyaz Card (Home gibi)
+                Card(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(top = screenHeight * 0.02f),
+                    colors = CardDefaults.cardColors(containerColor = BackgroundLight),
+                    shape = RoundedCornerShape(
+                        topStart = screenWidth * 0.08f,
+                        topEnd = screenWidth * 0.08f
                     )
-                    AdminPanelItem(
-                        title = "Proje Oluştur",
-                        subtitle = "Yeni bir proje oluşturur.",
-                        onClick = onNavigateToCreateProject,
-                        screenWidth = screenWidth
-                    )
-
-                    AdminPanelItem(
-                        title = "Tüm Projeleri Listele",
-                        subtitle = "Tüm Projeleri Sayfalı Olarak Listeler.",
-                        onClick = onNavigateToAllProjects,
-                        screenWidth = screenWidth
-                    )
-
-                    AdminPanelItem(
-                        title = "Lab'da Bulunan Kişileri Listele",
-                        subtitle = "Anlık Olarak Lab İçerisinde Bulunan Kişileri Gösterir.",
-                        onClick = onNavigateToLabPeople, 
-                        screenWidth = screenWidth
-                    )
-
-                    AdminPanelItem(
-                        title = "Mevcut Görevleri Puanlandır",
-                        subtitle = "Üyelere Atanan Görevlerin Önem Derecesini Belirle",
-                        onClick = onNavigateToPendingTasks, // ✅ BAĞLANDI
-                        screenWidth = screenWidth
-                    )
-
-                    AdminPanelItem(
-                        title = "Tüm Kullanıcılara Duyuru Gönder",
-                        subtitle = "Sisteme Kayıtlı Tüm Kullanıcılara Duyuru Gönderir.",
-                        onClick = { /* TODO */ },
-                        screenWidth = screenWidth
-                    )
-
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState())
+                            .padding(horizontal = screenWidth * 0.04f, vertical = screenHeight * 0.03f),
+                        verticalArrangement = Arrangement.spacedBy(screenHeight * 0.015f)
+                    ) {
+                        AdminPanelItem(
+                            title = "Tüm Kullanıcıları Listele",
+                            subtitle = "Tüm Kullanıcıları Sayfalar Bir Şekilde Listeler.",
+                            onClick = onNavigateToUsersList,
+                            screenWidth = screenWidth
+                        )
+                        AdminPanelItem(
+                            title = "Proje Oluştur",
+                            subtitle = "Yeni bir proje oluşturur.",
+                            onClick = onNavigateToCreateProject,
+                            screenWidth = screenWidth
+                        )
+    
+                        AdminPanelItem(
+                            title = "Tüm Projeleri Listele",
+                            subtitle = "Tüm Projeleri Sayfalı Olarak Listeler.",
+                            onClick = onNavigateToAllProjects,
+                            screenWidth = screenWidth
+                        )
+    
+                        AdminPanelItem(
+                            title = "Lab'da Bulunan Kişileri Listele",
+                            subtitle = "Anlık Olarak Lab İçerisinde Bulunan Kişileri Gösterir.",
+                            onClick = onNavigateToLabPeople,
+                            screenWidth = screenWidth
+                        )
+    
+                        AdminPanelItem(
+                            title = "Mevcut Görevleri Puanlandır",
+                            subtitle = "Üyelere Atanan Görevlerin Önem Derecesini Belirle",
+                            onClick = onNavigateToPendingTasks, // ✅ BAĞLANDI
+                            screenWidth = screenWidth
+                        )
+    
+                        AdminPanelItem(
+                            title = "Tüm Kullanıcılara Duyuru Gönder",
+                            subtitle = "Sisteme Kayıtlı Tüm Kullanıcılara Duyuru Gönderir.",
+                            onClick = onNavigateToSendAnnouncement, // ✅ BAĞLA
+                            screenWidth = screenWidth
+                        )
                     AdminPanelItem(
                         title = "Lab'a Giriş İznini Ayarla",
                         subtitle = "Laboratuvara Giriş Yetkisini Düzenler.",

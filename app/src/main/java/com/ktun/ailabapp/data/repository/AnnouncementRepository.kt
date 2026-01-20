@@ -62,4 +62,35 @@ class AnnouncementRepository @Inject constructor(
             Result.failure(e)
         }
     }
+
+    suspend fun createAnnouncement(
+        title: String,
+        content: String,
+        scope: Int,
+        userId: String? = null,
+        projectId: String? = null
+    ): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val targetUserIds = if (userId != null) listOf(userId) else null
+            val targetProjectIds = if (projectId != null) listOf(projectId) else null
+
+            val request = com.ktun.ailabapp.data.remote.dto.request.CreateAnnouncementRequest(
+                title = title,
+                content = content,
+                scope = scope,
+                targetUserIds = targetUserIds,
+                targetProjectIds = targetProjectIds
+            )
+
+            val response = announcementApi.createAnnouncement(request)
+
+            if (response.isSuccessful) {
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("Duyuru oluşturulamadı: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

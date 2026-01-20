@@ -38,21 +38,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        lifecycleScope.launch {
-            authRepository.sessionExpiredEvent.collect {
-                if (isHandlingSessionExpired) {
-                    Log.d("MainActivity", "⏭️ Already handling session expired, skipping")
-                    return@collect
-                }
-
-                isHandlingSessionExpired = true
-                Log.e("MainActivity", "🔴 Session expired event received - Restarting app")
-
-                preferencesManager.clearAllData()
-                recreate()
-            }
-        }
-
         setContent {
             AiLabAppTheme {
                 Surface(
@@ -62,7 +47,19 @@ class MainActivity : ComponentActivity() {
                     val navController = rememberNavController()
                     var startDestination by remember { mutableStateOf<String?>(null) }
 
+                    // ✅ Global Session Expiry Handler
                     LaunchedEffect(Unit) {
+                        launch {
+                            authRepository.sessionExpiredEvent.collect {
+                                Log.e("MainActivity", "🔴 Session expired - Navigating to Login")
+                                preferencesManager.clearAllData()
+                                navController.navigate(Screen.Login.route) {
+                                    popUpTo(0) { inclusive = true }
+                                }
+                            }
+                        }
+
+                        // ✅ App Start Logic
                         Log.d("AILAB_DEBUG", "=== APP STARTING ===")
 
                         val rememberMe = preferencesManager.getRememberMe().first()

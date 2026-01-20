@@ -37,7 +37,7 @@ data class HomeUiState(
 
 data class TopUserItem(
     val name: String,
-    val score: Int,
+    val score: Double, // ✅ Int -> Double
     val avatarUrl: String?
 )
 

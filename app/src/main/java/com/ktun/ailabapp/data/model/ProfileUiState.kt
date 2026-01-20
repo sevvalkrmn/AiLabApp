@@ -8,7 +8,7 @@ data class ProfileUiState(
     val schoolNumber: String = "",
     val phone: String = "",
     val profileImageUrl: String? = null,
-    val totalScore: Int = 0,
+    val totalScore: Double = 0.0,
     val roles: List<String> = emptyList(),
     val isAdmin: Boolean = false, // ✅ Admin kontrolü için
     val isLoading: Boolean = true,

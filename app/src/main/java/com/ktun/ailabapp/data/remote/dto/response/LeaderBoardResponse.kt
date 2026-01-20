@@ -6,7 +6,7 @@ data class LeaderboardUserResponse(
     val fullName: String,
 
     @SerializedName("totalScore")
-    val totalScore: Int,
+    val totalScore: Double,
 
     @SerializedName("profileImageUrl")
     val profileImageUrl: String?

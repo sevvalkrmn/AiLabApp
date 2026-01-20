@@ -297,7 +297,7 @@ fun ProfileScreen(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
-                                text = uiState.totalScore.toString(),
+                                text = uiState.totalScore.toInt().toString(), // ✅ Double -> Int
                                 fontSize = (screenWidth.value * 0.12f).sp,
                                 fontWeight = FontWeight.Bold,
                                 color = PrimaryBlue

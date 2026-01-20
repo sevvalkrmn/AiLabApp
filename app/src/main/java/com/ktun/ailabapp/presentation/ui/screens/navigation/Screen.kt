@@ -33,4 +33,5 @@ sealed class Screen(val route: String) {
 
     object LabPeople : Screen("lab_people")
     object PendingTasks : Screen("pending_tasks")
+    object SendGlobalAnnouncement : Screen("send_global_announcement")
 }

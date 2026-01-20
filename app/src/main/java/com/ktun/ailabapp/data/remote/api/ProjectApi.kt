@@ -12,6 +12,8 @@ import com.ktun.ailabapp.data.remote.dto.response.ProjectMember
 import retrofit2.Response
 import retrofit2.http.*
 
+import com.ktun.ailabapp.data.remote.dto.response.PaginatedResponse // ✅ Import
+
 interface ProjectApi {
 
     /**
@@ -22,6 +24,10 @@ interface ProjectApi {
     suspend fun getMyProjects(
         @Query("role") role: String? = null  // "Captain" veya "Member" filtresi
     ): Response<List<MyProjectsResponse>>
+
+    // ✅ YENİ: Sistemdeki TÜM projeleri listele (Sadece Admin)
+    @GET("api/Projects")
+    suspend fun getAllProjects(): Response<PaginatedResponse<MyProjectsResponse>> // ✅ List -> PaginatedResponse
 
     // ✅ YENİ ENDPOINT - Belirli bir kullanıcının projelerini getir
     /**

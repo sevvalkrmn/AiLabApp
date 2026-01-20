@@ -28,7 +28,8 @@ class AllProjectsViewModel @Inject constructor(
         _state.update { it.copy(isLoading = true, error = null) }
 
         viewModelScope.launch {
-            when (val result = projectRepository.getMyProjects()) {
+            // ✅ DEĞİŞTİRİLDİ: Sadece Adminlerin erişebildiği 'Tüm Projeler' endpoint'i
+            when (val result = projectRepository.getAllProjects()) {
                 is NetworkResult.Success -> {
                     _state.update {
                         it.copy(

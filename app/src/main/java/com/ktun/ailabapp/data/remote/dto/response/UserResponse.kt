@@ -57,7 +57,7 @@ fun UserResponse.toUser(): User {
         username = username,                    // ✅ YENİ
         profileImageUrl = profileImageUrl,
         isActive = status == 1,                 // ✅ status 1 ise active
-        points = totalScore?.toInt() ?: 0,      // ✅ totalScore → points (Double → Int)
+        points = totalScore ?: 0.0,             // ✅ totalScore → points (Double)
         lastLabEntry = lastLabEntry,            // ✅ YENİ
         roles = roles,                          // ✅ Liste olarak
         projects = null                     // ✅ YENİ

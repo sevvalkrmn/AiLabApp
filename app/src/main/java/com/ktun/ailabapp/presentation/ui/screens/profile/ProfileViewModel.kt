@@ -6,7 +6,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ktun.ailabapp.data.model.ProfileUiState // ✅ YENİ IMPORT
+import com.ktun.ailabapp.data.model.ProfileUiState
 import com.ktun.ailabapp.data.repository.AuthRepository
 import com.ktun.ailabapp.util.ImageCompressor
 import com.ktun.ailabapp.util.NetworkResult
@@ -39,7 +39,6 @@ class ProfileViewModel @Inject constructor(
                 is NetworkResult.Success -> {
                     result.data?.let { profile ->
 
-                        // ✅ BÜYÜK/KÜÇÜK HARF DUYARSIZ KONTROL
                         val isAdminUser = profile.roles.any { role ->
                             role.equals("admin", ignoreCase = true)
                         }
@@ -51,16 +50,14 @@ class ProfileViewModel @Inject constructor(
                             schoolNumber = profile.schoolNumber,
                             phone = profile.phone,
                             profileImageUrl = profile.profileImageUrl,
-                            totalScore = profile.totalScore,
+                            totalScore = profile.totalScore, // Double
                             roles = profile.roles,
-                            isAdmin = isAdminUser, // ✅ Doğru kontrol
+                            isAdmin = isAdminUser,
                             isLoading = false,
                             errorMessage = null
                         )
 
                         Logger.d("✅ Profile loaded: ${profile.fullName}", "ProfileVM")
-                        Logger.d("  - Roles: ${profile.roles}", "ProfileVM")
-                        Logger.d("  - isAdmin: $isAdminUser", "ProfileVM")
                     }
                 }
                 is NetworkResult.Error -> {
@@ -86,8 +83,6 @@ class ProfileViewModel @Inject constructor(
                 errorMessage = null
             )
 
-            Logger.d("📤 Compressing and uploading profile image...", "ProfileVM")
-
             try {
                 val compressResult = ImageCompressor.compressToWebP(
                     context = context,
@@ -103,25 +98,13 @@ class ProfileViewModel @Inject constructor(
                 }
 
                 val optimizedUri = compressResult.getOrNull()!!
-                Logger.d("✅ Image compressed to WebP successfully", "ProfileVM")
-
                 val userId = _uiState.value.id
+                
                 when (val result = authRepository.uploadAndUpdateProfileImage(userId, optimizedUri)) {
                     is NetworkResult.Success -> {
-                        Logger.d("✅ Profile image uploaded successfully", "ProfileVM")
-
-                        result.data?.let { profile ->
-                            _uiState.value = _uiState.value.copy(
-                                profileImageUrl = profile.profileImageUrl,
-                                isUploadingImage = false,
-                                errorMessage = null
-                            )
-                        }
-
                         loadUserProfile()
                     }
                     is NetworkResult.Error -> {
-                        Logger.e("❌ Profile image upload error: ${result.message}", tag = "ProfileVM")
                         _uiState.value = _uiState.value.copy(
                             isUploadingImage = false,
                             errorMessage = result.message ?: "Fotoğraf yüklenemedi"
@@ -130,7 +113,6 @@ class ProfileViewModel @Inject constructor(
                     is NetworkResult.Loading -> {}
                 }
             } catch (e: Exception) {
-                Logger.e("❌ Error processing image: ${e.message}", e, "ProfileVM")
                 _uiState.value = _uiState.value.copy(
                     isUploadingImage = false,
                     errorMessage = "Fotoğraf işlenirken hata oluştu"
@@ -146,24 +128,11 @@ class ProfileViewModel @Inject constructor(
                 errorMessage = null
             )
 
-            Logger.d("🖼️ Selecting default avatar: $avatarUrl", "ProfileVM")
-
             when (val result = authRepository.selectDefaultAvatar(avatarUrl)) {
                 is NetworkResult.Success -> {
-                    Logger.d("✅ Default avatar selected successfully", "ProfileVM")
-
-                    result.data?.let { profile ->
-                        _uiState.value = _uiState.value.copy(
-                            profileImageUrl = profile.profileImageUrl,
-                            isUploadingImage = false,
-                            errorMessage = null
-                        )
-                    }
-
                     loadUserProfile()
                 }
                 is NetworkResult.Error -> {
-                    Logger.e("❌ Default avatar selection error: ${result.message}", tag = "ProfileVM")
                     _uiState.value = _uiState.value.copy(
                         isUploadingImage = false,
                         errorMessage = result.message ?: "Avatar seçimi başarısız"
@@ -176,15 +145,12 @@ class ProfileViewModel @Inject constructor(
 
     private fun loadDefaultAvatars() {
         viewModelScope.launch {
-            Logger.d("📥 Loading default avatars...", "ProfileVM")
-
             when (val result = authRepository.getDefaultAvatars()) {
                 is NetworkResult.Success -> {
                     result.data?.let { avatars ->
                         _uiState.value = _uiState.value.copy(
                             defaultAvatars = avatars
                         )
-                        Logger.d("✅ Default avatars loaded: ${avatars.size}", "ProfileVM")
                     }
                 }
                 is NetworkResult.Error -> {
@@ -198,16 +164,11 @@ class ProfileViewModel @Inject constructor(
     fun logout(onSuccess: () -> Unit) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
-
             try {
-                Logger.d("🚪 Logout started", "ProfileVM")
                 authRepository.logout()
-                Logger.d("✅ Logout successful", "ProfileVM")
-
                 _uiState.value = _uiState.value.copy(isLoading = false)
                 onSuccess()
             } catch (e: Exception) {
-                Logger.e("❌ Logout error: ${e.message}", e, "ProfileVM")
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     errorMessage = "Çıkış yapılırken hata oluştu"
