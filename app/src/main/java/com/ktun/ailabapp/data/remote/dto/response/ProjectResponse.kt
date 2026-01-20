@@ -5,8 +5,6 @@ package com.ktun.ailabapp.data.remote.dto.response
 import com.google.gson.annotations.SerializedName
 import com.ktun.ailabapp.data.model.UserProject
 
-
-// GET /api/projects/my-projects için basit liste
 data class MyProjectsResponse(
     @SerializedName("id")
     val id: String = "",
@@ -20,10 +18,26 @@ data class MyProjectsResponse(
     @SerializedName("createdAt")
     val createdAt: String = "",
 
-    @SerializedName("userRole")
-    val userRole: String = "Member"
-)
+    @SerializedName("createdBy")
+    val createdBy: String = "",
 
+    @SerializedName("createdByName")
+    val createdByName: String = "",
+
+    // ✅ YENİ - Backend döndürüyor
+    @SerializedName("memberCount")
+    val memberCount: Int = 0,
+
+    @SerializedName("taskCount")
+    val taskCount: Int = 0,
+
+    @SerializedName("captainNames")
+    val captainNames: List<String> = emptyList(),
+
+    @SerializedName("userRole")
+    val userRole: String? = null
+
+)
 // GET /api/projects/{id} için detaylı proje
 data class ProjectDetailResponse(
     @SerializedName("id")

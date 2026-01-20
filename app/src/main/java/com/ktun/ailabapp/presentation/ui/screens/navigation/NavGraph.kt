@@ -13,6 +13,8 @@ import androidx.navigation.navArgument
 import com.ktun.ailabapp.data.model.User
 import com.ktun.ailabapp.presentation.ui.navigation.Screen
 import com.ktun.ailabapp.presentation.ui.screens.admin.AdminPanelScreen // ✅ IMPORT EKLE
+import com.ktun.ailabapp.presentation.ui.screens.admin.createproject.AllProjectsScreen
+import com.ktun.ailabapp.presentation.ui.screens.admin.createproject.CreateProjectScreen
 import com.ktun.ailabapp.presentation.ui.screens.announcement.AnnouncementScreen
 import com.ktun.ailabapp.presentation.ui.screens.announcement.AnnouncementViewModel
 import com.ktun.ailabapp.presentation.ui.screens.home.HomeScreen
@@ -174,6 +176,21 @@ fun NavGraph(
                 onNavigateToUsersList = { // ✅ YENİ
                     android.util.Log.d("NavGraph", "🔵 Navigating to Users List")
                     navController.navigate(Screen.UsersList.route)
+                },
+                onNavigateToCreateProject = {
+                    navController.navigate(Screen.CreateProject.route)
+                },
+                onNavigateToAllProjects = {  // ✅ YENİ
+                    navController.navigate(Screen.AllProjects.route)
+                }
+            )
+        }
+
+        composable(Screen.AllProjects.route) {
+            AllProjectsScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToProjectDetail = { projectId ->
+                    navController.navigate(Screen.ProjectDetail.createRoute(projectId))
                 }
             )
         }
@@ -245,6 +262,12 @@ fun NavGraph(
             TaskHistoryScreen(
                 userId = userId,
                 userName = userName,
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.CreateProject.route) {
+            CreateProjectScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }

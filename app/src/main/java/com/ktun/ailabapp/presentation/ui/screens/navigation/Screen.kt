@@ -19,6 +19,9 @@ sealed class Screen(val route: String) {
     object AdminPanel : Screen("admin_panel")
     object UsersList : Screen("users_list")
 
+    object CreateProject : Screen("create_project")
+    object AllProjects : Screen("all_projects")
+
     object TaskHistory : Screen("task_history/{userId}/{userName}") {
         fun createRoute(userId: String, userName: String) = "task_history/$userId/$userName"
     }

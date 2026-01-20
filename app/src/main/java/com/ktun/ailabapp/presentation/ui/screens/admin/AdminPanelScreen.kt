@@ -28,7 +28,9 @@ import com.ktun.ailabapp.ui.theme.White
 @Composable
 fun AdminPanelScreen(
     onNavigateBack: () -> Unit,
-    onNavigateToUsersList: () -> Unit = {}
+    onNavigateToUsersList: () -> Unit = {},
+    onNavigateToCreateProject: () -> Unit,
+    onNavigateToAllProjects: () -> Unit
 ) {
     val configuration = LocalConfiguration.current
     val screenHeight = configuration.screenHeightDp.dp
@@ -111,11 +113,17 @@ fun AdminPanelScreen(
                         onClick = onNavigateToUsersList,
                         screenWidth = screenWidth
                     )
+                    AdminPanelItem(
+                        title = "Proje Oluştur",
+                        subtitle = "Yeni bir proje oluşturur.",
+                        onClick = onNavigateToCreateProject,
+                        screenWidth = screenWidth
+                    )
 
                     AdminPanelItem(
                         title = "Tüm Projeleri Listele",
                         subtitle = "Tüm Projeleri Sayfalı Olarak Listeler.",
-                        onClick = { /* TODO */ },
+                        onClick = onNavigateToAllProjects,
                         screenWidth = screenWidth
                     )
 
