@@ -33,7 +33,9 @@ fun UserDetailBottomSheet(
     onEditClick: () -> Unit,
     onSendAnnouncement: (String, String) -> Unit,
     onManageRoles: (String) -> Unit,
-    onViewTaskHistory: (String, String) -> Unit
+    onViewTaskHistory: (String, String) -> Unit,
+    onImageUpdated: () -> Unit = {},
+    onScoreUpdated: () -> Unit = {} // ✅ EKLE
 ) {
     // ✅ STATE TANIMLA
     var showAdjustScoreDialog by remember { mutableStateOf(false) }
@@ -99,6 +101,7 @@ fun UserDetailBottomSheet(
             currentScore = user.points ?: 0,
             onDismiss = {
                 showAdjustScoreDialog = false
+                onScoreUpdated() // ✅ Puan değişince haber ver
             }
         )
     }
@@ -110,6 +113,7 @@ fun UserDetailBottomSheet(
             currentImageUrl = user.profileImageUrl,
             onDismiss = {
                 showUpdateImageDialog = false
+                onImageUpdated() // ✅ Fotoğraf değişince haber ver
             }
         )
     }

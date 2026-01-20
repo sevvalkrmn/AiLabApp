@@ -86,4 +86,24 @@ class UserRepository @Inject constructor(
             NetworkResult.Error(e.message ?: "Bilinmeyen hata")
         }
     }
+
+    suspend fun updateUserProfileImage(
+        userId: String,
+        imageUrl: String
+    ): NetworkResult<String> = withContext(Dispatchers.IO) {
+        try {
+            val request = com.ktun.ailabapp.data.remote.dto.request.UpdateProfileImageRequest(imageUrl)
+            val response = usersApi.updateUserProfileImage(userId, request)
+
+            if (response.isSuccessful && response.body() != null) {
+                NetworkResult.Success(response.body()!!.url)
+            } else {
+                NetworkResult.Error("Fotoğraf güncellenemedi: ${response.code()}")
+            }
+        } catch (e: Exception) {
+            NetworkResult.Error(e.message ?: "Bilinmeyen hata")
+        }
+    }
+
+
 }

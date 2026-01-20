@@ -2,50 +2,41 @@ package com.ktun.ailabapp.data.remote.dto.request
 
 import com.google.gson.annotations.SerializedName
 
-/**
- * Yeni görev oluşturma isteği
- * POST /api/tasks
- */
 data class CreateTaskRequest(
     @SerializedName("title")
     val title: String,
 
     @SerializedName("description")
-    val description: String? = null,
+    val description: String?,
 
     @SerializedName("projectId")
     val projectId: String,
 
-    @SerializedName("assignedToUserId")
-    val assignedToUserId: String? = null,
+    @SerializedName("assigneeId")
+    val assigneeId: String?,
 
     @SerializedName("dueDate")
-    val dueDate: String? = null
+    val dueDate: String?
 )
 
-/**
- * Görev güncelleme isteği
- * PUT /api/tasks/{id}
- */
 data class UpdateTaskRequest(
     @SerializedName("title")
-    val title: String? = null,
+    val title: String?,
 
     @SerializedName("description")
-    val description: String? = null,
+    val description: String?,
 
-    @SerializedName("assignedToUserId")
-    val assignedToUserId: String? = null,
+    @SerializedName("status")
+    val status: Int?,
+
+    @SerializedName("assigneeId")
+    val assigneeId: String?,
 
     @SerializedName("dueDate")
-    val dueDate: String? = null
+    val dueDate: String?
 )
 
-/**
- * Görev durumu güncelleme isteği
- * PUT /api/tasks/{id}/status
- */
 data class UpdateTaskStatusRequest(
     @SerializedName("status")
-    val status: Int  // 0=Todo, 1=InProgress, 2=Done
+    val status: Int
 )

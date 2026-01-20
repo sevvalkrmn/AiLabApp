@@ -9,6 +9,8 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
+import com.ktun.ailabapp.data.remote.dto.request.CreateTaskRequest
+
 @Singleton
 class TaskRepository @Inject constructor(
     private val taskApi: TaskApi
@@ -57,7 +59,7 @@ class TaskRepository @Inject constructor(
     /**
      * Kullanıcının görevlerini getir
      */
-    suspend fun getMyTasks(status: String? = null): NetworkResult<List<TaskResponse>> =
+    suspend fun getMyTasks(status: Int? = null): NetworkResult<List<TaskResponse>> =
         withContext(Dispatchers.IO) {
             try {
                 android.util.Log.d("TaskRepository", "Kullanıcı görevleri çekiliyor. Status: $status")
@@ -86,6 +88,50 @@ class TaskRepository @Inject constructor(
                 NetworkResult.Error(e.message ?: "Bilinmeyen hata")
             }
         }
+
+    suspend fun createTask(
+        title: String,
+        description: String?,
+        projectId: String,
+        assigneeId: String?,
+        dueDate: String?
+    ): NetworkResult<TaskResponse> = withContext(Dispatchers.IO) {
+        try {
+            val request = CreateTaskRequest(
+                title = title,
+                description = description,
+                projectId = projectId,
+                assigneeId = assigneeId,
+                dueDate = dueDate
+            )
+
+            val response = taskApi.createTask(request)
+
+            if (response.isSuccessful && response.body() != null) {
+                NetworkResult.Success(response.body()!!)
+            } else {
+                val errorBody = response.errorBody()?.string()
+                NetworkResult.Error("Görev oluşturulamadı: $errorBody")
+            }
+        } catch (e: Exception) {
+            NetworkResult.Error(e.message ?: "Bilinmeyen hata")
+        }
+    }
+
+    suspend fun deleteTask(taskId: String): NetworkResult<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val response = taskApi.deleteTask(taskId)
+
+            if (response.isSuccessful) {
+                NetworkResult.Success(Unit)
+            } else {
+                val errorBody = response.errorBody()?.string()
+                NetworkResult.Error("Görev silinemedi: $errorBody")
+            }
+        } catch (e: Exception) {
+            NetworkResult.Error(e.message ?: "Bilinmeyen hata")
+        }
+    }
 
     /**
      * Görev durumunu güncelle

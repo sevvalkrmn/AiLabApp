@@ -30,4 +30,7 @@ sealed class Screen(val route: String) {
     object SendAnnouncement : Screen("send_announcement/{userId}/{userName}") {
         fun createRoute(userId: String, userName: String) = "send_announcement/$userId/$userName"
     }
+
+    object LabPeople : Screen("lab_people")
+    object PendingTasks : Screen("pending_tasks")
 }

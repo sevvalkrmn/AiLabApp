@@ -19,6 +19,9 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
+import com.ktun.ailabapp.data.remote.api.AdminScoreApi // ✅ Import
+import com.ktun.ailabapp.data.repository.AdminScoreRepository // ✅ Import
+
 @Module
 @InstallIn(SingletonComponent::class)
 object RepositoryModule {
@@ -62,5 +65,13 @@ object RepositoryModule {
         roomsApi: RoomsApi
     ): LabStatsRepository {
         return LabStatsRepositoryImpl(roomsApi)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAdminScoreRepository(
+        adminScoreApi: AdminScoreApi
+    ): AdminScoreRepository {
+        return AdminScoreRepository(adminScoreApi)
     }
 }

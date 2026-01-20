@@ -4,6 +4,7 @@ package com.ktun.ailabapp.data.repository
 
 import com.ktun.ailabapp.data.model.UserProject
 import com.ktun.ailabapp.data.remote.api.ProjectApi
+import com.ktun.ailabapp.data.remote.dto.request.AddMemberRequest
 import com.ktun.ailabapp.data.remote.dto.request.CreateProjectRequest
 import com.ktun.ailabapp.data.remote.dto.response.MyProjectsResponse
 import com.ktun.ailabapp.data.remote.dto.response.ProjectDetailResponse
@@ -197,6 +198,134 @@ class ProjectRepository @Inject constructor(
                 else -> {
                     android.util.Log.e("ProjectRepository", "❌ Error: ${response.code()}")
                     NetworkResult.Error("Proje oluşturulamadı: ${response.code()}")
+                }
+            }
+        } catch (e: HttpException) {
+            android.util.Log.e("ProjectRepository", "❌ HTTP Exception: ${e.code()}", e)
+            return@withContext NetworkResult.Error("HTTP ${e.code()}: ${e.message()}")
+        } catch (e: Exception) {
+            android.util.Log.e("ProjectRepository", "❌ Exception: ${e.message}", e)
+            return@withContext NetworkResult.Error(e.message ?: "Bilinmeyen hata")
+        }
+    }
+
+    suspend fun addMember(
+        projectId: String,
+        request: AddMemberRequest
+    ): NetworkResult<ProjectMember> = withContext(Dispatchers.IO) {
+        try {
+            android.util.Log.d("ProjectRepository", "🔍 Adding member to project: $projectId")
+
+            val response = projectApi.addMember(projectId, request)
+
+            return@withContext when {  // ✅ return@withContext EKLE
+                response.code() == 401 -> NetworkResult.Error("Oturum süresi doldu")
+                response.code() == 403 -> NetworkResult.Error("Üye ekleme yetkiniz yok")
+                response.code() == 409 -> NetworkResult.Error("Kullanıcı zaten bu projede")
+                response.code() == 400 -> {
+                    // ✅ Backend'den gelen gerçek hatayı okumaya çalış
+                    val errorBody = response.errorBody()?.string()
+                    android.util.Log.e("ProjectRepository", "Add Member 400 Error Body: $errorBody")
+                    
+                    if (!errorBody.isNullOrEmpty()) {
+                        if (errorBody.contains("An error occurred while saving the entity changes", ignoreCase = true)) {
+                            NetworkResult.Error("Ekleme başarısız: Kullanıcı daha önce eklenip çıkarılmış olabilir. Sistem tekrar eklemeye izin vermiyor (Backend Kısıtlaması).")
+                        } else {
+                            NetworkResult.Error("Ekleme başarısız: $errorBody")
+                        }
+                    } else {
+                        NetworkResult.Error("Bu projede zaten bir Captain var veya geçersiz istek (400)")
+                    }
+                }
+                response.isSuccessful && response.body() != null -> {
+                    val member = response.body()!!
+                    android.util.Log.d("ProjectRepository", "✅ Member added: ${member.fullName}")
+                    NetworkResult.Success(member)
+                }
+                else -> {
+                    android.util.Log.e("ProjectRepository", "❌ Error: ${response.code()}")
+                    NetworkResult.Error("Üye eklenemedi: ${response.code()}")
+                }
+            }
+        } catch (e: HttpException) {
+            android.util.Log.e("ProjectRepository", "❌ HTTP Exception: ${e.code()}", e)
+            return@withContext NetworkResult.Error("HTTP ${e.code()}: ${e.message()}")
+        } catch (e: Exception) {
+            android.util.Log.e("ProjectRepository", "❌ Exception: ${e.message}", e)
+            return@withContext NetworkResult.Error(e.message ?: "Bilinmeyen hata")
+        }
+    }
+
+    /**
+     * Projeden üye çıkar
+     * DELETE /api/projects/{projectId}/members/{userId}
+     */
+    suspend fun removeMember(
+        projectId: String,
+        userId: String
+    ): NetworkResult<Unit> = withContext(Dispatchers.IO) {
+        try {
+            android.util.Log.d("ProjectRepository", "🔍 Removing member from project: $projectId")
+
+            val response = projectApi.removeMember(projectId, userId)
+
+            return@withContext when {
+                response.code() == 401 -> NetworkResult.Error("Oturum süresi doldu")
+                response.code() == 403 -> NetworkResult.Error("Üye çıkarma yetkiniz yok")
+                response.code() == 400 -> {
+                    // ✅ Backend'den gelen gerçek hatayı okumaya çalış
+                    val errorBody = response.errorBody()?.string()
+                    android.util.Log.e("ProjectRepository", "Remove Member 400 Error Body: $errorBody")
+                    
+                    if (!errorBody.isNullOrEmpty()) {
+                        // Eğer backend düz metin veya JSON içinde mesaj dönüyorsa onu kullanabiliriz.
+                        // Basitçe errorBody'i döndürelim (veya JSON parse edilebilir)
+                        NetworkResult.Error("İşlem başarısız: $errorBody") 
+                    } else {
+                        NetworkResult.Error("Kullanıcı projeden çıkarılamadı (400)")
+                    }
+                }
+                response.isSuccessful -> {
+                    android.util.Log.d("ProjectRepository", "✅ Member removed")
+                    NetworkResult.Success(Unit)
+                }
+                else -> {
+                    android.util.Log.e("ProjectRepository", "❌ Error: ${response.code()}")
+                    NetworkResult.Error("Üye çıkarılamadı: ${response.code()}")
+                }
+            }
+        } catch (e: HttpException) {
+            android.util.Log.e("ProjectRepository", "❌ HTTP Exception: ${e.code()}", e)
+            return@withContext NetworkResult.Error("HTTP ${e.code()}: ${e.message()}")
+        } catch (e: Exception) {
+            android.util.Log.e("ProjectRepository", "❌ Exception: ${e.message}", e)
+            return@withContext NetworkResult.Error(e.message ?: "Bilinmeyen hata")
+        }
+    }
+
+    /**
+     * Projeyi sil
+     * DELETE /api/projects/{projectId}
+     */
+    suspend fun deleteProject(
+        projectId: String
+    ): NetworkResult<Unit> = withContext(Dispatchers.IO) {
+        try {
+            android.util.Log.d("ProjectRepository", "🔍 Deleting project: $projectId")
+
+            val response = projectApi.deleteProject(projectId)
+
+            return@withContext when {
+                response.code() == 401 -> NetworkResult.Error("Oturum süresi doldu")
+                response.code() == 403 -> NetworkResult.Error("Proje silme yetkiniz yok")
+                response.code() == 400 -> NetworkResult.Error("Aktif görevler var, önce bunları tamamlayın")
+                response.isSuccessful -> {
+                    android.util.Log.d("ProjectRepository", "✅ Project deleted")
+                    NetworkResult.Success(Unit)
+                }
+                else -> {
+                    android.util.Log.e("ProjectRepository", "❌ Error: ${response.code()}")
+                    NetworkResult.Error("Proje silinemedi: ${response.code()}")
                 }
             }
         } catch (e: HttpException) {
