@@ -3,6 +3,7 @@ package com.ktun.ailabapp.presentation.ui.screens.register
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ktun.ailabapp.data.repository.AuthRepository
+import com.ktun.ailabapp.util.FirebaseAuthManager
 import com.ktun.ailabapp.util.NetworkResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -12,6 +13,8 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class RegisterUiState(
+    val step: Int = 1, // 1: Email/Pass, 2: Details
+    val idToken: String? = null,
     val fullName: String = "",
     val username: String = "",
     val email: String = "",
@@ -28,67 +31,41 @@ data class RegisterUiState(
 
 @HiltViewModel
 class RegisterViewModel @Inject constructor(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val authManager: FirebaseAuthManager // ✅ Inject
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RegisterUiState())
     val uiState: StateFlow<RegisterUiState> = _uiState.asStateFlow()
 
-    fun updateFullName(fullName: String) {
-        _uiState.value = _uiState.value.copy(fullName = fullName)
-    }
-
-    fun updateUsername(username: String) {
-        _uiState.value = _uiState.value.copy(username = username)
-    }
-
-    fun updateEmail(email: String) {
-        _uiState.value = _uiState.value.copy(email = email)
-    }
-
-    fun updateSchoolNumber(schoolNumber: String) {
-        _uiState.value = _uiState.value.copy(schoolNumber = schoolNumber)
-    }
-
+    // ... Update functions ...
+    fun updateFullName(fullName: String) { _uiState.value = _uiState.value.copy(fullName = fullName) }
+    fun updateUsername(username: String) { _uiState.value = _uiState.value.copy(username = username) }
+    fun updateEmail(email: String) { _uiState.value = _uiState.value.copy(email = email) }
+    fun updateSchoolNumber(schoolNumber: String) { _uiState.value = _uiState.value.copy(schoolNumber = schoolNumber) }
     fun updatePhone(phone: String) {
-        // Sadece rakam girişine izin ver ve başındaki 0'ı kaldır
         val cleanedPhone = phone.filter { it.isDigit() }.removePrefix("0")
         _uiState.value = _uiState.value.copy(phone = cleanedPhone)
     }
+    fun updatePassword(password: String) { _uiState.value = _uiState.value.copy(password = password) }
+    fun updateConfirmPassword(confirmPassword: String) { _uiState.value = _uiState.value.copy(confirmPassword = confirmPassword) }
+    fun togglePasswordVisibility() { _uiState.value = _uiState.value.copy(isPasswordVisible = !_uiState.value.isPasswordVisible) }
+    fun toggleConfirmPasswordVisibility() { _uiState.value = _uiState.value.copy(isConfirmPasswordVisible = !_uiState.value.isConfirmPasswordVisible) }
 
-    fun updatePassword(password: String) {
-        _uiState.value = _uiState.value.copy(password = password)
+    fun previousStep() {
+        if (_uiState.value.step == 2) {
+            _uiState.value = _uiState.value.copy(step = 1, errorMessage = null)
+        }
     }
 
-    fun updateConfirmPassword(confirmPassword: String) {
-        _uiState.value = _uiState.value.copy(confirmPassword = confirmPassword)
-    }
-
-    fun togglePasswordVisibility() {
-        _uiState.value = _uiState.value.copy(
-            isPasswordVisible = !_uiState.value.isPasswordVisible
-        )
-    }
-
-    fun toggleConfirmPasswordVisibility() {
-        _uiState.value = _uiState.value.copy(
-            isConfirmPasswordVisible = !_uiState.value.isConfirmPasswordVisible
-        )
-    }
-
-    private fun validateInputs(): String? {
+    // Step 1 Validation & Firebase Creation
+    fun createFirebaseUser() {
         val state = _uiState.value
-
-        return when {
-            state.fullName.isBlank() -> "Ad Soyad boş bırakılamaz"
-            state.username.isBlank() -> "Kullanıcı adı boş bırakılamaz"
-            state.username.length < 3 -> "Kullanıcı adı en az 3 karakter olmalıdır"
-            state.username.length > 50 -> "Kullanıcı adı en fazla 50 karakter olabilir"
+        
+        // Validate Step 1
+        val error = when {
             state.email.isBlank() -> "E-posta boş bırakılamaz"
             !android.util.Patterns.EMAIL_ADDRESS.matcher(state.email).matches() -> "Geçerli bir e-posta adresi girin"
-            state.schoolNumber.isBlank() -> "Okul numarası boş bırakılamaz"
-            state.phone.isBlank() -> "Telefon numarası boş bırakılamaz"
-            state.phone.length < 10 -> "Telefon numarası 10 haneli olmalıdır"
             state.password.isBlank() -> "Şifre boş bırakılamaz"
             state.password.length < 8 -> "Şifre en az 8 karakter olmalıdır"
             !state.password.any { it.isUpperCase() } -> "Şifre en az 1 büyük harf içermelidir"
@@ -96,51 +73,84 @@ class RegisterViewModel @Inject constructor(
             state.password != state.confirmPassword -> "Şifreler eşleşmiyor"
             else -> null
         }
-    }
 
-    fun register(onSuccess: () -> Unit) {
+        if (error != null) {
+            _uiState.value = _uiState.value.copy(errorMessage = error)
+            return
+        }
+
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
 
-            // Validasyonları kontrol et
-            val validationError = validateInputs()
-            if (validationError != null) {
+            val result = authManager.signUp(state.email, state.password)
+            
+            result.onSuccess { token ->
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    errorMessage = validationError
+                    idToken = token,
+                    step = 2 // Move to next step
                 )
-                return@launch
+            }.onFailure { e ->
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = "Firebase Hatası: ${e.message}"
+                )
             }
+        }
+    }
 
-            // Backend'e kayıt isteği gönder
-            val state = _uiState.value
+    // Step 2 Validation & Backend Registration
+    fun completeRegistration(onSuccess: () -> Unit) {
+        val state = _uiState.value
+        
+        // Validate Step 2
+        val error = when {
+            state.fullName.isBlank() -> "Ad Soyad boş bırakılamaz"
+            state.username.isBlank() -> "Kullanıcı adı boş bırakılamaz"
+            state.username.length < 3 -> "Kullanıcı adı en az 3 karakter olmalıdır"
+            state.schoolNumber.isBlank() -> "Okul numarası boş bırakılamaz"
+            state.phone.isBlank() -> "Telefon numarası boş bırakılamaz"
+            state.phone.length < 10 -> "Telefon numarası 10 haneli olmalıdır"
+            else -> null
+        }
 
-            when (val result = authRepository.register(
+        if (error != null) {
+            _uiState.value = _uiState.value.copy(errorMessage = error)
+            return
+        }
+
+        if (state.idToken == null) {
+            _uiState.value = _uiState.value.copy(errorMessage = "Oturum token'ı bulunamadı. Lütfen başa dönün.")
+            return
+        }
+
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+
+            val result = authRepository.completeRegistration(
+                idToken = state.idToken,
                 fullName = state.fullName,
                 username = state.username,
                 email = state.email,
                 schoolNumber = state.schoolNumber,
-                phone = state.phone,
-                password = state.password
-            )) {
+                phone = state.phone
+            )
+
+            when (result) {
                 is NetworkResult.Success -> {
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        isRegistered = true,
-                        errorMessage = null
+                        isRegistered = true
                     )
                     onSuccess()
                 }
                 is NetworkResult.Error -> {
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        isRegistered = false,
                         errorMessage = result.message
                     )
                 }
-                is NetworkResult.Loading -> {
-                    // Loading durumu zaten set edildi
-                }
+                is NetworkResult.Loading -> {}
             }
         }
     }

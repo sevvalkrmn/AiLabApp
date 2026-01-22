@@ -52,6 +52,7 @@ fun HomeScreen(
 
     if (showFeedbackDialog) {
         FeedbackDialog(
+            pageInfo = "home-screen", // ✅ Sayfa bilgisi
             onDismiss = { showFeedbackDialog = false },
             onSubmit = { feedback ->
                 android.util.Log.d("HomeScreen", "📝 Feedback: $feedback")
