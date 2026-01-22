@@ -63,10 +63,10 @@ fun ProjectsScreen(
     // ✅ YENİ: Feedback Dialog
     if (showFeedbackDialog) {
         FeedbackDialog(
+            pageInfo = "projects-screen", // ✅ Sayfa bilgisi
             onDismiss = { showFeedbackDialog = false },
             onSubmit = { feedback ->
-                android.util.Log.d("ProjectsScreen", "📝 Feedback: $feedback")
-                Toast.makeText(context, "Geri bildiriminiz alındı!", Toast.LENGTH_SHORT).show()
+                android.widget.Toast.makeText(context, "Geri bildiriminiz alındı!", android.widget.Toast.LENGTH_SHORT).show()
                 showFeedbackDialog = false
             }
         )

@@ -75,6 +75,7 @@ fun ProfileScreen(
 
     if (showFeedbackDialog) {
         FeedbackDialog(
+            pageInfo = "profile-screen", // ✅ Sayfa bilgisi
             onDismiss = { showFeedbackDialog = false },
             onSubmit = { feedback ->
                 showFeedbackDialog = false

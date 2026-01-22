@@ -14,6 +14,8 @@ import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.PUT
 
+import com.ktun.ailabapp.data.remote.dto.request.FirebaseLoginRequest // ✅ Import
+
 interface AuthApi {
 
     @POST("api/auth/register")
@@ -21,6 +23,10 @@ interface AuthApi {
 
     @POST("api/auth/login")
     suspend fun login(@Body request: LoginRequest): Response<AuthResponse>
+
+    // ✅ YENİ: Firebase Login
+    @POST("api/Auth/login-firebase")
+    suspend fun loginFirebase(@Body request: FirebaseLoginRequest): Response<AuthResponse>
 
     @POST("api/auth/logout")
     suspend fun logout(): Response<Unit>

@@ -1,26 +1,15 @@
 package com.ktun.ailabapp.di
 
-
 import com.ktun.ailabapp.data.local.datastore.PreferencesManager
-import com.ktun.ailabapp.data.remote.api.AnnouncementApi
-import com.ktun.ailabapp.data.remote.api.AuthApi
-import com.ktun.ailabapp.data.remote.api.ProjectApi
-import com.ktun.ailabapp.data.remote.api.RoomsApi
-import com.ktun.ailabapp.data.remote.api.TaskApi
-import com.ktun.ailabapp.data.repository.AnnouncementRepository
-import com.ktun.ailabapp.data.repository.AuthRepository
-import com.ktun.ailabapp.data.repository.LabStatsRepository
-import com.ktun.ailabapp.data.repository.LabStatsRepositoryImpl
-import com.ktun.ailabapp.data.repository.ProjectRepository
-import com.ktun.ailabapp.data.repository.TaskRepository
+import com.ktun.ailabapp.data.remote.api.*
+import com.ktun.ailabapp.data.repository.*
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
-import com.ktun.ailabapp.data.remote.api.AdminScoreApi // ✅ Import
-import com.ktun.ailabapp.data.repository.AdminScoreRepository // ✅ Import
+import com.ktun.ailabapp.util.FirebaseAuthManager // ✅ Import
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -30,9 +19,10 @@ object RepositoryModule {
     @Singleton
     fun provideAuthRepository(
         authApi: AuthApi,
-        preferencesManager: PreferencesManager
+        preferencesManager: PreferencesManager,
+        authManager: FirebaseAuthManager // ✅ Inject FirebaseAuthManager
     ): AuthRepository {
-        return AuthRepository(authApi, preferencesManager)
+        return AuthRepository(authApi, preferencesManager, authManager) // ✅ Pass to constructor
     }
 
     @Provides
@@ -73,5 +63,13 @@ object RepositoryModule {
         adminScoreApi: AdminScoreApi
     ): AdminScoreRepository {
         return AdminScoreRepository(adminScoreApi)
+    }
+
+    @Provides
+    @Singleton
+    fun provideBugReportRepository(
+        bugReportApi: BugReportApi
+    ): BugReportRepository {
+        return BugReportRepository(bugReportApi)
     }
 }

@@ -1,10 +1,10 @@
 package com.ktun.ailabapp.di
 
+import android.content.Context
+import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.ktun.ailabapp.BuildConfig
 import com.ktun.ailabapp.data.local.datastore.PreferencesManager
-import com.ktun.ailabapp.data.remote.api.AuthApi
-import com.ktun.ailabapp.data.remote.api.ProjectApi
-import com.ktun.ailabapp.data.remote.api.TaskApi
+import com.ktun.ailabapp.data.remote.api.*
 import com.ktun.ailabapp.data.remote.interceptor.AuthInterceptor
 import dagger.Module
 import dagger.Provides
@@ -17,13 +17,8 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
-import android.content.Context
-import com.chuckerteam.chucker.api.ChuckerInterceptor
-import com.ktun.ailabapp.data.remote.api.AdminScoreApi
-import com.ktun.ailabapp.data.remote.api.AnnouncementApi
-import com.ktun.ailabapp.data.remote.api.RoleApi
-import com.ktun.ailabapp.data.remote.api.RoomsApi
-import com.ktun.ailabapp.data.remote.api.UsersApi
+
+import com.ktun.ailabapp.util.FirebaseAuthManager // ✅ Import
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -32,9 +27,9 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideAuthInterceptor(
-        preferencesManager: PreferencesManager
+        authManager: FirebaseAuthManager // ✅ Updated
     ): AuthInterceptor {
-        return AuthInterceptor(preferencesManager)
+        return AuthInterceptor(authManager)
     }
 
     @Provides
@@ -86,36 +81,21 @@ object NetworkModule {
             .build()
     }
 
-    // ❌ BU METODU SİL - Kullanılmıyor ve yanlış import var
-    // @Provides
-    // @Singleton
-    // fun provideApiService(
-    //     retrofit: Retrofit
-    // ): ApiService {
-    //     return retrofit.create(ApiService::class.java)
-    // }
-
     @Provides
     @Singleton
-    fun provideAuthApi(
-        retrofit: Retrofit
-    ): AuthApi {
+    fun provideAuthApi(retrofit: Retrofit): AuthApi {
         return retrofit.create(AuthApi::class.java)
     }
 
     @Provides
     @Singleton
-    fun provideProjectApi(
-        retrofit: Retrofit
-    ): ProjectApi {
+    fun provideProjectApi(retrofit: Retrofit): ProjectApi {
         return retrofit.create(ProjectApi::class.java)
     }
 
     @Provides
     @Singleton
-    fun provideTaskApi(
-        retrofit: Retrofit
-    ): TaskApi {
+    fun provideTaskApi(retrofit: Retrofit): TaskApi {
         return retrofit.create(TaskApi::class.java)
     }
 
@@ -147,5 +127,11 @@ object NetworkModule {
     @Singleton
     fun provideAdminScoreApi(retrofit: Retrofit): AdminScoreApi {
         return retrofit.create(AdminScoreApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideBugReportApi(retrofit: Retrofit): BugReportApi {
+        return retrofit.create(BugReportApi::class.java)
     }
 }

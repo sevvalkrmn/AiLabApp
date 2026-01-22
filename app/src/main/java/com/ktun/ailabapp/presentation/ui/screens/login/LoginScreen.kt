@@ -1,14 +1,15 @@
 package com.ktun.ailabapp.presentation.ui.screens.login
 
 import android.widget.Toast
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -16,40 +17,23 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.*
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ktun.ailabapp.R
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.ui.text.input.ImeAction
-import com.ktun.ailabapp.ui.theme.PrimaryBlue
-import com.ktun.ailabapp.ui.theme.SecondaryBlue
-import com.ktun.ailabapp.ui.theme.BackgroundLight
-import com.ktun.ailabapp.ui.theme.TextGray
-import com.ktun.ailabapp.ui.theme.BorderGray
-import com.ktun.ailabapp.ui.theme.LabelGray
-import com.ktun.ailabapp.ui.theme.White
-
-// LoginScreen fonksiyonundan ÖNCE tanımla
-private val sfProFontFamily = FontFamily(
-    Font(R.font.sfpro_regular, FontWeight.Normal),
-    Font(R.font.sfpro_medium, FontWeight.Medium),
-    Font(R.font.sfpro_bold, FontWeight.Bold)
-)
+import com.ktun.ailabapp.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -60,267 +44,310 @@ fun LoginScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
-
     val configuration = LocalConfiguration.current
     val screenHeight = configuration.screenHeightDp.dp
-    val screenWidth = configuration.screenWidthDp.dp
 
-    // Error mesajını göster
     LaunchedEffect(uiState.errorMessage) {
-        uiState.errorMessage?.let { error ->
-            Toast.makeText(context, error, Toast.LENGTH_LONG).show()
-        }
+        uiState.errorMessage?.let { Toast.makeText(context, it, Toast.LENGTH_LONG).show() }
     }
-
-    // Giriş başarılı olduğunda
     LaunchedEffect(uiState.isLoggedIn) {
-        if (uiState.isLoggedIn) {
-            Toast.makeText(context, "Giriş başarılı!", Toast.LENGTH_SHORT).show()
-            onLoginSuccess()
-        }
+        if (uiState.isLoggedIn) onLoginSuccess()
     }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .windowInsetsPadding(WindowInsets.systemBars)
-    ) {
-        // ÜST KISIM - Gradient + Logo (Ekranın %40'ı)
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(screenHeight * 0.4f)
-                .background(
-                    brush = Brush.radialGradient(
-                        colors = listOf(
-                            SecondaryBlue,
-                            PrimaryBlue
-                        ),
-                        radius = screenWidth.value * 1.5f,
-                        center = Offset(0.2f, 0.8f)
-                    )
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.ailablogo),
-                contentDescription = "AI Lab Logo",
-                modifier = Modifier
-                    .size(screenWidth * 0.5f)
-                    .padding(screenWidth * 0.04f),
-                colorFilter = ColorFilter.tint(White)
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        Color(0xFFF4F6FC), // Top - light
+                        Color(0xFFF4F6FC), // Keep light
+                        Color(0xFFF4F6FC), // Still light
+                        Color(0xFFE8E8EC), // Slight transition
+                        Color(0xFFD4D4D8), // Mid gray
+                        Color(0xFFC0C0C4)  // Bottom - light gray
+                    ),
+                    startY = 0f,
+                    endY = Float.POSITIVE_INFINITY
+                )
             )
-        }
-
-        // ALT KISIM - Form
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .clip(RoundedCornerShape(topStart = screenWidth * 0.08f, topEnd = screenWidth * 0.08f))
-                .background(BackgroundLight)
-                .verticalScroll(rememberScrollState())
-                .padding(screenWidth * 0.06f),
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(screenHeight * 0.03f))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(screenHeight * 0.35f),
+                contentAlignment = Alignment.Center
+            ) {
+                // Background shape
+                Image(
+                    painter = painterResource(id = R.drawable.login_background),
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.FillBounds
+                )
+
+                // Logo with inner shadow - moved up 8dp
+                Image(
+                    painter = painterResource(id = R.drawable.ai_lab_logo_in),
+                    contentDescription = "AI Lab Logo",
+                    modifier = Modifier
+                        .size(200.dp)
+                        .padding(top = 8.dp),
+                    contentScale = ContentScale.Fit
+                )
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
 
             Text(
                 text = "Ai Lab'e Hoşgeldin",
-                fontSize = (screenWidth.value * 0.06f).sp,
+                fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                fontFamily = sfProFontFamily,
-                color = PrimaryBlue
+                color = Color(0xFF1E3A8A),
+                modifier = Modifier.padding(bottom = 4.dp)
             )
 
             Text(
                 text = "Hesabına giriş yap",
-                fontSize = (screenWidth.value * 0.035f).sp,
-                color = TextGray,
-                fontWeight = FontWeight.Medium,
-                fontFamily = sfProFontFamily,
-                modifier = Modifier.padding(top = screenHeight * 0.005f)
+                fontSize = 14.sp,
+                color = Color(0xFF64748B),
+                modifier = Modifier.padding(bottom = 24.dp)
             )
 
-            Spacer(modifier = Modifier.height(screenHeight * 0.04f))
-
-            // Email TextField
-            OutlinedTextField(
-                value = uiState.email,
-                onValueChange = viewModel::updateEmail,
-                label = { Text("Mail'ini Gir", fontSize = (screenWidth.value * 0.04f).sp) },
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 32.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                RoundedInput(
+                    value = uiState.email,
+                    onValueChange = viewModel::updateEmail,
+                    placeholder = "E-posta adresinizi girin",
                     keyboardType = KeyboardType.Email,
                     imeAction = ImeAction.Next
-                ),
-                keyboardActions = KeyboardActions(
-                    onNext = { }
-                ),
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = PrimaryBlue,
-                    unfocusedBorderColor = BorderGray,
-                    focusedLabelColor = MaterialTheme.colorScheme.onBackground,
-                    unfocusedLabelColor = LabelGray,
-                    focusedContainerColor = White,
-                    unfocusedContainerColor = White,
-                    focusedTextColor = MaterialTheme.colorScheme.onBackground,
-                    unfocusedTextColor = MaterialTheme.colorScheme.onBackground
-                ),
-                shape = RoundedCornerShape(screenWidth * 0.03f),
-                textStyle = LocalTextStyle.current.copy(
-                    fontSize = (screenWidth.value * 0.04f).sp,
-                    color = MaterialTheme.colorScheme.onBackground
                 )
-            )
 
-            Spacer(modifier = Modifier.height(screenHeight * 0.02f))
-
-            // Password TextField
-            OutlinedTextField(
-                value = uiState.password,
-                onValueChange = viewModel::updatePassword,
-                label = { Text("Şifreni Gir", fontSize = (screenWidth.value * 0.04f).sp) },
-                modifier = Modifier.fillMaxWidth(),
-                visualTransformation = if (uiState.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(
+                RoundedInput(
+                    value = uiState.password,
+                    onValueChange = viewModel::updatePassword,
+                    placeholder = "Şifrenizi girin",
                     keyboardType = KeyboardType.Password,
-                    imeAction = ImeAction.Done
-                ),
-                keyboardActions = KeyboardActions(
-                    onDone = {
-                        viewModel.login(onSuccess = onLoginSuccess)
-                    }
-                ),
-                singleLine = true,
-                trailingIcon = {
-                    IconButton(onClick = viewModel::togglePasswordVisibility) {
-                        Icon(
-                            imageVector = if (uiState.isPasswordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                            contentDescription = "Şifreyi göster/gizle",
-                            tint = PrimaryBlue,
-                            modifier = Modifier.size(screenWidth * 0.06f)
-                        )
-                    }
-                },
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = PrimaryBlue,
-                    unfocusedBorderColor = BorderGray,
-                    focusedLabelColor = MaterialTheme.colorScheme.onBackground,
-                    unfocusedLabelColor = LabelGray,
-                    focusedContainerColor = White,
-                    unfocusedContainerColor = White,
-                    focusedTextColor = MaterialTheme.colorScheme.onBackground,
-                    unfocusedTextColor = MaterialTheme.colorScheme.onBackground
-                ),
-                shape = RoundedCornerShape(screenWidth * 0.03f),
-                textStyle = LocalTextStyle.current.copy(
-                    fontSize = (screenWidth.value * 0.04f).sp,
-                    color = MaterialTheme.colorScheme.onBackground
+                    imeAction = ImeAction.Done,
+                    isPassword = true,
+                    isPasswordVisible = uiState.isPasswordVisible,
+                    onTogglePasswordVisibility = viewModel::togglePasswordVisibility,
+                    onDone = { viewModel.login(onSuccess = onLoginSuccess) }
                 )
-            )
+            }
 
-            Spacer(modifier = Modifier.height(screenHeight * 0.02f))
+            Spacer(modifier = Modifier.height(8.dp))
 
-            // Remember me + Forgot password
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 32.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.clickable { viewModel.toggleRememberMe() }
+                ) {
                     Checkbox(
                         checked = uiState.rememberMe,
                         onCheckedChange = { viewModel.toggleRememberMe() },
-                        colors = CheckboxDefaults.colors(checkedColor = PrimaryBlue),
-                        modifier = Modifier.size(screenWidth * 0.06f)
+                        colors = CheckboxDefaults.colors(
+                            checkedColor = Color(0xFF0D24D8),
+                            uncheckedColor = Color(0xFF94A3B8)
+                        )
                     )
                     Text(
-                        "Beni hatırla",
-                        fontSize = (screenWidth.value * 0.035f).sp,
-                        fontWeight = FontWeight.Medium,
-                        fontFamily = sfProFontFamily
+                        "Beni Hatırla",
+                        fontSize = 13.sp,
+                        color = Color(0xFF475569)
                     )
                 }
 
                 TextButton(onClick = { }) {
                     Text(
-                        "Şifreni mi unuttun?",
-                        color = PrimaryBlue,
-                        fontSize = (screenWidth.value * 0.035f).sp,
-                        fontWeight = FontWeight.Medium,
-                        fontFamily = sfProFontFamily
+                        "Şifremi Unuttum",
+                        fontSize = 13.sp,
+                        color = Color(0xFF0D24D8)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(screenHeight * 0.03f))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            // Login Button
+            // Log In Button
             Button(
-                onClick = {
-                    viewModel.login(onSuccess = onLoginSuccess)
-                },
+                onClick = { viewModel.login(onSuccess = onLoginSuccess) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(screenHeight * 0.07f),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = PrimaryBlue
-                ),
-                shape = RoundedCornerShape(screenWidth * 0.03f),
+                    .padding(horizontal = 32.dp)
+                    .height(52.dp)
+                    .shadow(
+                        elevation = 8.dp,
+                        shape = RoundedCornerShape(12.dp),
+                        ambientColor = Color(0xFF0D24D8).copy(alpha = 0.3f),
+                        spotColor = Color(0xFF0D24D8).copy(alpha = 0.3f)
+                    ),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                contentPadding = PaddingValues(),
                 enabled = !uiState.isLoading
             ) {
-                if (uiState.isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(screenWidth * 0.05f),
-                        color = White
-                    )
-                } else {
-                    Text(
-                        "Giriş Yap",
-                        fontSize = (screenWidth.value * 0.04f).sp,
-                        fontWeight = FontWeight.Medium,
-                        fontFamily = sfProFontFamily,
-                        color = White
-                    )
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    Color(0xFF0D24D8),
+                                    Color(0xFF071372)
+                                ),
+                                center = Offset(0.5f, 0.5f),
+                                radius = 800f
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (uiState.isLoading) {
+                        CircularProgressIndicator(
+                            color = Color.White,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    } else {
+                        Text(
+                            text = "Giriş Yap",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color.White
+                        )
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(screenHeight * 0.015f))
+            Spacer(modifier = Modifier.height(12.dp))
 
-            // Kaydol Butonu
-            OutlinedButton(
+            // Register Button
+            Button(
                 onClick = onNavigateToRegister,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(screenHeight * 0.07f),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = PrimaryBlue
-                ),
-                border = BorderStroke(screenWidth * 0.005f, PrimaryBlue),
-                shape = RoundedCornerShape(screenWidth * 0.03f)
+                    .padding(horizontal = 32.dp)
+                    .height(52.dp)
+                    .shadow(
+                        elevation = 8.dp,
+                        shape = RoundedCornerShape(12.dp),
+                        ambientColor = Color(0xFF0D24D8).copy(alpha = 0.3f),
+                        spotColor = Color(0xFF0D24D8).copy(alpha = 0.3f)
+                    ),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                contentPadding = PaddingValues()
             ) {
-                Text(
-                    text = "Hesabın yok mu? Kaydol!",
-                    fontSize = (screenWidth.value * 0.04f).sp,
-                    fontWeight = FontWeight.Medium,
-                    fontFamily = sfProFontFamily,
-                    color = PrimaryBlue
-                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    Color(0xFF0D24D8),
+                                    Color(0xFF071372)
+                                ),
+                                center = Offset(0.5f, 0.5f),
+                                radius = 800f
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Hesabın Yok Mu? Kaydol",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.White
+                    )
+                }
             }
 
-            Spacer(modifier = Modifier.height(screenHeight * 0.02f))
+            Spacer(modifier = Modifier.weight(1f))
 
             Text(
                 text = "Yapay Zeka ve Veri Bilimi Laboratuvarı, D114",
-                fontSize = (screenWidth.value * 0.03f).sp,
-                color = TextGray,
+                fontSize = 11.sp,
+                color = Color(0xFF1E3A8A),
                 fontWeight = FontWeight.Medium,
-                fontFamily = sfProFontFamily,
-                textAlign = TextAlign.Center
+                modifier = Modifier.padding(bottom = 32.dp, top = 16.dp)
             )
-
-            Spacer(modifier = Modifier.height(screenHeight * 0.02f))
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun RoundedInput(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    keyboardType: KeyboardType,
+    imeAction: ImeAction,
+    isPassword: Boolean = false,
+    isPasswordVisible: Boolean = false,
+    onTogglePasswordVisibility: () -> Unit = {},
+    onDone: () -> Unit = {}
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        placeholder = {
+            Text(
+                placeholder,
+                color = Color(0xFF94A3B8),
+                fontSize = 13.sp
+            )
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(52.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = Color(0xFFE2E8F0),
+            unfocusedBorderColor = Color(0xFFE2E8F0),
+            focusedContainerColor = Color.White,
+            unfocusedContainerColor = Color.White,
+            focusedTextColor = Color(0xFF1E293B),
+            unfocusedTextColor = Color(0xFF1E293B),
+            cursorColor = Color(0xFF0D24D8)
+        ),
+        visualTransformation = if (isPassword && !isPasswordVisible)
+            PasswordVisualTransformation() else VisualTransformation.None,
+        keyboardOptions = KeyboardOptions(
+            keyboardType = keyboardType,
+            imeAction = imeAction
+        ),
+        keyboardActions = KeyboardActions(onDone = { onDone() }),
+        trailingIcon = if (isPassword) {
+            {
+                IconButton(onClick = onTogglePasswordVisibility) {
+                    Icon(
+                        imageVector = if (isPasswordVisible)
+                            Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                        contentDescription = null,
+                        tint = Color(0xFF94A3B8)
+                    )
+                }
+            }
+        } else null,
+        singleLine = true
+    )
 }

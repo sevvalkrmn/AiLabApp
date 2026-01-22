@@ -2,40 +2,45 @@ package com.ktun.ailabapp.data.remote.dto.response
 
 import com.google.gson.annotations.SerializedName
 
-// Backend direkt token ve user döndürüyor, data wrapper'ı yok
 data class AuthResponse(
     @SerializedName("token")
-    val token: String?,
+    val token: String? = null,
 
     @SerializedName("refreshToken")
-    val refreshToken: String?,
+    val refreshToken: String? = null,
 
     @SerializedName("expiresAt")
-    val expiresAt: String?,
+    val expiresAt: String? = null,
 
-    @SerializedName("user")
-    val user: User
-)
+    // Backend dökümanına göre yeni düz yapı
+    @SerializedName("userId")
+    val userId: String? = null,
 
-data class User(
-    @SerializedName("id")
-    val id: String,
+    @SerializedName("id") // Alternatif isimlendirme (eski yapıdan kalma olabilir)
+    val id: String? = null,
 
     @SerializedName("userName")
-    val userName: String,
+    val userName: String? = null,
 
     @SerializedName("email")
-    val email: String,
+    val email: String? = null,
 
     @SerializedName("fullName")
-    val fullName: String,
+    val fullName: String? = null,
 
     @SerializedName("phoneNumber")
-    val phoneNumber: String?,
+    val phoneNumber: String? = null,
 
     @SerializedName("avatarUrl")
-    val avatarUrl: String?,
+    val avatarUrl: String? = null,
 
     @SerializedName("roles")
-    val roles: List<String>
-)
+    val roles: List<String>? = null,
+
+    @SerializedName("authProvider")
+    val authProvider: String? = null
+) {
+    // Helper property to get the actual ID regardless of field name
+    val actualUserId: String
+        get() = userId ?: id ?: ""
+}

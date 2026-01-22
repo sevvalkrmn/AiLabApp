@@ -65,9 +65,10 @@ fun AnnouncementScreen(
     // Feedback Dialog
     if (showFeedbackDialog) {
         FeedbackDialog(
+            pageInfo = "announcements-screen", // ✅ Sayfa bilgisi
             onDismiss = { showFeedbackDialog = false },
             onSubmit = { feedback ->
-                println("📝 Feedback: $feedback")
+                android.widget.Toast.makeText(context, "Geri bildiriminiz alındı!", android.widget.Toast.LENGTH_SHORT).show()
                 showFeedbackDialog = false
             }
         )

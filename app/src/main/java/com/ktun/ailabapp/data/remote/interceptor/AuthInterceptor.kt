@@ -1,23 +1,24 @@
 package com.ktun.ailabapp.data.remote.interceptor
 
 import com.ktun.ailabapp.data.remote.network.ApiConfig
-import com.ktun.ailabapp.data.local.datastore.PreferencesManager
-import kotlinx.coroutines.flow.first
+import com.ktun.ailabapp.util.FirebaseAuthManager
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.Response
+import javax.inject.Inject
 
-class AuthInterceptor(
-    private val preferencesManager: PreferencesManager
+class AuthInterceptor @Inject constructor(
+    private val authManager: FirebaseAuthManager
 ) : Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalRequest = chain.request()
 
-        // Token gerektirmeyen endpoint'ler (Public)
+        // Token gerektirmeyen endpoint'ler
         val publicEndpoints = listOf(
             ApiConfig.Endpoints.REGISTER,
             ApiConfig.Endpoints.LOGIN,
+            ApiConfig.Endpoints.LOGIN_FIREBASE, // ✅ Updated
             ApiConfig.Endpoints.REFRESH_TOKEN
         )
 
@@ -25,49 +26,24 @@ class AuthInterceptor(
             originalRequest.url.encodedPath.contains(it)
         }
 
-        // DEBUG LOG
-        android.util.Log.d("AuthInterceptor", "Request URL: ${originalRequest.url}")
-        android.util.Log.d("AuthInterceptor", "Is Public: $isPublicEndpoint")
+        if (isPublicEndpoint) {
+            return chain.proceed(originalRequest)
+        }
 
-        val response = if (isPublicEndpoint) {
-            // Public endpoint - token eklemeden devam et
-            android.util.Log.d("AuthInterceptor", "Public endpoint - No token added")
-            chain.proceed(originalRequest)
-        } else {
-            // Private endpoint - token ekle
-            val token = runBlocking {
-                preferencesManager.getToken().first()
-            }
+        // ✅ Firebase'den güncel token al (Otomatik refresh dahil)
+        val token = runBlocking {
+            authManager.getIdToken()
+        }
 
-            android.util.Log.d("AuthInterceptor", "Token: ${if (token.isNullOrEmpty()) "YOK" else token.take(20) + "..."}")
-
-            val newRequest = originalRequest.newBuilder()
-                .apply {
-                    if (!token.isNullOrEmpty()) {
-                        addHeader(ApiConfig.HEADER_AUTHORIZATION, "Bearer $token")
-                        android.util.Log.d("AuthInterceptor", "Token header eklendi")
-                    } else {
-                        android.util.Log.e("AuthInterceptor", "Token YOK - Header eklenemedi!")
-                    }
-                    addHeader(ApiConfig.HEADER_CONTENT_TYPE, ApiConfig.CONTENT_TYPE_JSON)
+        val newRequest = originalRequest.newBuilder()
+            .apply {
+                if (!token.isNullOrEmpty()) {
+                    addHeader(ApiConfig.HEADER_AUTHORIZATION, "Bearer $token")
                 }
-                .build()
-
-            chain.proceed(newRequest)
-        }
-
-        // ✅ 401 Unauthorized kontrolü
-        if (response.code == 401) {
-            android.util.Log.e("AuthInterceptor", "🔴 401 Unauthorized - Token expired!")
-
-            // ✅ Token'ları temizle
-            runBlocking {
-                preferencesManager.clearAllData()  // ✅ clearRefreshToken() yerine
+                addHeader(ApiConfig.HEADER_CONTENT_TYPE, ApiConfig.CONTENT_TYPE_JSON)
             }
+            .build()
 
-            android.util.Log.d("AuthInterceptor", "✅ Tokens cleared - User will be logged out")
-        }
-
-        return response
+        return chain.proceed(newRequest)
     }
 }
