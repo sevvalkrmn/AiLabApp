@@ -143,6 +143,27 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
+    fun updateEmail(password: String, newEmail: String, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+
+            when (val result = authRepository.updateEmail(password, newEmail)) {
+                is NetworkResult.Success -> {
+                    Logger.d("✅ Email updated successfully", "ProfileVM")
+                    loadUserProfile() // Refresh profile to show new email
+                    onSuccess()
+                }
+                is NetworkResult.Error -> {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = result.message
+                    )
+                }
+                is NetworkResult.Loading -> {}
+            }
+        }
+    }
+
     private fun loadDefaultAvatars() {
         viewModelScope.launch {
             when (val result = authRepository.getDefaultAvatars()) {
