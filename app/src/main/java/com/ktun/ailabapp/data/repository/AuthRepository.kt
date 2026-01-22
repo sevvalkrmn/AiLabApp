@@ -4,6 +4,7 @@ import android.net.Uri
 import com.ktun.ailabapp.data.local.datastore.PreferencesManager
 import com.ktun.ailabapp.data.remote.api.AuthApi
 import com.ktun.ailabapp.data.remote.dto.request.FirebaseLoginRequest
+import com.ktun.ailabapp.data.remote.dto.request.UpdateEmailRequest // ✅ Import
 import com.ktun.ailabapp.data.remote.dto.request.UpdateProfileImageRequest
 import com.ktun.ailabapp.data.remote.dto.response.AuthResponse
 import com.ktun.ailabapp.data.remote.dto.response.LeaderboardUserResponse
@@ -29,7 +30,6 @@ class AuthRepository @Inject constructor(
     private val _sessionExpiredEvent = MutableSharedFlow<Unit>(replay = 0)
     val sessionExpiredEvent: SharedFlow<Unit> = _sessionExpiredEvent.asSharedFlow()
 
-    // ✅ YENİ: Firebase kaydı sonrası Backend kaydını tamamlama
     suspend fun completeRegistration(
         idToken: String,
         fullName: String,
@@ -51,8 +51,7 @@ class AuthRepository @Inject constructor(
 
             if (response.isSuccessful && response.body() != null) {
                 val authResponse = response.body()!!
-                android.util.Log.d("AuthRepository", "Complete Registration Response: $authResponse")
-
+                
                 val userId = authResponse.actualUserId
                 if (userId.isBlank()) {
                     return@withContext NetworkResult.Error("Backend hatası: Kullanıcı ID bulunamadı")
@@ -97,7 +96,6 @@ class AuthRepository @Inject constructor(
                 return@withContext NetworkResult.Error("Firebase Kayıt Hatası: ${it.message}")
             }
 
-            // Reuse the completeRegistration logic
             completeRegistration(idToken, fullName, username, email, schoolNumber, phone)
         } catch (e: Exception) {
             NetworkResult.Error(e.message ?: "Bilinmeyen hata")
@@ -120,13 +118,9 @@ class AuthRepository @Inject constructor(
 
             if (response.isSuccessful && response.body() != null) {
                 val authResponse = response.body()!!
-                android.util.Log.d("AuthRepository", "Login Response: $authResponse")
-
+                
                 val userId = authResponse.actualUserId
                 if (userId.isBlank()) {
-                    // Fallback: Firebase user ID'sini kullan (Backend bazen ID dönmeyebilir ama işlem başarılıdır)
-                    // Ancak backend userId kritikse hata dönmeliyiz.
-                    // Şimdilik hata dönelim.
                     return@withContext NetworkResult.Error("Backend hatası: Kullanıcı ID eksik")
                 }
 
@@ -160,6 +154,35 @@ class AuthRepository @Inject constructor(
             // Ignore
         } finally {
             preferencesManager.clearAllData()
+        }
+    }
+
+    // ✅ YENİ: E-posta Güncelleme (Firebase + Backend)
+    suspend fun updateEmail(password: String, newEmail: String): NetworkResult<Unit> = withContext(Dispatchers.IO) {
+        try {
+            // 1. Re-authenticate
+            val reauthResult = authManager.reauthenticate(password)
+            if (reauthResult.isFailure) {
+                return@withContext NetworkResult.Error("Kimlik doğrulama başarısız: ${reauthResult.exceptionOrNull()?.message}")
+            }
+
+            // 2. Firebase Update
+            val firebaseUpdateResult = authManager.updateEmail(newEmail)
+            if (firebaseUpdateResult.isFailure) {
+                return@withContext NetworkResult.Error("Firebase güncelleme hatası: ${firebaseUpdateResult.exceptionOrNull()?.message}")
+            }
+
+            // 3. Backend Sync
+            val request = UpdateEmailRequest(newEmail = newEmail)
+            val response = authApi.updateEmail(request)
+
+            if (response.isSuccessful) {
+                NetworkResult.Success(Unit)
+            } else {
+                NetworkResult.Error("Backend senkronizasyon hatası: ${response.code()}")
+            }
+        } catch (e: Exception) {
+            NetworkResult.Error(e.message ?: "Bilinmeyen hata")
         }
     }
 

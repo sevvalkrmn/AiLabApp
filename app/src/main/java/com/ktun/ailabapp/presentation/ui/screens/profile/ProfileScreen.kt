@@ -19,7 +19,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
@@ -63,6 +62,7 @@ fun ProfileScreen(
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showAvatarPicker by remember { mutableStateOf(false) }
     var showPhotoSourceDialog by remember { mutableStateOf(false) }
+    var showUpdateEmailDialog by remember { mutableStateOf(false) } // ✅ State added
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -75,7 +75,7 @@ fun ProfileScreen(
 
     if (showFeedbackDialog) {
         FeedbackDialog(
-            pageInfo = "profile-screen", // ✅ Sayfa bilgisi
+            pageInfo = "profile-screen",
             onDismiss = { showFeedbackDialog = false },
             onSubmit = { feedback ->
                 showFeedbackDialog = false
@@ -144,6 +144,18 @@ fun ProfileScreen(
             confirmButton = {
                 TextButton(onClick = { showPhotoSourceDialog = false }) {
                     Text("İptal")
+                }
+            }
+        )
+    }
+
+    if (showUpdateEmailDialog) {
+        UpdateEmailDialog(
+            onDismiss = { showUpdateEmailDialog = false },
+            onConfirm = { password, newEmail ->
+                showUpdateEmailDialog = false
+                viewModel.updateEmail(password, newEmail) {
+                    Toast.makeText(context, "E-posta başarıyla güncellendi", Toast.LENGTH_SHORT).show()
                 }
             }
         )
@@ -298,7 +310,7 @@ fun ProfileScreen(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
-                                text = uiState.totalScore.toInt().toString(), // ✅ Double -> Int
+                                text = uiState.totalScore.toInt().toString(), // Double -> Int
                                 fontSize = (screenWidth.value * 0.12f).sp,
                                 fontWeight = FontWeight.Bold,
                                 color = PrimaryBlue
@@ -326,7 +338,7 @@ fun ProfileScreen(
                     ProfileMenuItem(
                         icon = Icons.Default.Email,
                         text = "E-posta Adresini Değiştir",
-                        onClick = { /* TODO */ },
+                        onClick = { showUpdateEmailDialog = true }, // ✅ Click action
                         screenWidth = screenWidth,
                         screenHeight = screenHeight
                     )
@@ -351,7 +363,6 @@ fun ProfileScreen(
                         screenHeight = screenHeight
                     )
 
-                    // ✅ ADMIN PANEL BUTONU
                     if (uiState.isAdmin) {
                         Spacer(modifier = Modifier.height(screenHeight * 0.015f))
 
