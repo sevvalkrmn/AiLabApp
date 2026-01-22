@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
@@ -14,11 +15,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
-import com.ktun.ailabapp.data.repository.AuthRepository
-import com.ktun.ailabapp.presentation.ui.screens.navigation.NavGraph
-import com.ktun.ailabapp.ui.theme.AiLabAppTheme
 import com.ktun.ailabapp.data.local.datastore.PreferencesManager
-import com.ktun.ailabapp.presentation.ui.navigation.Screen
+import com.ktun.ailabapp.presentation.ui.screens.navigation.NavGraph
+import com.ktun.ailabapp.presentation.ui.screens.navigation.Screen
+import com.ktun.ailabapp.ui.theme.AiLabAppTheme
+import com.ktun.ailabapp.util.FirebaseAuthManager
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -31,12 +32,13 @@ class MainActivity : ComponentActivity() {
     lateinit var preferencesManager: PreferencesManager
 
     @Inject
-    lateinit var authRepository: AuthRepository
+    lateinit var authManager: FirebaseAuthManager
 
-    private var isHandlingSessionExpired = false
+    private val mainViewModel: MainViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Log.d("MainActivity", "🎬 onCreate called")
 
         setContent {
             AiLabAppTheme {
@@ -45,73 +47,47 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     val navController = rememberNavController()
-                    var startDestination by remember { mutableStateOf<String?>(null) }
+                    val startDestination by mainViewModel.startDestination.collectAsState()
+                    val isLoading by mainViewModel.isLoading.collectAsState()
 
-                    // ✅ Global Session Expiry Handler
-                    LaunchedEffect(Unit) {
-                        launch {
-                            authRepository.sessionExpiredEvent.collect {
-                                Log.e("MainActivity", "🔴 Session expired - Navigating to Login")
-                                preferencesManager.clearAllData()
+                    // ✅ Sadece Session Expired durumunda zorunlu yönlendirme yap
+                    LaunchedEffect(startDestination) {
+                        if (startDestination == Screen.Login.route) {
+                            val currentRoute = navController.currentDestination?.route
+                            if (currentRoute != null && currentRoute != Screen.Login.route) {
+                                Log.d("MainActivity", "🔄 Navigating to Login due to session change")
                                 navController.navigate(Screen.Login.route) {
                                     popUpTo(0) { inclusive = true }
                                 }
                             }
                         }
-
-                        // ✅ App Start Logic
-                        Log.d("AILAB_DEBUG", "=== APP STARTING ===")
-
-                        val rememberMe = preferencesManager.getRememberMe().first()
-                        val token = preferencesManager.getToken().first()
-
-                        Log.d("AILAB_DEBUG", """
-                            RememberMe: $rememberMe
-                            Token exists: ${!token.isNullOrEmpty()}
-                        """.trimIndent())
-
-                        startDestination = if (!token.isNullOrEmpty()) {
-                            Log.d("AILAB_DEBUG", "Token found - Going to HOME")
-                            Screen.Home.route
-                        } else {
-                            Log.d("AILAB_DEBUG", "No token - Going to LOGIN")
-                            Screen.Login.route
-                        }
                     }
 
-                    if (startDestination != null) {
+                    if (isLoading || startDestination == null) {
+                        Log.d("MainActivity", "⏳ Showing loading indicator")
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator()
+                        }
+                    } else {
+                        Log.d("MainActivity", "✅ Creating NavGraph with: $startDestination")
                         NavGraph(
                             navController = navController,
                             startDestination = startDestination!!
                         )
-                    } else {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator()
-                        }
                     }
                 }
             }
         }
     }
 
-    // ✅ GÜNCELLEME: onStop() kullan (uygulama arka plana gidince)
     override fun onStop() {
         super.onStop()
-
         lifecycleScope.launch {
             val rememberMe = preferencesManager.getRememberMe().first()
-
-            Log.d("MainActivity", "📱 App going to background - RememberMe: $rememberMe")
-
             if (!rememberMe) {
-                Log.d("MainActivity", "🧹 RememberMe is FALSE - Clearing tokens")
-                preferencesManager.clearToken()
-                preferencesManager.clearRefreshToken()
-            } else {
-                Log.d("MainActivity", "💾 RememberMe is TRUE - Tokens preserved")
+                Log.d("MainActivity", "onStop: Clearing session (RememberMe=false)")
+                authManager.signOut()
+                preferencesManager.clearAllData()
             }
         }
     }

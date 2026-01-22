@@ -156,7 +156,7 @@ fun RegisterScreen(
                     RegisterInput(
                         value = uiState.password,
                         onValueChange = viewModel::updatePassword,
-                        placeholder = "Şifrenizi girin (En az 8 karakter, 1 büyük harf)",
+                        placeholder = "Şifre (En az 8 karakter, 1 büyük harf, 1 sayı içermelidir.)",
                         keyboardType = KeyboardType.Password,
                         imeAction = ImeAction.Next,
                         isPassword = true,

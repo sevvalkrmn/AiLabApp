@@ -28,14 +28,18 @@ data class ProjectDetailUiState(
 
     // ✅ YENİ - Admin ve Kaptan işlemleri
     val isAdmin: Boolean = false,
-    val isCaptain: Boolean = false, // ✅ Kaptan kontrolü
-    val canEdit: Boolean = false,   // ✅ Yetki kontrolü (Admin veya Kaptan)
+    val isCaptain: Boolean = false, 
+    val canEdit: Boolean = false,   
     
     val showAddMemberDialog: Boolean = false,
     val showRemoveMemberDialog: Boolean = false,
     val showDeleteProjectDialog: Boolean = false,
-    val showCreateTaskDialog: Boolean = false, // ✅ YENİ
-    val availableUsers: List<User> = emptyList()
+    val showCreateTaskDialog: Boolean = false,
+    val availableUsers: List<User> = emptyList(),
+
+    // ✅ YENİ - Seçili Görev Detayı
+    val selectedTask: TaskResponse? = null,
+    val isTaskDetailLoading: Boolean = false
 )
 
 @HiltViewModel
@@ -50,14 +54,11 @@ class ProjectDetailViewModel @Inject constructor(
     val uiState: StateFlow<ProjectDetailUiState> = _uiState.asStateFlow()
 
     init {
-        android.util.Log.d("ProjectDetailViewModel", "🎬 ViewModel CREATED")
         checkAdminStatus()
     }
 
-    // ✅ YENİ - Admin kontrolü
     private fun checkAdminStatus() {
         viewModelScope.launch {
-            // ✅ suspend function olduğu için direkt çağır
             val userId = preferencesManager.getUserId()
 
             if (userId != null) {
@@ -68,57 +69,34 @@ class ProjectDetailViewModel @Inject constructor(
                             it.equals("Admin", ignoreCase = true)
                         } ?: false
 
-                        android.util.Log.d("ProjectDetailViewModel", "👤 User: ${user?.fullName}, Roles: ${user?.roles}, isAdmin: $isAdmin")
-
                         _uiState.update { 
                             it.copy(
                                 isAdmin = isAdmin,
-                                canEdit = isAdmin // Varsayılan olarak admin ise yetkili
+                                canEdit = isAdmin 
                             ) 
                         }
                     }
                     is NetworkResult.Error -> {
-                        android.util.Log.e("ProjectDetailViewModel", "Failed to load user: ${result.message}")
                         _uiState.update { it.copy(isAdmin = false) }
                     }
                     is NetworkResult.Loading -> {}
                 }
             } else {
-                android.util.Log.e("ProjectDetailViewModel", "User ID is null")
                 _uiState.update { it.copy(isAdmin = false) }
             }
         }
     }
 
     fun loadProjectDetail(projectId: String) {
-        android.util.Log.d("ProjectDetailViewModel", "🔵 ========================================")
-        android.util.Log.d("ProjectDetailViewModel", "🔵 loadProjectDetail() ÇAĞRILDI")
-        android.util.Log.d("ProjectDetailViewModel", "🔵 ProjectID: $projectId")
-        android.util.Log.d("ProjectDetailViewModel", "🔵 ========================================")
-
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
 
-            android.util.Log.d("ProjectDetailViewModel", "📥 Proje detayı API çağrısı başlıyor...")
-
             when (val projectResult = projectRepository.getProjectDetail(projectId)) {
                 is NetworkResult.Success -> {
-                    android.util.Log.d("ProjectDetailViewModel", "✅ Proje detayı başarılı")
-
                     projectResult.data?.let { project ->
-                        android.util.Log.d("ProjectDetailViewModel", """
-                            ✅ Proje yüklendi:
-                            - Name: ${project.name}
-                            - Members: ${project.members.size}
-                            - Captains: ${project.captains.size}
-                        """.trimIndent())
-
-                        // ✅ Kaptanlık Kontrolü
                         val currentUserId = preferencesManager.getUserId()
                         val isCaptain = project.captains.any { it.userId == currentUserId }
                         val isAdmin = _uiState.value.isAdmin
-                        
-                        // Admin veya Kaptan ise düzenleyebilir
                         val canEdit = isAdmin || isCaptain
 
                         _uiState.value = _uiState.value.copy(
@@ -128,38 +106,28 @@ class ProjectDetailViewModel @Inject constructor(
                             isLoading = false
                         )
 
-                        android.util.Log.d("ProjectDetailViewModel", "🔄 loadProjectTasks() çağrılıyor...")
                         loadProjectTasks(projectId)
                     } ?: run {
-                        android.util.Log.e("ProjectDetailViewModel", "❌ Project data NULL!")
+                        // Error handling
                     }
                 }
                 is NetworkResult.Error -> {
-                    android.util.Log.e("ProjectDetailViewModel", "❌ Proje yükleme hatası: ${projectResult.message}")
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         errorMessage = projectResult.message
                     )
                 }
-                is NetworkResult.Loading -> {
-                    android.util.Log.d("ProjectDetailViewModel", "⏳ Loading state")
-                }
+                is NetworkResult.Loading -> {}
             }
         }
     }
 
     private fun loadProjectTasks(projectId: String) {
         viewModelScope.launch {
-            android.util.Log.d("ProjectDetailViewModel", "🔵 loadProjectTasks() BAŞLADI - ProjectID: $projectId")
-
             when (val result = taskRepository.getMyTasks(status = null)) {
                 is NetworkResult.Success -> {
                     result.data?.let { allMyTasks ->
-                        android.util.Log.d("ProjectDetailViewModel", "📦 Toplam görev sayısı: ${allMyTasks.size}")
-
                         val currentProjectName = _uiState.value.project?.name
-
-                        android.util.Log.d("ProjectDetailViewModel", "🔍 Filtreleme kriteri: projectName = '$currentProjectName'")
 
                         val projectTasks = if (currentProjectName != null) {
                             allMyTasks.filter { task ->
@@ -169,13 +137,6 @@ class ProjectDetailViewModel @Inject constructor(
                             emptyList()
                         }
 
-                        android.util.Log.d("ProjectDetailViewModel", """
-                        ✅ Filtreleme tamamlandı:
-                        - Toplam görevim: ${allMyTasks.size}
-                        - Bu projedeki görevlerim: ${projectTasks.size}
-                    """.trimIndent())
-
-                        // İstatistikler hesapla
                         val total = projectTasks.size
                         val todo = projectTasks.count { it.status == "Todo" }
                         val inProgress = projectTasks.count { it.status == "InProgress" }
@@ -194,33 +155,55 @@ class ProjectDetailViewModel @Inject constructor(
                                 project = updatedProject,
                                 tasks = projectTasks
                             )
-
-                            android.util.Log.d("ProjectDetailViewModel", "✅ UI State güncellendi - Tasks: ${projectTasks.size}")
                         }
                     }
                 }
+                is NetworkResult.Error -> {}
+                is NetworkResult.Loading -> {}
+            }
+        }
+    }
+
+    // ✅ YENİ: Görev Detayını Çek
+    fun loadTaskDetail(taskId: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isTaskDetailLoading = true) }
+
+            when (val result = taskRepository.getTaskDetail(taskId)) {
+                is NetworkResult.Success -> {
+                    _uiState.update { 
+                        it.copy(
+                            isTaskDetailLoading = false,
+                            selectedTask = result.data
+                        ) 
+                    }
+                }
                 is NetworkResult.Error -> {
-                    android.util.Log.e("ProjectDetailViewModel", "❌ getMyTasks() ERROR: ${result.message}")
+                    _uiState.update { 
+                        it.copy(
+                            isTaskDetailLoading = false,
+                            errorMessage = "Görev detayı alınamadı: ${result.message}"
+                        ) 
+                    }
                 }
                 is NetworkResult.Loading -> {}
             }
         }
     }
 
+    fun clearSelectedTask() {
+        _uiState.update { it.copy(selectedTask = null) }
+    }
+
     fun updateTaskStatus(taskId: String, newStatus: String) {
         viewModelScope.launch {
-            android.util.Log.d("ProjectDetailViewModel", "🔄 Görev durumu güncelleniyor: $taskId -> $newStatus")
-
             when (val result = taskRepository.updateTaskStatus(taskId, newStatus)) {
                 is NetworkResult.Success -> {
-                    android.util.Log.d("ProjectDetailViewModel", "✅ Görev durumu güncellendi")
-
                     _uiState.value.project?.let { project ->
                         loadProjectDetail(project.id)
                     }
                 }
                 is NetworkResult.Error -> {
-                    android.util.Log.e("ProjectDetailViewModel", "❌ Durum güncelleme hatası: ${result.message}")
                     _uiState.value = _uiState.value.copy(
                         errorMessage = result.message
                     )
@@ -235,8 +218,6 @@ class ProjectDetailViewModel @Inject constructor(
             loadProjectDetail(project.id)
         }
     }
-
-    // ✅ YENİ - Admin Fonksiyonları
 
     fun showAddMemberDialog() {
         loadAvailableUsers()
@@ -263,7 +244,6 @@ class ProjectDetailViewModel @Inject constructor(
         _uiState.update { it.copy(showDeleteProjectDialog = false) }
     }
 
-    // ✅ YENİ: Görev Ekleme Dialog Kontrolleri
     fun showCreateTaskDialog() {
         _uiState.update { it.copy(showCreateTaskDialog = true) }
     }
@@ -275,14 +255,12 @@ class ProjectDetailViewModel @Inject constructor(
     fun createTask(title: String, description: String?, assigneeId: String?, dueDate: String?) {
         viewModelScope.launch {
             val projectId = _uiState.value.project?.id ?: return@launch
-
-            // Eğer assigneeId boşsa null gönder
             val finalAssigneeId = if (assigneeId.isNullOrBlank()) null else assigneeId
 
             when (val result = taskRepository.createTask(title, description, projectId, finalAssigneeId, dueDate)) {
                 is NetworkResult.Success -> {
                     _uiState.update { it.copy(showCreateTaskDialog = false, errorMessage = null) }
-                    loadProjectDetail(projectId) // Listeyi yenile
+                    loadProjectDetail(projectId)
                 }
                 is NetworkResult.Error -> {
                     _uiState.update { it.copy(errorMessage = result.message) }
@@ -314,7 +292,7 @@ class ProjectDetailViewModel @Inject constructor(
             when (val result = projectRepository.addMember(projectId, request)) {
                 is NetworkResult.Success -> {
                     _uiState.update { it.copy(showAddMemberDialog = false, errorMessage = null) }
-                    loadProjectDetail(projectId) // Refresh
+                    loadProjectDetail(projectId) 
                 }
                 is NetworkResult.Error -> {
                     _uiState.update { it.copy(errorMessage = result.message) }
@@ -328,13 +306,10 @@ class ProjectDetailViewModel @Inject constructor(
         viewModelScope.launch {
             val projectId = _uiState.value.project?.id ?: return@launch
 
-            // ✅ Kural 5: Sadece Captain koruması var. (UI'da zaten Captainlar listede yok)
-            // Başka bir durum (task vb.) göz önünde bulundurulmamalı dendiği için kontrolü kaldırdık.
-
             when (val result = projectRepository.removeMember(projectId, userId)) {
                 is NetworkResult.Success -> {
                     _uiState.update { it.copy(showRemoveMemberDialog = false, errorMessage = null) }
-                    loadProjectDetail(projectId) // Refresh
+                    loadProjectDetail(projectId) 
                 }
                 is NetworkResult.Error -> {
                     _uiState.update { it.copy(errorMessage = result.message) }
@@ -348,7 +323,6 @@ class ProjectDetailViewModel @Inject constructor(
         viewModelScope.launch {
             val projectId = _uiState.value.project?.id ?: return@launch
 
-            // ✅ Kural 6: Projede Tamamlanmamış (Aktif) görevler varsa silme işlemi engellenir.
             val hasIncompleteTasks = _uiState.value.tasks.any { it.status != "Done" }
             
             if (hasIncompleteTasks) {
@@ -364,7 +338,7 @@ class ProjectDetailViewModel @Inject constructor(
             when (val result = projectRepository.deleteProject(projectId)) {
                 is NetworkResult.Success -> {
                     _uiState.update { it.copy(showDeleteProjectDialog = false) }
-                    onSuccess() // Navigate back
+                    onSuccess()
                 }
                 is NetworkResult.Error -> {
                     _uiState.update { it.copy(errorMessage = result.message) }

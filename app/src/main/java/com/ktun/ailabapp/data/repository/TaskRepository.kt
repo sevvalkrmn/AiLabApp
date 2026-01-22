@@ -89,6 +89,19 @@ class TaskRepository @Inject constructor(
             }
         }
 
+    suspend fun getTaskDetail(taskId: String): NetworkResult<TaskResponse> = withContext(Dispatchers.IO) {
+        try {
+            val response = taskApi.getTaskDetail(taskId)
+            if (response.isSuccessful && response.body() != null) {
+                NetworkResult.Success(response.body()!!)
+            } else {
+                NetworkResult.Error("Görev detayı alınamadı")
+            }
+        } catch (e: Exception) {
+            NetworkResult.Error(e.message ?: "Bilinmeyen hata")
+        }
+    }
+
     suspend fun createTask(
         title: String,
         description: String?,

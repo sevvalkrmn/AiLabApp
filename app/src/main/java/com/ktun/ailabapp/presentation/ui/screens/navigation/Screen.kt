@@ -1,6 +1,6 @@
 // presentation/ui/navigation/Screen.kt
 
-package com.ktun.ailabapp.presentation.ui.navigation
+package com.ktun.ailabapp.presentation.ui.screens.navigation
 
 sealed class Screen(val route: String) {
     object Login : Screen("login")
