@@ -34,7 +34,10 @@ data class TaskResponse(
     val createdAt: String? = null,
 
     @SerializedName("updatedAt")
-    val updatedAt: String? = null
+    val updatedAt: String? = null,
+
+    @SerializedName("score")
+    val score: Double? = null // ✅ YENİ: Görev puanı
 ) {
     // Status'u String'e çevir
     val status: String

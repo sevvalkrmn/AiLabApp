@@ -24,6 +24,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle // ✅ Import
+import androidx.lifecycle.LifecycleEventObserver // ✅ Import
+import androidx.lifecycle.compose.LocalLifecycleOwner // ✅ Import
 import coil.compose.AsyncImage
 import com.ktun.ailabapp.data.model.User
 
@@ -35,8 +38,10 @@ fun UsersListScreen(
     onNavigateToSendAnnouncement: (String, String) -> Unit,
     onNavigateToManageRoles: (String) -> Unit,
     onNavigateToTaskHistory: (String, String) -> Unit,
+    onNavigateToProjectDetail: (String) -> Unit = {}, // ✅ YENİ PARAMETRE
     viewModel: UsersListViewModel = hiltViewModel()
-) {
+)
+{
     val uiState by viewModel.uiState.collectAsState()
 
     var selectedUser by remember { mutableStateOf<User?>(null) }
@@ -53,7 +58,7 @@ fun UsersListScreen(
                 is AdminNavigationEvent.ToManageRoles -> {
                     onNavigateToManageRoles(event.userId)
                 }
-                is AdminNavigationEvent.ToTaskHistory -> { // ✅ EKLE
+                is AdminNavigationEvent.ToTaskHistory -> {
                     onNavigateToTaskHistory(event.userId, event.userName)
                 }
             }
@@ -61,10 +66,10 @@ fun UsersListScreen(
     }
 
     // ✅ YENİ - ManageRoles'tan döndüğünde user'ı refresh et
-    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
-        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
-            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
                 // ManageRoles'tan döndüyse ve bir user seçiliyse, refresh et
                 selectedUser?.let { user ->
                     android.util.Log.d("UsersListScreen", "🔄 Refreshing user: ${user.id}")
@@ -236,6 +241,10 @@ fun UsersListScreen(
                     }
                     viewModel.loadUsers()
                 }
+            },
+            onProjectClick = { projectId -> // ✅ BAĞLA
+                showBottomSheet = false
+                onNavigateToProjectDetail(projectId)
             }
         )
     }
@@ -246,7 +255,8 @@ private fun SearchBar(
     query: String,
     onQueryChange: (String) -> Unit,
     modifier: Modifier = Modifier
-) {
+)
+{
     OutlinedTextField(
         value = query,
         onValueChange = onQueryChange,
@@ -283,7 +293,8 @@ private fun SearchBar(
 private fun UsersList(
     users: List<User>,
     onUserClick: (User) -> Unit
-) {
+)
+{
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(
@@ -310,7 +321,8 @@ private fun UsersList(
 private fun UserListItem(
     user: User,
     onClick: () -> Unit
-) {
+)
+{
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -371,7 +383,8 @@ private fun UserListItem(
 @Composable
 private fun EmptyState(
     searchQuery: String
-) {
+)
+{
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -398,7 +411,8 @@ private fun EmptyState(
 private fun ErrorState(
     message: String,
     onRetry: () -> Unit
-) {
+)
+{
     Box(
         modifier = Modifier
             .fillMaxSize()

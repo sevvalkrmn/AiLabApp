@@ -30,15 +30,18 @@ import com.ktun.ailabapp.data.remote.dto.response.ProjectDetailResponse
 import com.ktun.ailabapp.data.remote.dto.response.ProjectMember
 import com.ktun.ailabapp.data.remote.dto.response.TaskResponse
 import com.ktun.ailabapp.data.remote.dto.response.TaskStatistics
-import com.ktun.ailabapp.presentation.ui.util.formatDate
+import com.ktun.ailabapp.util.formatDate
 import com.ktun.ailabapp.ui.theme.BackgroundLight
 import com.ktun.ailabapp.ui.theme.PrimaryBlue
 import com.ktun.ailabapp.ui.theme.White
 import java.util.Calendar
 
+import com.ktun.ailabapp.presentation.ui.components.TaskDetailDialog // ✅ Import added
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProjectDetailScreen(
+// ...
     projectId: String,
     onNavigateBack: () -> Unit = {},
     viewModel: ProjectDetailViewModel = hiltViewModel()
@@ -124,7 +127,6 @@ fun ProjectDetailScreen(
                         .padding(screenWidth * 0.04f),
                     verticalArrangement = Arrangement.spacedBy(screenHeight * 0.02f)
                 ) {
-                    // Proje Bilgileri
                     item {
                         ProjectInfoCard(
                             project = uiState.project!!,
@@ -133,7 +135,6 @@ fun ProjectDetailScreen(
                         )
                     }
 
-                    // Görev İstatistikleri
                     item {
                         TaskStatisticsCard(
                             statistics = uiState.project!!.taskStatistics,
@@ -142,7 +143,6 @@ fun ProjectDetailScreen(
                         )
                     }
 
-                    // Görevler Başlık ve Ekle Butonu
                     item {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -168,7 +168,6 @@ fun ProjectDetailScreen(
                         }
                     }
 
-                    // Görevler Listesi
                     if (uiState.tasks.isEmpty()) {
                         item {
                             Card(
@@ -204,13 +203,16 @@ fun ProjectDetailScreen(
                                 onStatusChange = { newStatus ->
                                     viewModel.updateTaskStatus(task.id, newStatus)
                                 },
+                                onClick = { 
+                                    // ✅ Görev detayını API'den çek
+                                    viewModel.loadTaskDetail(task.id) 
+                                },
                                 screenWidth = screenWidth,
                                 screenHeight = screenHeight
                             )
                         }
                     }
 
-                    // Proje Üyeleri Başlık
                     item {
                         Spacer(modifier = Modifier.height(screenHeight * 0.01f))
                         Text(
@@ -221,7 +223,6 @@ fun ProjectDetailScreen(
                         )
                     }
 
-                    // Kaptanlar
                     items(uiState.project!!.captains) { captain ->
                         MemberCard(
                             member = captain,
@@ -230,7 +231,6 @@ fun ProjectDetailScreen(
                         )
                     }
 
-                    // Üyeler
                     items(uiState.project!!.members) { member ->
                         MemberCard(
                             member = member,
@@ -239,7 +239,6 @@ fun ProjectDetailScreen(
                         )
                     }
 
-                    // ✅ YENİ - Admin ve Kaptan Butonları
                     if (uiState.canEdit) {
                         item {
                             AdminActionsSection(
@@ -248,8 +247,8 @@ fun ProjectDetailScreen(
                                 onDeleteProject = { viewModel.showDeleteProjectDialog() },
                                 screenWidth = screenWidth,
                                 screenHeight = screenHeight,
-                                isCaptain = uiState.isCaptain, // ✅ Parametre ekle
-                                isAdmin = uiState.isAdmin      // ✅ Parametre ekle
+                                isCaptain = uiState.isCaptain,
+                                isAdmin = uiState.isAdmin
                             )
                         }
                     }
@@ -258,7 +257,21 @@ fun ProjectDetailScreen(
         }
     }
 
-    // ✅ YENİ - Görev Ekle Dialog
+    // ✅ YENİ: Görev Detay Dialog (API'den gelen veriye göre)
+    if (uiState.isTaskDetailLoading) {
+        Box(
+            modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.3f)),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(color = White)
+        }
+    } else if (uiState.selectedTask != null) {
+        TaskDetailDialog(
+            task = uiState.selectedTask!!,
+            onDismiss = { viewModel.clearSelectedTask() }
+        )
+    }
+
     if (uiState.showCreateTaskDialog) {
         CreateTaskDialog(
             members = (uiState.project?.captains.orEmpty() + uiState.project?.members.orEmpty()),
@@ -269,7 +282,6 @@ fun ProjectDetailScreen(
         )
     }
 
-    // ✅ YENİ - Dialog'lar
     if (uiState.showAddMemberDialog) {
         AddMemberDialog(
             availableUsers = uiState.availableUsers,
@@ -282,7 +294,7 @@ fun ProjectDetailScreen(
 
     if (uiState.showRemoveMemberDialog) {
         RemoveMemberDialog(
-            members = uiState.project?.members ?: emptyList(),  // ✅ Sadece members
+            members = uiState.project?.members ?: emptyList(),
             onDismiss = { viewModel.hideRemoveMemberDialog() },
             onConfirm = { userId ->
                 viewModel.removeMember(userId)
@@ -321,7 +333,6 @@ fun CreateTaskDialog(
     val datePickerDialog = DatePickerDialog(
         context,
         { _: DatePicker, year: Int, month: Int, dayOfMonth: Int ->
-            // ISO 8601 Format: 2026-01-20T13:17:38.291Z
             val formattedDate = String.format("%04d-%02d-%02dT23:59:59Z", year, month + 1, dayOfMonth)
             dueDate = formattedDate
         },
@@ -352,7 +363,6 @@ fun CreateTaskDialog(
                     maxLines = 3
                 )
 
-                // Assignee Dropdown
                 ExposedDropdownMenuBox(
                     expanded = assigneeExpanded,
                     onExpandedChange = { assigneeExpanded = it }
@@ -382,7 +392,6 @@ fun CreateTaskDialog(
                     }
                 }
 
-                // Date Picker Button
                 OutlinedButton(
                     onClick = { datePickerDialog.show() },
                     modifier = Modifier.fillMaxWidth()
@@ -413,7 +422,132 @@ fun CreateTaskDialog(
     )
 }
 
-// ============= COMPOSABLE KARTLAR =============
+@Composable
+fun TaskCard(
+    task: TaskResponse,
+    onStatusChange: (String) -> Unit,
+    onClick: () -> Unit,
+    screenWidth: androidx.compose.ui.unit.Dp,
+    screenHeight: androidx.compose.ui.unit.Dp
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(containerColor = White),
+        shape = RoundedCornerShape(screenWidth * 0.03f)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(screenWidth * 0.04f)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = task.title,
+                    fontSize = (screenWidth.value * 0.04f).sp,
+                    fontWeight = FontWeight.Bold,
+                    color = PrimaryBlue,
+                    modifier = Modifier.weight(1f)
+                )
+
+                // Status Dropdown
+                Box {
+                    Surface(
+                        color = getStatusColor(task.status),
+                        shape = RoundedCornerShape(screenWidth * 0.02f),
+                        modifier = Modifier.clickable { expanded = true }
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(
+                                horizontal = screenWidth * 0.02f,
+                                vertical = screenHeight * 0.005f
+                            ),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = getStatusText(task.status),
+                                color = White,
+                                fontSize = (screenWidth.value * 0.03f).sp
+                            )
+                            Icon(
+                                Icons.Default.ArrowDropDown,
+                                contentDescription = null,
+                                tint = White,
+                                modifier = Modifier.size(screenWidth * 0.04f)
+                            )
+                        }
+                    }
+
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Yapılacak") },
+                            onClick = {
+                                onStatusChange("Todo")
+                                expanded = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Devam Ediyor") },
+                            onClick = {
+                                onStatusChange("InProgress")
+                                expanded = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Tamamlandı") },
+                            onClick = {
+                                onStatusChange("Done")
+                                expanded = false
+                            }
+                        )
+                    }
+                }
+            }
+
+            if (!task.description.isNullOrEmpty()) {
+                Spacer(modifier = Modifier.height(screenHeight * 0.01f))
+                Text(
+                    text = task.description,
+                    fontSize = (screenWidth.value * 0.03f).sp,
+                    color = PrimaryBlue.copy(alpha = 0.7f),
+                    maxLines = 2,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                )
+            }
+
+            if (task.assignedTo != null) {
+                Spacer(modifier = Modifier.height(screenHeight * 0.01f))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Default.Person,
+                        contentDescription = null,
+                        tint = PrimaryBlue.copy(alpha = 0.5f),
+                        modifier = Modifier.size(screenWidth * 0.04f)
+                    )
+                    Spacer(modifier = Modifier.width(screenWidth * 0.01f))
+                    Text(
+                        text = task.assignedTo.fullName,
+                        fontSize = (screenWidth.value * 0.03f).sp,
+                        color = PrimaryBlue.copy(alpha = 0.7f)
+                    )
+                }
+            }
+        }
+    }
+}
+
+// ... ProjectInfoCard, TaskStatisticsCard, StatItem, MemberCard, AdminActionsSection, AddMemberDialog, RemoveMemberDialog, DeleteProjectDialog ...
+// (Helper fonksiyonlar aynen kalacak, dosya içeriğini tam olarak yukarıdaki gibi yazıyorum)
 
 @Composable
 fun ProjectInfoCard(
@@ -600,127 +734,6 @@ fun MemberCard(
 }
 
 @Composable
-fun TaskCard(
-    task: TaskResponse,
-    onStatusChange: (String) -> Unit,
-    screenWidth: androidx.compose.ui.unit.Dp,
-    screenHeight: androidx.compose.ui.unit.Dp
-) {
-    var expanded by remember { mutableStateOf(false) }
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = White),
-        shape = RoundedCornerShape(screenWidth * 0.03f)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(screenWidth * 0.04f)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = task.title,
-                    fontSize = (screenWidth.value * 0.04f).sp,
-                    fontWeight = FontWeight.Bold,
-                    color = PrimaryBlue,
-                    modifier = Modifier.weight(1f)
-                )
-
-                // Status Dropdown
-                Box {
-                    Surface(
-                        color = getStatusColor(task.status),
-                        shape = RoundedCornerShape(screenWidth * 0.02f),
-                        modifier = Modifier.clickable { expanded = true }
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(
-                                horizontal = screenWidth * 0.02f,
-                                vertical = screenHeight * 0.005f
-                            ),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = getStatusText(task.status),
-                                color = White,
-                                fontSize = (screenWidth.value * 0.03f).sp
-                            )
-                            Icon(
-                                Icons.Default.ArrowDropDown,
-                                contentDescription = null,
-                                tint = White,
-                                modifier = Modifier.size(screenWidth * 0.04f)
-                            )
-                        }
-                    }
-
-                    DropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false }
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text("Yapılacak") },
-                            onClick = {
-                                onStatusChange("Todo")
-                                expanded = false
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text("Devam Ediyor") },
-                            onClick = {
-                                onStatusChange("InProgress")
-                                expanded = false
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text("Tamamlandı") },
-                            onClick = {
-                                onStatusChange("Done")
-                                expanded = false
-                            }
-                        )
-                    }
-                }
-            }
-
-            if (!task.description.isNullOrEmpty()) {
-                Spacer(modifier = Modifier.height(screenHeight * 0.01f))
-                Text(
-                    text = task.description,
-                    fontSize = (screenWidth.value * 0.03f).sp,
-                    color = PrimaryBlue.copy(alpha = 0.7f)
-                )
-            }
-
-            if (task.assignedTo != null) {
-                Spacer(modifier = Modifier.height(screenHeight * 0.01f))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Default.Person,
-                        contentDescription = null,
-                        tint = PrimaryBlue.copy(alpha = 0.5f),
-                        modifier = Modifier.size(screenWidth * 0.04f)
-                    )
-                    Spacer(modifier = Modifier.width(screenWidth * 0.01f))
-                    Text(
-                        text = task.assignedTo.fullName,
-                        fontSize = (screenWidth.value * 0.03f).sp,
-                        color = PrimaryBlue.copy(alpha = 0.7f)
-                    )
-                }
-            }
-        }
-    }
-}
-
-// ============= YENİ - ADMIN BUTONLARI =============
-
-@Composable
 fun AdminActionsSection(
     onAddMember: () -> Unit,
     onRemoveMember: () -> Unit,
@@ -776,7 +789,6 @@ fun AdminActionsSection(
             Text("Üye Çıkar", fontSize = (screenWidth.value * 0.04f).sp)
         }
 
-        // ✅ Kural 6: Sadece Admin silebilir
         if (isAdmin) {
             Spacer(Modifier.height(screenHeight * 0.01f))
 
@@ -798,8 +810,6 @@ fun AdminActionsSection(
     }
 }
 
-// ============= YENİ - DIALOG'LAR =============
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddMemberDialog(
@@ -816,7 +826,6 @@ fun AddMemberDialog(
         title = { Text("Üye Ekle") },
         text = {
             Column {
-                // Kullanıcı Seçimi
                 ExposedDropdownMenuBox(
                     expanded = dropdownExpanded,
                     onExpandedChange = { dropdownExpanded = it }
@@ -869,7 +878,6 @@ fun AddMemberDialog(
 
                 Spacer(Modifier.height(16.dp))
 
-                // Rol Seçimi
                 Text("Rol:", style = MaterialTheme.typography.labelMedium)
                 Spacer(Modifier.height(8.dp))
 
@@ -962,10 +970,6 @@ fun RemoveMemberDialog(
                         expanded = dropdownExpanded,
                         onDismissRequest = { dropdownExpanded = false }
                     ) {
-                        // ✅ FİLTRELEMEYİ KALDIR - members listesi zaten sadece Member'ları içeriyor
-                        // Backend 'members' ve 'captains' listelerini ayrı gönderiyor.
-                        // Dolayısıyla bu liste zaten temiz.
-                        
                         if (members.isEmpty()) {
                             DropdownMenuItem(
                                 text = { Text("Çıkarılabilir üye yok") },
@@ -1049,8 +1053,6 @@ fun DeleteProjectDialog(
         }
     )
 }
-
-// ============= HELPER FUNCTIONS =============
 
 fun getStatusColor(status: String): Color {
     return when (status) {

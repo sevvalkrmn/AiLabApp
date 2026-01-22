@@ -1,4 +1,4 @@
-package com.ktun.ailabapp.presentation.ui.util
+package com.ktun.ailabapp.util
 
 import androidx.compose.ui.graphics.Color
 import java.text.SimpleDateFormat

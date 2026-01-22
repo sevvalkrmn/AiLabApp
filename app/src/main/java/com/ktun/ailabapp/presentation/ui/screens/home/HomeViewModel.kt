@@ -32,7 +32,10 @@ data class HomeUiState(
     val topUsers: List<TopUserItem> = emptyList(),
 
     val isLoading: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    // ✅ YENİ: Seçili Görev Detayı
+    val selectedTask: TaskResponse? = null,
+    val isTaskDetailLoading: Boolean = false
 )
 
 data class TopUserItem(
@@ -78,6 +81,33 @@ class HomeViewModel @Inject constructor(
                 loadLabStats()
             }
         }
+    }
+
+    // ✅ YENİ: Görev Detayını Çek
+    fun loadTaskDetail(taskId: String) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isTaskDetailLoading = true)
+
+            when (val result = taskRepository.getTaskDetail(taskId)) {
+                is NetworkResult.Success -> {
+                    _uiState.value = _uiState.value.copy(
+                        isTaskDetailLoading = false,
+                        selectedTask = result.data
+                    )
+                }
+                is NetworkResult.Error -> {
+                    _uiState.value = _uiState.value.copy(
+                        isTaskDetailLoading = false,
+                        errorMessage = "Görev detayı alınamadı: ${result.message}"
+                    )
+                }
+                is NetworkResult.Loading -> {}
+            }
+        }
+    }
+
+    fun clearSelectedTask() {
+        _uiState.value = _uiState.value.copy(selectedTask = null)
     }
 
     fun loadUserData() {
@@ -178,12 +208,13 @@ class HomeViewModel @Inject constructor(
                         """.trimIndent())
                         }
 
-                        val testTasks = allTasks.take(2)
+                        // ✅ GÜNCELLEME: Sadece tamamlanmamış görevleri al ve sınır koyma
+                        val activeTasks = allTasks.filter { it.status != "Done" }
 
-                        android.util.Log.d("HomeViewModel", "🎯 UI'a gönderilen görev sayısı: ${testTasks.size}")
+                        android.util.Log.d("HomeViewModel", "🎯 UI'a gönderilen aktif görev sayısı: ${activeTasks.size}")
 
                         _uiState.value = _uiState.value.copy(
-                            currentTasks = testTasks
+                            currentTasks = activeTasks
                         )
 
                         android.util.Log.d("HomeViewModel", "✅ uiState güncellendi - currentTasks.size: ${_uiState.value.currentTasks.size}")
