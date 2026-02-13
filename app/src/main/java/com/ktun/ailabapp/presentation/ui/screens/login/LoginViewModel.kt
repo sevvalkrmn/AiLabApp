@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ktun.ailabapp.data.model.LoginUiState
 import com.ktun.ailabapp.data.repository.AuthRepository
+import com.ktun.ailabapp.util.Logger
 import com.ktun.ailabapp.util.NetworkResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -48,17 +49,11 @@ class LoginViewModel @Inject constructor(
             val password = _uiState.value.password
             val rememberMe = _uiState.value.rememberMe  // ✅ YENİ
 
-            android.util.Log.d("LoginViewModel", """
-                Login Attempt:
-                Email: $email
-                Password Length: ${password.length}
-                Remember Me: $rememberMe
-            """.trimIndent())
+            Logger.d("Login attempt started", "LoginViewModel")
 
-            // ✅ rememberMe parametresi eklendi
             when (val result = authRepository.login(email, password, rememberMe)) {
                 is NetworkResult.Success -> {
-                    android.util.Log.d("LoginViewModel", "Login Success! Remember Me: $rememberMe")
+                    Logger.d("Login successful", "LoginViewModel")
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         isLoggedIn = true,
@@ -67,16 +62,14 @@ class LoginViewModel @Inject constructor(
                     onSuccess()
                 }
                 is NetworkResult.Error -> {
-                    android.util.Log.e("LoginViewModel", "Login Error: ${result.message}")
+                    Logger.e("Login failed: ${result.message}", tag = "LoginViewModel")
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         isLoggedIn = false,
                         errorMessage = result.message ?: "Giriş başarısız"
                     )
                 }
-                is NetworkResult.Loading -> {
-                    android.util.Log.d("LoginViewModel", "Login Loading...")
-                }
+                is NetworkResult.Loading -> {}
             }
         }
     }

@@ -2,7 +2,6 @@ package com.ktun.ailabapp.data.remote.interceptor
 
 import com.ktun.ailabapp.data.remote.network.ApiConfig
 import com.ktun.ailabapp.util.FirebaseAuthManager
-import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.Response
 import javax.inject.Inject
@@ -18,7 +17,7 @@ class AuthInterceptor @Inject constructor(
         val publicEndpoints = listOf(
             ApiConfig.Endpoints.REGISTER,
             ApiConfig.Endpoints.LOGIN,
-            ApiConfig.Endpoints.LOGIN_FIREBASE, // ✅ Updated
+            ApiConfig.Endpoints.LOGIN_FIREBASE,
             ApiConfig.Endpoints.REFRESH_TOKEN
         )
 
@@ -30,10 +29,8 @@ class AuthInterceptor @Inject constructor(
             return chain.proceed(originalRequest)
         }
 
-        // ✅ Firebase'den güncel token al (Otomatik refresh dahil)
-        val token = runBlocking {
-            authManager.getIdToken()
-        }
+        // Cached token'ı senkron oku — runBlocking yok, thread bloke olmaz
+        val token = authManager.getTokenSync()
 
         val newRequest = originalRequest.newBuilder()
             .apply {

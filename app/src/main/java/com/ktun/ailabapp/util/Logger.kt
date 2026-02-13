@@ -1,7 +1,7 @@
 package com.ktun.ailabapp.util
 
 import android.util.Log
-import com.google.firebase.BuildConfig
+import com.ktun.ailabapp.BuildConfig
 
 object Logger {
     private const val TAG = "AiLabApp"

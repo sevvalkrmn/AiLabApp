@@ -28,6 +28,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import coil.compose.AsyncImage
 import com.ktun.ailabapp.data.remote.dto.response.TaskResponse
 import com.ktun.ailabapp.presentation.ui.components.BottomNavigationBar
@@ -66,6 +69,22 @@ fun HomeScreen(
                 showFeedbackDialog = false
             }
         )
+    }
+
+    // Lifecycle-aware polling: sadece ekran görünürken çalışır
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> viewModel.startPolling()
+                Lifecycle.Event.ON_PAUSE -> viewModel.stopPolling()
+                else -> {}
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
     }
 
     LaunchedEffect(Unit) {
