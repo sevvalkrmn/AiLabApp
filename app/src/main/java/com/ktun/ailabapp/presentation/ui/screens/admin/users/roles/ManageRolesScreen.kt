@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ktun.ailabapp.data.model.User
 import com.ktun.ailabapp.presentation.ui.screens.admin.roles.ManageRolesViewModel
+import com.ktun.ailabapp.ui.theme.PrimaryBlue
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -60,7 +61,7 @@ fun ManageRolesScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF071372),
+                    containerColor = PrimaryBlue,
                     titleContentColor = Color.White,
                     navigationIconContentColor = Color.White
                 )
@@ -75,7 +76,7 @@ fun ManageRolesScreen(
                     .padding(paddingValues),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = Color(0xFF071372))
+                CircularProgressIndicator(color = PrimaryBlue)
             }
         } else if (uiState.user == null) {
             Box(
@@ -110,7 +111,7 @@ fun ManageRolesScreen(
                         text = "Proje Seçin:",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF071372)
+                        color = PrimaryBlue
                     )
 
                     LazyColumn(
@@ -141,7 +142,7 @@ fun ManageRolesScreen(
                         text = "Yeni Rol Seçin:",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF071372)
+                        color = PrimaryBlue
                     )
 
                     Row(
@@ -188,14 +189,14 @@ private fun UserInfoCard(user: User) {
             Surface(
                 modifier = Modifier.size(48.dp),
                 shape = RoundedCornerShape(24.dp),
-                color = Color(0xFF071372).copy(alpha = 0.1f)
+                color = PrimaryBlue.copy(alpha = 0.1f)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Text(
                         text = user.fullName.take(1).uppercase(),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF071372)
+                        color = PrimaryBlue
                     )
                 }
             }
@@ -205,7 +206,7 @@ private fun UserInfoCard(user: User) {
                     text = user.fullName,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF071372)
+                    color = PrimaryBlue
                 )
                 Text(
                     text = user.email,
@@ -229,10 +230,10 @@ private fun ProjectSelectionCard(
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(12.dp),
-        color = if (isSelected) Color(0xFF071372).copy(alpha = 0.1f) else Color.White,
+        color = if (isSelected) PrimaryBlue.copy(alpha = 0.1f) else Color.White,
         border = BorderStroke(
             width = if (isSelected) 2.dp else 1.dp,
-            color = if (isSelected) Color(0xFF071372) else Color.Gray.copy(alpha = 0.3f)
+            color = if (isSelected) PrimaryBlue else Color.Gray.copy(alpha = 0.3f)
         )
     ) {
         Row(
@@ -244,7 +245,7 @@ private fun ProjectSelectionCard(
                     text = projectName,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF071372)
+                    color = PrimaryBlue
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
@@ -258,7 +259,7 @@ private fun ProjectSelectionCard(
                 Icon(
                     imageVector = Icons.Default.CheckCircle,
                     contentDescription = null,
-                    tint = Color(0xFF071372)
+                    tint = PrimaryBlue
                 )
             }
         }
@@ -277,11 +278,11 @@ private fun RoleButton(
         onClick = onClick,
         modifier = modifier.height(48.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = if (isSelected) Color(0xFF071372) else Color.White,
-            contentColor = if (isSelected) Color.White else Color(0xFF071372)
+            containerColor = if (isSelected) PrimaryBlue else Color.White,
+            contentColor = if (isSelected) Color.White else PrimaryBlue
         ),
         shape = RoundedCornerShape(24.dp),
-        border = BorderStroke(1.dp, Color(0xFF071372)),
+        border = BorderStroke(1.dp, PrimaryBlue),
         enabled = !isLoading
     ) {
         if (isLoading && isSelected) {
@@ -349,7 +350,7 @@ private fun CaptainWarningDialog(
             TextButton(
                 onClick = onConfirm,
                 colors = ButtonDefaults.textButtonColors(
-                    contentColor = Color(0xFF071372)
+                    contentColor = PrimaryBlue
                 )
             ) {
                 Text("Devam Et", fontWeight = FontWeight.Bold)

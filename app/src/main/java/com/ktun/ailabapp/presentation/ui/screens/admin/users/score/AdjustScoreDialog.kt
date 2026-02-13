@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ktun.ailabapp.presentation.ui.screens.admin.score.AdjustScoreViewModel
+import com.ktun.ailabapp.ui.theme.PrimaryBlue
 
 @Composable
 fun AdjustScoreDialog(
@@ -63,14 +64,14 @@ fun AdjustScoreDialog(
                     text = "Puan Ekle / Azalt",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF071372)
+                    color = PrimaryBlue
                 )
 
                 // User Info
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
-                    color = Color(0xFF071372).copy(alpha = 0.1f)
+                    color = PrimaryBlue.copy(alpha = 0.1f)
                 ) {
                     Column(
                         modifier = Modifier.padding(12.dp)
@@ -79,7 +80,7 @@ fun AdjustScoreDialog(
                             text = userName,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = Color(0xFF071372)
+                            color = PrimaryBlue
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
@@ -132,7 +133,7 @@ fun AdjustScoreDialog(
                         keyboardType = KeyboardType.Decimal // ✅ Number -> Decimal
                     ),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFF071372),
+                        focusedBorderColor = PrimaryBlue,
                         unfocusedBorderColor = Color(0xFF9FA8DA)
                     )
                 )
@@ -154,7 +155,7 @@ fun AdjustScoreDialog(
                         capitalization = KeyboardCapitalization.Sentences
                     ),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFF071372),
+                        focusedBorderColor = PrimaryBlue,
                         unfocusedBorderColor = Color(0xFF9FA8DA)
                     ),
                     maxLines = 2
@@ -218,7 +219,7 @@ fun AdjustScoreDialog(
                         onClick = { viewModel.adjustScore(userId) },
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF071372)
+                            containerColor = PrimaryBlue
                         ),
                         enabled = !uiState.isLoading
                     ) {

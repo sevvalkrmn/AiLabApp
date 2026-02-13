@@ -62,7 +62,9 @@ fun ProfileScreen(
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showAvatarPicker by remember { mutableStateOf(false) }
     var showPhotoSourceDialog by remember { mutableStateOf(false) }
-    var showUpdateEmailDialog by remember { mutableStateOf(false) } // ✅ State added
+    var showUpdateEmailDialog by remember { mutableStateOf(false) }
+    var showChangePasswordDialog by remember { mutableStateOf(false) }
+    var showUpdatePhoneDialog by remember { mutableStateOf(false) } // ✅ State
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -156,6 +158,30 @@ fun ProfileScreen(
                 showUpdateEmailDialog = false
                 viewModel.updateEmail(password, newEmail) {
                     Toast.makeText(context, "E-posta başarıyla güncellendi", Toast.LENGTH_SHORT).show()
+                }
+            }
+        )
+    }
+
+    if (showChangePasswordDialog) {
+        ChangePasswordDialog(
+            onDismiss = { showChangePasswordDialog = false },
+            onConfirm = { oldPass, newPass ->
+                showChangePasswordDialog = false
+                viewModel.changePassword(oldPass, newPass) {
+                    Toast.makeText(context, "Şifreniz başarıyla değiştirildi", Toast.LENGTH_SHORT).show()
+                }
+            }
+        )
+    }
+
+    if (showUpdatePhoneDialog) {
+        UpdatePhoneDialog(
+            onDismiss = { showUpdatePhoneDialog = false },
+            onConfirm = { newPhone ->
+                showUpdatePhoneDialog = false
+                viewModel.updatePhone(newPhone) {
+                    Toast.makeText(context, "Telefon numarası başarıyla güncellendi", Toast.LENGTH_SHORT).show()
                 }
             }
         )
@@ -348,7 +374,7 @@ fun ProfileScreen(
                     ProfileMenuItem(
                         icon = Icons.Default.Lock,
                         text = "Şifreyi Değiştir",
-                        onClick = { /* TODO */ },
+                        onClick = { showChangePasswordDialog = true }, // ✅ Click action
                         screenWidth = screenWidth,
                         screenHeight = screenHeight
                     )
@@ -358,7 +384,7 @@ fun ProfileScreen(
                     ProfileMenuItem(
                         icon = Icons.Default.Phone,
                         text = "Telefon Numarasını Değiştir",
-                        onClick = { /* TODO */ },
+                        onClick = { showUpdatePhoneDialog = true }, // ✅ Click action
                         screenWidth = screenWidth,
                         screenHeight = screenHeight
                     )

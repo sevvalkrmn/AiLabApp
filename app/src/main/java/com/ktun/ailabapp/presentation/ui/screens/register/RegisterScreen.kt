@@ -36,6 +36,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.ktun.ailabapp.presentation.ui.screens.register.RegisterViewModel
 import com.ktun.ailabapp.R
+import com.ktun.ailabapp.ui.theme.PrimaryBlue
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -145,6 +146,11 @@ fun RegisterScreen(
                 if (uiState.step == 1) {
                     // --- STEP 1: Email & Password ---
 
+                    // Şifre kuralları: Min 8 karakter, en az 1 büyük harf, en az 1 rakam
+                    val passwordRegex = "^(?=.*[A-Z])(?=.*[0-9]).{8,}$".toRegex()
+                    val isValidPassword = passwordRegex.matches(uiState.password)
+                    val passwordsMatch = uiState.password == uiState.confirmPassword && uiState.password.isNotBlank()
+
                     RegisterInput(
                         value = uiState.email,
                         onValueChange = viewModel::updateEmail,
@@ -156,13 +162,23 @@ fun RegisterScreen(
                     RegisterInput(
                         value = uiState.password,
                         onValueChange = viewModel::updatePassword,
-                        placeholder = "Şifre (En az 8 karakter, 1 büyük harf, 1 sayı içermelidir.)",
+                        placeholder = "Şifre belirleyin",
                         keyboardType = KeyboardType.Password,
                         imeAction = ImeAction.Next,
                         isPassword = true,
                         isPasswordVisible = uiState.isPasswordVisible,
-                        onTogglePasswordVisibility = viewModel::togglePasswordVisibility
+                        onTogglePasswordVisibility = viewModel::togglePasswordVisibility,
+                        isError = uiState.password.isNotBlank() && !isValidPassword
                     )
+
+                    if (uiState.password.isNotBlank() && !isValidPassword) {
+                        Text(
+                            text = "En az 8 karakter, 1 büyük harf ve 1 rakam gereklidir.",
+                            color = Color.Red,
+                            fontSize = 11.sp,
+                            modifier = Modifier.padding(start = 4.dp)
+                        )
+                    }
 
                     RegisterInput(
                         value = uiState.confirmPassword,
@@ -172,8 +188,18 @@ fun RegisterScreen(
                         imeAction = ImeAction.Done,
                         isPassword = true,
                         isPasswordVisible = uiState.isConfirmPasswordVisible,
-                        onTogglePasswordVisibility = viewModel::toggleConfirmPasswordVisibility
+                        onTogglePasswordVisibility = viewModel::toggleConfirmPasswordVisibility,
+                        isError = uiState.confirmPassword.isNotBlank() && !passwordsMatch
                     )
+
+                    if (uiState.confirmPassword.isNotBlank() && !passwordsMatch) {
+                        Text(
+                            text = "Şifreler uyuşmuyor.",
+                            color = Color.Red,
+                            fontSize = 11.sp,
+                            modifier = Modifier.padding(start = 4.dp)
+                        )
+                    }
 
                 } else {
                     // --- STEP 2: Personal Details ---
@@ -216,6 +242,18 @@ fun RegisterScreen(
             Spacer(modifier = Modifier.height(20.dp))
 
             // --- ACTION BUTTON ---
+            val passwordRegex = "^(?=.*[A-Z])(?=.*[0-9]).{8,}$".toRegex()
+            val isStep1Valid = uiState.email.isNotBlank() && 
+                              passwordRegex.matches(uiState.password) && 
+                              uiState.password == uiState.confirmPassword
+            
+            val isStep2Valid = uiState.fullName.isNotBlank() && 
+                              uiState.username.length >= 3 && 
+                              uiState.schoolNumber.isNotBlank() && 
+                              uiState.phone.length >= 10
+
+            val isButtonEnabled = if (uiState.step == 1) isStep1Valid else isStep2Valid
+
             Button(
                 onClick = {
                     if (uiState.step == 1) {
@@ -237,7 +275,7 @@ fun RegisterScreen(
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                 contentPadding = PaddingValues(),
-                enabled = !uiState.isLoading
+                enabled = !uiState.isLoading && isButtonEnabled
             ) {
                 Box(
                     modifier = Modifier
@@ -246,7 +284,7 @@ fun RegisterScreen(
                             brush = Brush.radialGradient(
                                 colors = listOf(
                                     Color(0xFF0D24D8),
-                                    Color(0xFF071372)
+                                    PrimaryBlue
                                 ),
                                 center = Offset(0.5f, 0.5f),
                                 radius = 800f
@@ -321,11 +359,13 @@ fun RegisterInput(
     isPassword: Boolean = false,
     isPasswordVisible: Boolean = false,
     onTogglePasswordVisibility: () -> Unit = {},
-    prefix: String? = null
+    prefix: String? = null,
+    isError: Boolean = false // ✅ Parametre eklendi
 ) {
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
+        isError = isError, // ✅ Atama yapıldı
         placeholder = {
             Text(
                 placeholder,
@@ -341,8 +381,8 @@ fun RegisterInput(
             .height(52.dp),
         shape = RoundedCornerShape(12.dp),
         colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = Color(0xFFE2E8F0),
-            unfocusedBorderColor = Color(0xFFE2E8F0),
+            focusedBorderColor = if (isError) Color.Red else Color(0xFFE2E8F0), // ✅ Hata rengi
+            unfocusedBorderColor = if (isError) Color.Red else Color(0xFFE2E8F0),
             focusedContainerColor = Color.White,
             unfocusedContainerColor = Color.White,
             focusedTextColor = Color(0xFF1E293B),

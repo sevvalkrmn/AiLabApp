@@ -211,7 +211,7 @@ fun LoginScreen(
                             brush = Brush.radialGradient(
                                 colors = listOf(
                                     Color(0xFF0D24D8),
-                                    Color(0xFF071372)
+                                    PrimaryBlue
                                 ),
                                 center = Offset(0.5f, 0.5f),
                                 radius = 800f
@@ -262,7 +262,7 @@ fun LoginScreen(
                             brush = Brush.radialGradient(
                                 colors = listOf(
                                     Color(0xFF0D24D8),
-                                    Color(0xFF071372)
+                                    PrimaryBlue
                                 ),
                                 center = Offset(0.5f, 0.5f),
                                 radius = 800f

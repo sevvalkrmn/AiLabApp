@@ -17,8 +17,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.ktun.ailabapp.ui.theme.PrimaryBlue // ✅ Import added
 
 @OptIn(ExperimentalMaterial3Api::class)
+
+
 @Composable
 fun FeedbackDialog(
     pageInfo: String = "unknown-page", // Hatanın olduğu sayfa
@@ -82,12 +85,12 @@ fun FeedbackDialog(
                             text = "Hata Bildir",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF071372)
+                            color = PrimaryBlue
                         )
                     }
 
                     IconButton(onClick = onDismiss) {
-                        Icon(Icons.Default.Close, contentDescription = "Kapat", tint = Color(0xFF071372))
+                        Icon(Icons.Default.Close, contentDescription = "Kapat", tint = PrimaryBlue)
                     }
                 }
 
@@ -106,7 +109,7 @@ fun FeedbackDialog(
                         label = { Text("Hata Türü") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF071372),
+                            focusedBorderColor = PrimaryBlue,
                             unfocusedBorderColor = Color(0xFFE0E0E0)
                         ),
                         modifier = Modifier.fillMaxWidth().menuAnchor()
@@ -140,7 +143,7 @@ fun FeedbackDialog(
                     label = { Text("Açıklama") },
                     placeholder = { Text("Lütfen hatayı detaylıca açıklayın...") },
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFF071372),
+                        focusedBorderColor = PrimaryBlue,
                         unfocusedBorderColor = Color(0xFFE0E0E0)
                     ),
                     shape = RoundedCornerShape(12.dp),
@@ -168,7 +171,7 @@ fun FeedbackDialog(
                         modifier = Modifier.weight(1f).height(48.dp),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("İptal", color = Color(0xFF071372))
+                        Text("İptal", color = PrimaryBlue)
                     }
 
                     Button(
@@ -183,7 +186,7 @@ fun FeedbackDialog(
                             )
                         },
                         modifier = Modifier.weight(1f).height(48.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF071372)),
+                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
                         shape = RoundedCornerShape(12.dp),
                         enabled = description.isNotBlank() && !uiState.isLoading
                     ) {

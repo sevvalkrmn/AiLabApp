@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ktun.ailabapp.data.remote.dto.response.TaskHistory
 import com.ktun.ailabapp.data.remote.dto.response.TaskStatus
+import com.ktun.ailabapp.ui.theme.PrimaryBlue
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,7 +44,7 @@ fun TaskHistoryScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF071372),
+                    containerColor = PrimaryBlue,
                     titleContentColor = Color.White,
                     navigationIconContentColor = Color.White
                 )
@@ -71,7 +72,7 @@ fun TaskHistoryScreen(
                         text = userName,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF071372)
+                        color = PrimaryBlue
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
@@ -131,7 +132,7 @@ fun TaskHistoryScreen(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        CircularProgressIndicator(color = Color(0xFF071372))
+                        CircularProgressIndicator(color = PrimaryBlue)
                     }
                 }
 
@@ -180,7 +181,7 @@ private fun FilterChip(
     isSelected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    color: Color = Color(0xFF071372)
+    color: Color = PrimaryBlue
 ) {
     Button(
         onClick = onClick,
@@ -237,7 +238,7 @@ private fun TaskCard(task: TaskHistory) {
                     text = task.title,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF071372)
+                    color = PrimaryBlue
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(

@@ -4,7 +4,8 @@ import android.net.Uri
 import com.ktun.ailabapp.data.local.datastore.PreferencesManager
 import com.ktun.ailabapp.data.remote.api.AuthApi
 import com.ktun.ailabapp.data.remote.dto.request.FirebaseLoginRequest
-import com.ktun.ailabapp.data.remote.dto.request.UpdateEmailRequest // ✅ Import
+import com.ktun.ailabapp.data.remote.dto.request.UpdateEmailRequest
+import com.ktun.ailabapp.data.remote.dto.request.UpdatePhoneRequest
 import com.ktun.ailabapp.data.remote.dto.request.UpdateProfileImageRequest
 import com.ktun.ailabapp.data.remote.dto.response.AuthResponse
 import com.ktun.ailabapp.data.remote.dto.response.LeaderboardUserResponse
@@ -157,19 +158,18 @@ class AuthRepository @Inject constructor(
         }
     }
 
-    // ✅ YENİ: E-posta Güncelleme (Firebase + Backend)
     suspend fun updateEmail(password: String, newEmail: String): NetworkResult<Unit> = withContext(Dispatchers.IO) {
         try {
             // 1. Re-authenticate
             val reauthResult = authManager.reauthenticate(password)
             if (reauthResult.isFailure) {
-                return@withContext NetworkResult.Error("Kimlik doğrulama başarısız: ${reauthResult.exceptionOrNull()?.message}")
+                return@withContext NetworkResult.Error(reauthResult.exceptionOrNull()?.message ?: "Kimlik doğrulama başarısız")
             }
 
             // 2. Firebase Update
             val firebaseUpdateResult = authManager.updateEmail(newEmail)
             if (firebaseUpdateResult.isFailure) {
-                return@withContext NetworkResult.Error("Firebase güncelleme hatası: ${firebaseUpdateResult.exceptionOrNull()?.message}")
+                return@withContext NetworkResult.Error(firebaseUpdateResult.exceptionOrNull()?.message ?: "Firebase güncelleme hatası")
             }
 
             // 3. Backend Sync
@@ -180,6 +180,41 @@ class AuthRepository @Inject constructor(
                 NetworkResult.Success(Unit)
             } else {
                 NetworkResult.Error("Backend senkronizasyon hatası: ${response.code()}")
+            }
+        } catch (e: Exception) {
+            NetworkResult.Error(e.message ?: "Bilinmeyen hata")
+        }
+    }
+
+    suspend fun changePassword(oldPassword: String, newPassword: String): NetworkResult<Unit> = withContext(Dispatchers.IO) {
+        try {
+            // 1. Eski şifre ile doğrulama (Re-auth)
+            val reauthResult = authManager.reauthenticate(oldPassword)
+            if (reauthResult.isFailure) {
+                return@withContext NetworkResult.Error(reauthResult.exceptionOrNull()?.message ?: "Kimlik doğrulama başarısız")
+            }
+
+            // 2. Yeni şifreyi Firebase'de güncelle
+            val updateResult = authManager.updatePassword(newPassword)
+            if (updateResult.isFailure) {
+                return@withContext NetworkResult.Error(updateResult.exceptionOrNull()?.message ?: "Şifre güncelleme hatası")
+            }
+
+            NetworkResult.Success(Unit)
+        } catch (e: Exception) {
+            NetworkResult.Error(e.message ?: "Bilinmeyen bir hata oluştu")
+        }
+    }
+
+    suspend fun updatePhone(newPhone: String): NetworkResult<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val request = UpdatePhoneRequest(phoneNumber = newPhone)
+            val response = authApi.updatePhone(request)
+
+            if (response.isSuccessful) {
+                NetworkResult.Success(Unit)
+            } else {
+                NetworkResult.Error("Telefon güncelleme hatası: ${response.code()}")
             }
         } catch (e: Exception) {
             NetworkResult.Error(e.message ?: "Bilinmeyen hata")

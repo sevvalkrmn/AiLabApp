@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.ktun.ailabapp.ui.theme.PrimaryBlue
 
 @Composable
 fun UpdateProfileImageDialog(
@@ -71,14 +72,14 @@ fun UpdateProfileImageDialog(
                     text = "Profil Fotoğrafını Değiştir",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF071372)
+                    color = PrimaryBlue
                 )
 
                 // Current Image
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
-                    color = Color(0xFF071372).copy(alpha = 0.1f)
+                    color = PrimaryBlue.copy(alpha = 0.1f)
                 ) {
                     Row(
                         modifier = Modifier.padding(12.dp),
@@ -99,7 +100,7 @@ fun UpdateProfileImageDialog(
                                 text = userName,
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = Color(0xFF071372)
+                                color = PrimaryBlue
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
@@ -130,7 +131,7 @@ fun UpdateProfileImageDialog(
                     text = "Veya sistem avatarlarından seçin:",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
-                    color = Color(0xFF071372)
+                    color = PrimaryBlue
                 )
 
                 LazyVerticalGrid(
@@ -147,7 +148,7 @@ fun UpdateProfileImageDialog(
                                 .clip(CircleShape)
                                 .border(
                                     width = if (avatarUrl == uiState.imageUrl) 3.dp else 1.dp,
-                                    color = if (avatarUrl == uiState.imageUrl) Color(0xFF071372) else Color.LightGray,
+                                    color = if (avatarUrl == uiState.imageUrl) PrimaryBlue else Color.LightGray,
                                     shape = CircleShape
                                 )
                                 .clickable { viewModel.onImageUrlChange(avatarUrl) }
@@ -196,7 +197,7 @@ fun UpdateProfileImageDialog(
                         onClick = { viewModel.updateProfileImage(userId) },
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF071372)
+                            containerColor = PrimaryBlue
                         ),
                         enabled = !uiState.isLoading && uiState.imageUrl.isNotEmpty()
                     ) {
