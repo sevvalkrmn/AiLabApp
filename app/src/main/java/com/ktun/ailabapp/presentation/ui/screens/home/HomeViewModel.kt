@@ -7,12 +7,15 @@ import com.ktun.ailabapp.data.remote.dto.response.TaskResponse
 import com.ktun.ailabapp.data.repository.AuthRepository
 import com.ktun.ailabapp.data.repository.LabStatsRepository
 import com.ktun.ailabapp.data.repository.TaskRepository
+import com.ktun.ailabapp.util.Logger
 import com.ktun.ailabapp.util.NetworkResult
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -54,10 +57,15 @@ class HomeViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
+    private var pollingJob: Job? = null
+
+    companion object {
+        private const val POLLING_INTERVAL_MS = 30_000L
+    }
+
     init {
         loadAllData()
         updateGreeting()
-        startPeriodicLabStatsUpdate()
     }
 
     private fun loadAllData() {
@@ -73,14 +81,22 @@ class HomeViewModel @Inject constructor(
         loadAllData()
     }
 
-    private fun startPeriodicLabStatsUpdate() {
-        viewModelScope.launch {
-            while (true) {
-                delay(10_000)
-                android.util.Log.d("HomeViewModel", "🔄 Otomatik lab stats güncelleniyor...")
+    /** Ekran görünür olduğunda çağrılır (ON_RESUME) */
+    fun startPolling() {
+        pollingJob?.cancel()
+        pollingJob = viewModelScope.launch {
+            while (isActive) {
+                delay(POLLING_INTERVAL_MS)
+                Logger.d("Otomatik lab stats guncelleniyor...", tag = "HomeViewModel")
                 loadLabStats()
             }
         }
+    }
+
+    /** Ekran arka plana geçtiğinde çağrılır (ON_PAUSE) */
+    fun stopPolling() {
+        pollingJob?.cancel()
+        pollingJob = null
     }
 
     // ✅ YENİ: Görev Detayını Çek
@@ -114,11 +130,8 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
 
-            android.util.Log.d("HomeViewModel", "🔵 loadUserData() başladı")
-
             when (val result = authRepository.getProfile()) {
                 is NetworkResult.Success -> {
-                    android.util.Log.d("HomeViewModel", "✅ Profile loaded successfully")
                     result.data?.let { profile ->
                         val firstName = profile.fullName.split(" ").firstOrNull() ?: "Kullanıcı"
                         _uiState.value = _uiState.value.copy(
@@ -129,7 +142,7 @@ class HomeViewModel @Inject constructor(
                     }
                 }
                 is NetworkResult.Error -> {
-                    android.util.Log.e("HomeViewModel", "❌ Profile error: ${result.message}")
+                    Logger.e("Profile error: ${result.message}", tag = "HomeViewModel")
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         errorMessage = result.message
@@ -140,10 +153,9 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    // ✅ TEK loadLeaderboard fonksiyonu - Retry mekanizmalı versiyon
     private fun loadLeaderboard() {
         viewModelScope.launch {
-            android.util.Log.d("HomeViewModel", "🏆 Leaderboard yükleniyor...")
+            var backoffMs = 500L
 
             repeat(3) { attempt ->
                 when (val result = authRepository.getLeaderboard()) {
@@ -156,104 +168,57 @@ class HomeViewModel @Inject constructor(
                                     avatarUrl = user.profileImageUrl
                                 )
                             }
-
-                            android.util.Log.d("HomeViewModel", """
-                                ✅ Leaderboard yüklendi (deneme ${attempt + 1}):
-                                - 1. ${topUsers.getOrNull(0)?.name} (${topUsers.getOrNull(0)?.score})
-                                - 2. ${topUsers.getOrNull(1)?.name} (${topUsers.getOrNull(1)?.score})
-                                - 3. ${topUsers.getOrNull(2)?.name} (${topUsers.getOrNull(2)?.score})
-                            """.trimIndent())
-
                             _uiState.value = _uiState.value.copy(topUsers = topUsers)
                             return@launch
                         }
                     }
                     is NetworkResult.Error -> {
-                        android.util.Log.e("HomeViewModel", "❌ Leaderboard hatası (deneme ${attempt + 1}): ${result.message}")
-
+                        Logger.e("Leaderboard hatasi (deneme ${attempt + 1}): ${result.message}", tag = "HomeViewModel")
                         if (attempt < 2) {
-                            delay(500)
+                            delay(backoffMs)
+                            backoffMs *= 2 // Exponential backoff: 500 -> 1000 -> 2000
                         }
                     }
                     is NetworkResult.Loading -> {}
                 }
             }
 
-            android.util.Log.e("HomeViewModel", "❌ Leaderboard 3 denemede de yüklenemedi")
+            Logger.e("Leaderboard 3 denemede de yuklenemedi", tag = "HomeViewModel")
         }
     }
 
     private fun loadCurrentTasks() {
         viewModelScope.launch {
-            android.util.Log.d("HomeViewModel", "🔵 loadCurrentTasks() başladı")
-
             when (val result = taskRepository.getMyTasks()) {
                 is NetworkResult.Success -> {
-                    android.util.Log.d("HomeViewModel", "✅ NetworkResult.Success")
-
                     result.data?.let { allTasks ->
-                        android.util.Log.d("HomeViewModel", "📦 Gelen görev sayısı: ${allTasks.size}")
-
-                        allTasks.forEachIndexed { index, task ->
-                            android.util.Log.d("HomeViewModel", """
-                            ----------------------------------------
-                            Görev #$index:
-                            - ID: ${task.id}
-                            - Title: ${task.title}
-                            - Status String: '${task.status}'
-                            - Raw _status: ${task._status}
-                            - Description: ${task.description}
-                            - Project: ${task.projectName}
-                            ----------------------------------------
-                        """.trimIndent())
-                        }
-
-                        // ✅ GÜNCELLEME: Sadece tamamlanmamış görevleri al ve sınır koyma
                         val activeTasks = allTasks.filter { it.status != "Done" }
-
-                        android.util.Log.d("HomeViewModel", "🎯 UI'a gönderilen aktif görev sayısı: ${activeTasks.size}")
-
                         _uiState.value = _uiState.value.copy(
                             currentTasks = activeTasks
                         )
-
-                        android.util.Log.d("HomeViewModel", "✅ uiState güncellendi - currentTasks.size: ${_uiState.value.currentTasks.size}")
-
-                    } ?: run {
-                        android.util.Log.e("HomeViewModel", "❌ result.data NULL!")
                     }
                 }
                 is NetworkResult.Error -> {
-                    android.util.Log.e("HomeViewModel", "❌ NetworkResult.Error: ${result.message}")
+                    Logger.e("Tasks error: ${result.message}", tag = "HomeViewModel")
                 }
-                is NetworkResult.Loading -> {
-                    android.util.Log.d("HomeViewModel", "⏳ NetworkResult.Loading")
-                }
+                is NetworkResult.Loading -> {}
             }
         }
     }
 
     private fun loadLabStats() {
         viewModelScope.launch {
-            android.util.Log.d("HomeViewModel", "🔵 loadLabStats() başladı")
-
             when (val result = labStatsRepository.getGlobalLabStats()) {
                 is NetworkResult.Success -> {
                     result.data?.let { stats ->
-                        android.util.Log.d("HomeViewModel", """
-                        ✅ Global Lab Stats yüklendi:
-                        - Doluluk: ${stats.currentOccupancyCount}/${stats.totalCapacity}
-                        - İçerideki kişiler: ${stats.peopleInside.size} kişi
-                    """.trimIndent())
-
                         _uiState.value = _uiState.value.copy(
                             currentOccupancy = stats.currentOccupancyCount,
-                            totalCapacity = 16 // ✅ Kapasite artık statik 16
+                            totalCapacity = 16
                         )
                     }
                 }
                 is NetworkResult.Error -> {
-                    android.util.Log.e("HomeViewModel", "❌ Global Lab Stats hatası: ${result.message}")
+                    Logger.e("Global Lab Stats hatasi: ${result.message}", tag = "HomeViewModel")
                 }
                 is NetworkResult.Loading -> {}
             }
@@ -261,11 +226,6 @@ class HomeViewModel @Inject constructor(
             when (val result = labStatsRepository.getTeammatesStats()) {
                 is NetworkResult.Success -> {
                     result.data?.let { stats ->
-                        android.util.Log.d("HomeViewModel", """
-                        ✅ Teammates Stats yüklendi:
-                        - Takım arkadaşları: ${stats.teammatesInsideCount}/${stats.totalTeammatesCount}
-                    """.trimIndent())
-
                         _uiState.value = _uiState.value.copy(
                             teammatesInside = stats.teammatesInsideCount,
                             totalTeammates = stats.totalTeammatesCount
@@ -273,7 +233,7 @@ class HomeViewModel @Inject constructor(
                     }
                 }
                 is NetworkResult.Error -> {
-                    android.util.Log.e("HomeViewModel", "❌ Teammates Stats hatası: ${result.message}")
+                    Logger.e("Teammates Stats hatasi: ${result.message}", tag = "HomeViewModel")
                 }
                 is NetworkResult.Loading -> {}
             }
@@ -281,19 +241,13 @@ class HomeViewModel @Inject constructor(
             when (val result = labStatsRepository.getPersonalLabStats()) {
                 is NetworkResult.Success -> {
                     result.data?.let { stats ->
-                        android.util.Log.d("HomeViewModel", """
-                        ✅ Personal Stats yüklendi:
-                        - Son giriş: ${stats.lastEntryDate ?: "Hiç giriş yapılmamış"}
-                        - Toplam süre: ${stats.totalTimeSpent}
-                    """.trimIndent())
-
                         _uiState.value = _uiState.value.copy(
                             lastEntryDate = stats.lastEntryDate
                         )
                     }
                 }
                 is NetworkResult.Error -> {
-                    android.util.Log.e("HomeViewModel", "❌ Personal Stats hatası: ${result.message}")
+                    Logger.e("Personal Stats hatasi: ${result.message}", tag = "HomeViewModel")
                 }
                 is NetworkResult.Loading -> {}
             }
