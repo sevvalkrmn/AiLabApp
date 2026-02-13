@@ -31,6 +31,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import coil.compose.AsyncImage
 import com.ktun.ailabapp.data.model.User
+import com.ktun.ailabapp.presentation.ui.components.StaggeredAnimatedItem
 import com.ktun.ailabapp.presentation.ui.screens.admin.users.DeleteUserDialog
 import com.ktun.ailabapp.ui.theme.BackgroundLight
 import com.ktun.ailabapp.ui.theme.PrimaryBlue
@@ -52,6 +53,13 @@ fun UsersListScreen(
     var selectedUser by remember { mutableStateOf<User?>(null) }
     var showBottomSheet by remember { mutableStateOf(false) }
     var isLoadingDetail by remember { mutableStateOf(false) }
+    var isRefreshing by remember { mutableStateOf(false) }
+
+    LaunchedEffect(uiState.isLoading) {
+        if (!uiState.isLoading) {
+            isRefreshing = false
+        }
+    }
 
     // ✅ YENİ STATE: Silme Dialogu
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -156,41 +164,48 @@ fun UsersListScreen(
                         .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)),
                     color = BackgroundLight
                 ) {
-                    when {
-                        uiState.isLoading -> {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                CircularProgressIndicator(color = PrimaryBlue)
-                            }
-                        }
-
-                        uiState.errorMessage != null -> {
-                            ErrorState(
-                                message = uiState.errorMessage!!,
-                                onRetry = viewModel::loadUsers
-                            )
-                        }
-
-                        uiState.filteredUsers.isEmpty() -> {
-                            EmptyState(searchQuery = uiState.searchQuery)
-                        }
-
-                        else -> {
-                            UsersList(
-                                users = uiState.filteredUsers,
-                                onUserClick = { user ->
-                                    android.util.Log.d("UsersListScreen", "👤 Clicked: ${user.fullName} (${user.id})")
-
-                                    isLoadingDetail = true
-                                    viewModel.loadUserDetail(user.id) { detailedUser ->
-                                        isLoadingDetail = false
-                                        selectedUser = detailedUser
-                                        showBottomSheet = true
-                                    }
+                    androidx.compose.material3.pulltorefresh.PullToRefreshBox(
+                        isRefreshing = isRefreshing,
+                        onRefresh = {
+                            isRefreshing = true
+                            viewModel.loadUsers()
+                        },
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        when {
+                            uiState.isLoading && !isRefreshing -> {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator(color = PrimaryBlue)
                                 }
-                            )
+                            }
+
+                            uiState.errorMessage != null -> {
+                                ErrorState(
+                                    message = uiState.errorMessage!!,
+                                    onRetry = viewModel::loadUsers
+                                )
+                            }
+
+                            uiState.filteredUsers.isEmpty() -> {
+                                EmptyState(searchQuery = uiState.searchQuery)
+                            }
+
+                            else -> {
+                                UsersList(
+                                    users = uiState.filteredUsers,
+                                    onUserClick = { user ->
+                                        isLoadingDetail = true
+                                        viewModel.loadUserDetail(user.id) { detailedUser ->
+                                            isLoadingDetail = false
+                                            selectedUser = detailedUser
+                                            showBottomSheet = true
+                                        }
+                                    }
+                                )
+                            }
                         }
                     }
                 }
@@ -350,14 +365,13 @@ private fun UsersList(
         ),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        items(
-            items = users,
-            key = { it.id }
-        ) { user -> // ✅ Parametre eklendi
-            UserListItem(
-                user = user,
-                onClick = { onUserClick(user) }
-            )
+        items(users.size) { index ->
+            StaggeredAnimatedItem(index = index) {
+                UserListItem(
+                    user = users[index],
+                    onClick = { onUserClick(users[index]) }
+                )
+            }
         }
     }
 }

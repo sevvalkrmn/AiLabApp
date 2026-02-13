@@ -22,8 +22,6 @@ fun BadgeIcon(
     tint: Color = Color.White,
     modifier: Modifier = Modifier
 ) {
-    println("🔔 BadgeIcon - badgeCount: $badgeCount")
-
     Box(modifier = modifier) {
         Icon(
             imageVector = icon,

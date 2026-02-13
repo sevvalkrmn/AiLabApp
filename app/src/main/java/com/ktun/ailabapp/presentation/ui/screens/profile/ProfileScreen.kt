@@ -33,7 +33,14 @@ import coil.compose.AsyncImage
 import com.ktun.ailabapp.presentation.ui.components.*
 import com.ktun.ailabapp.presentation.ui.screens.announcement.AnnouncementViewModel
 import com.ktun.ailabapp.ui.theme.*
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
+import kotlinx.coroutines.delay
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     viewModel: ProfileViewModel = hiltViewModel(),
@@ -48,6 +55,13 @@ fun ProfileScreen(
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     val announcementUiState by announcementViewModel.uiState.collectAsState()
+    var isRefreshing by remember { mutableStateOf(false) }
+
+    LaunchedEffect(uiState.isLoading) {
+        if (!uiState.isLoading) {
+            isRefreshing = false
+        }
+    }
 
     val configuration = LocalConfiguration.current
     val screenHeight = configuration.screenHeightDp.dp
@@ -233,14 +247,17 @@ fun ProfileScreen(
                 }
             }
 
-            Column(
+            androidx.compose.material3.pulltorefresh.PullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh = {
+                    isRefreshing = true
+                    viewModel.refreshProfile()
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    // .clip(...) <-- Header kıvrımlı
             ) {
-                if (uiState.isLoading) {
-                    // ✅ Shimmer Skeleton
+                if (uiState.isLoading && !isRefreshing) {
                     ProfileScreenSkeleton(screenWidth, screenHeight)
                 } else {
                     Column(
@@ -250,175 +267,193 @@ fun ProfileScreen(
                             .padding(screenWidth * 0.06f),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Spacer(modifier = Modifier.height(screenHeight * 0.03f))
-
-                        Box(
-                            modifier = Modifier.size(screenWidth * 0.35f)
+                        // Avatar + isim animasyonu
+                        var visibleAvatar by remember { mutableStateOf(false) }
+                        LaunchedEffect(Unit) { visibleAvatar = true }
+                        AnimatedVisibility(
+                            visible = visibleAvatar,
+                            enter = slideInVertically(
+                                initialOffsetY = { it / 2 },
+                                animationSpec = tween(400, easing = FastOutSlowInEasing)
+                            ) + fadeIn(tween(400))
                         ) {
-                            if (!uiState.profileImageUrl.isNullOrEmpty()) {
-                                AsyncImage(
-                                    model = uiState.profileImageUrl,
-                                    contentDescription = "Profil Fotoğrafı",
-                                    modifier = Modifier
-                                        .size(screenWidth * 0.35f)
-                                        .clip(CircleShape)
-                                        .border(screenWidth * 0.01f, White, CircleShape),
-                                    contentScale = ContentScale.Crop
-                                )
-                            } else {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Spacer(modifier = Modifier.height(screenHeight * 0.03f))
+
                                 Box(
-                                    modifier = Modifier
-                                        .size(screenWidth * 0.35f)
-                                        .clip(CircleShape)
-                                        .border(screenWidth * 0.01f, White, CircleShape)
-                                        .background(PrimaryBlue.copy(alpha = 0.2f)),
-                                    contentAlignment = Alignment.Center
+                                    modifier = Modifier.size(screenWidth * 0.35f)
                                 ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Person,
-                                        contentDescription = "Varsayılan Avatar",
-                                        modifier = Modifier.size(screenWidth * 0.2f),
-                                        tint = PrimaryBlue
-                                    )
+                                    if (!uiState.profileImageUrl.isNullOrEmpty()) {
+                                        AsyncImage(
+                                            model = uiState.profileImageUrl,
+                                            contentDescription = "Profil Fotoğrafı",
+                                            modifier = Modifier
+                                                .size(screenWidth * 0.35f)
+                                                .clip(CircleShape)
+                                                .border(screenWidth * 0.01f, White, CircleShape),
+                                            contentScale = ContentScale.Crop
+                                        )
+                                    } else {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(screenWidth * 0.35f)
+                                                .clip(CircleShape)
+                                                .border(screenWidth * 0.01f, White, CircleShape)
+                                                .background(PrimaryBlue.copy(alpha = 0.2f)),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Person,
+                                                contentDescription = "Varsayılan Avatar",
+                                                modifier = Modifier.size(screenWidth * 0.2f),
+                                                tint = PrimaryBlue
+                                            )
+                                        }
+                                    }
+
+                                    if (uiState.isUploadingImage) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(screenWidth * 0.35f)
+                                                .clip(CircleShape)
+                                                .background(PrimaryBlue.copy(alpha = 0.7f)),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            CircularProgressIndicator(
+                                                color = White,
+                                                modifier = Modifier.size(screenWidth * 0.1f)
+                                            )
+                                        }
+                                    }
                                 }
-                            }
 
-                            if (uiState.isUploadingImage) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(screenWidth * 0.35f)
-                                        .clip(CircleShape)
-                                        .background(PrimaryBlue.copy(alpha = 0.7f)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    CircularProgressIndicator(
-                                        color = White,
-                                        modifier = Modifier.size(screenWidth * 0.1f)
-                                    )
-                                }
-                            }
-                        }
+                                Spacer(modifier = Modifier.height(screenHeight * 0.02f))
 
-                        Spacer(modifier = Modifier.height(screenHeight * 0.02f))
-
-                        Text(
-                            text = uiState.fullName,
-                            fontSize = (screenWidth.value * 0.06f).sp,
-                            fontWeight = FontWeight.Bold,
-                            color = PrimaryBlue
-                        )
-
-                        Spacer(modifier = Modifier.height(screenHeight * 0.005f))
-
-                        Text(
-                            text = uiState.email,
-                            fontSize = (screenWidth.value * 0.035f).sp,
-                            color = PrimaryBlue.copy(alpha = 0.7f)
-                        )
-
-                        Spacer(modifier = Modifier.height(screenHeight * 0.03f))
-
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(containerColor = White),
-                            shape = RoundedCornerShape(screenWidth * 0.04f),
-                            elevation = CardDefaults.cardElevation(screenWidth * 0.005f)
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(screenWidth * 0.05f),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
                                 Text(
-                                    text = uiState.totalScore.toInt().toString(),
-                                    fontSize = (screenWidth.value * 0.12f).sp,
+                                    text = uiState.fullName,
+                                    fontSize = (screenWidth.value * 0.06f).sp,
                                     fontWeight = FontWeight.Bold,
                                     color = PrimaryBlue
                                 )
+
+                                Spacer(modifier = Modifier.height(screenHeight * 0.005f))
+
                                 Text(
-                                    text = "Points",
-                                    fontSize = (screenWidth.value * 0.04f).sp,
+                                    text = uiState.email,
+                                    fontSize = (screenWidth.value * 0.035f).sp,
                                     color = PrimaryBlue.copy(alpha = 0.7f)
                                 )
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(screenHeight * 0.04f))
+                        Spacer(modifier = Modifier.height(screenHeight * 0.03f))
 
-                        ProfileMenuItem(
-                            icon = Icons.Default.Person,
-                            text = "Profil Fotoğrafını Değiştir",
-                            onClick = { showPhotoSourceDialog = true },
-                            screenWidth = screenWidth,
-                            screenHeight = screenHeight
-                        )
-
-                        Spacer(modifier = Modifier.height(screenHeight * 0.015f))
-
-                        ProfileMenuItem(
-                            icon = Icons.Default.Email,
-                            text = "E-posta Adresini Değiştir",
-                            onClick = { showUpdateEmailDialog = true },
-                            screenWidth = screenWidth,
-                            screenHeight = screenHeight
-                        )
-
-                        Spacer(modifier = Modifier.height(screenHeight * 0.015f))
-
-                        ProfileMenuItem(
-                            icon = Icons.Default.Lock,
-                            text = "Şifreyi Değiştir",
-                            onClick = { showChangePasswordDialog = true },
-                            screenWidth = screenWidth,
-                            screenHeight = screenHeight
-                        )
-
-                        Spacer(modifier = Modifier.height(screenHeight * 0.015f))
-
-                        ProfileMenuItem(
-                            icon = Icons.Default.Phone,
-                            text = "Telefon Numarasını Değiştir",
-                            onClick = { showUpdatePhoneDialog = true },
-                            screenWidth = screenWidth,
-                            screenHeight = screenHeight
-                        )
-
-                        if (uiState.isAdmin) {
-                            Spacer(modifier = Modifier.height(screenHeight * 0.015f))
-
-                            ProfileMenuItem(
-                                icon = Icons.Default.AdminPanelSettings,
-                                text = "Admin Panele Git",
-                                onClick = onNavigateToAdminPanel,
-                                screenWidth = screenWidth,
-                                screenHeight = screenHeight
-                            )
+                        // Puan kartı animasyonu
+                        var visibleScore by remember { mutableStateOf(false) }
+                        LaunchedEffect(Unit) { delay(80L); visibleScore = true }
+                        AnimatedVisibility(
+                            visible = visibleScore,
+                            enter = slideInVertically(
+                                initialOffsetY = { it / 2 },
+                                animationSpec = tween(400, easing = FastOutSlowInEasing)
+                            ) + fadeIn(tween(400))
+                        ) {
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(containerColor = White),
+                                shape = RoundedCornerShape(screenWidth * 0.04f),
+                                elevation = CardDefaults.cardElevation(screenWidth * 0.005f)
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(screenWidth * 0.05f),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        text = uiState.totalScore.toInt().toString(),
+                                        fontSize = (screenWidth.value * 0.12f).sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = PrimaryBlue
+                                    )
+                                    Text(
+                                        text = "Points",
+                                        fontSize = (screenWidth.value * 0.04f).sp,
+                                        color = PrimaryBlue.copy(alpha = 0.7f)
+                                    )
+                                }
+                            }
                         }
 
                         Spacer(modifier = Modifier.height(screenHeight * 0.04f))
 
-                        Button(
-                            onClick = { showLogoutDialog = true },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(screenHeight * 0.07f),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.error
-                            ),
-                            shape = RoundedCornerShape(screenWidth * 0.03f)
+                        // Menü öğeleri animasyonu
+                        val menuItems = mutableListOf(
+                            Triple(Icons.Default.Person, "Profil Fotoğrafını Değiştir") { showPhotoSourceDialog = true },
+                            Triple(Icons.Default.Email, "E-posta Adresini Değiştir") { showUpdateEmailDialog = true },
+                            Triple(Icons.Default.Lock, "Şifreyi Değiştir") { showChangePasswordDialog = true },
+                            Triple(Icons.Default.Phone, "Telefon Numarasını Değiştir") { showUpdatePhoneDialog = true }
+                        )
+                        if (uiState.isAdmin) {
+                            menuItems.add(Triple(Icons.Default.AdminPanelSettings, "Admin Panele Git", onNavigateToAdminPanel))
+                        }
+
+                        menuItems.forEachIndexed { idx, (icon, text, onClick) ->
+                            var visibleItem by remember { mutableStateOf(false) }
+                            LaunchedEffect(Unit) { delay((idx + 2) * 80L); visibleItem = true }
+                            AnimatedVisibility(
+                                visible = visibleItem,
+                                enter = slideInVertically(
+                                    initialOffsetY = { it / 2 },
+                                    animationSpec = tween(400, easing = FastOutSlowInEasing)
+                                ) + fadeIn(tween(400))
+                            ) {
+                                ProfileMenuItem(
+                                    icon = icon,
+                                    text = text,
+                                    onClick = onClick,
+                                    screenWidth = screenWidth,
+                                    screenHeight = screenHeight
+                                )
+                            }
+                            if (idx < menuItems.size - 1) {
+                                Spacer(modifier = Modifier.height(screenHeight * 0.015f))
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(screenHeight * 0.04f))
+
+                        var visibleLogout by remember { mutableStateOf(false) }
+                        LaunchedEffect(Unit) { delay((menuItems.size + 2) * 80L); visibleLogout = true }
+                        AnimatedVisibility(
+                            visible = visibleLogout,
+                            enter = slideInVertically(
+                                initialOffsetY = { it / 2 },
+                                animationSpec = tween(400, easing = FastOutSlowInEasing)
+                            ) + fadeIn(tween(400))
                         ) {
-                            Icon(
-                                Icons.Default.ExitToApp,
-                                contentDescription = "Çıkış Yap",
-                                modifier = Modifier.size(screenWidth * 0.05f)
-                            )
-                            Spacer(modifier = Modifier.width(screenWidth * 0.02f))
-                            Text(
-                                "Çıkış Yap",
-                                fontSize = (screenWidth.value * 0.04f).sp,
-                                fontWeight = FontWeight.Bold
-                            )
+                            Button(
+                                onClick = { showLogoutDialog = true },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(screenHeight * 0.07f),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.error
+                                ),
+                                shape = RoundedCornerShape(screenWidth * 0.03f)
+                            ) {
+                                Icon(
+                                    Icons.Default.ExitToApp,
+                                    contentDescription = "Çıkış Yap",
+                                    modifier = Modifier.size(screenWidth * 0.05f)
+                                )
+                                Spacer(modifier = Modifier.width(screenWidth * 0.02f))
+                                Text(
+                                    "Çıkış Yap",
+                                    fontSize = (screenWidth.value * 0.04f).sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         }
 
                         Spacer(modifier = Modifier.height(screenHeight * 0.03f))

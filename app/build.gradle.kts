@@ -153,6 +153,12 @@ dependencies {
     debugImplementation("com.github.chuckerteam.chucker:library:4.0.0")
     releaseImplementation("com.github.chuckerteam.chucker:library-no-op:4.0.0")
 
+    // Lottie
+    implementation("com.airbnb.android:lottie-compose:6.3.0")
+
+    // Splash Screen API
+    implementation("androidx.core:core-splashscreen:1.0.1")
+
     // Hilt
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)

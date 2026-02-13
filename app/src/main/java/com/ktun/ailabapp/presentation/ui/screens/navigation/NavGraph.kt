@@ -27,25 +27,19 @@ import com.ktun.ailabapp.presentation.ui.screens.admin.lab.LabPeopleScreen
 import com.ktun.ailabapp.presentation.ui.screens.admin.pendingtasks.PendingTasksScreen
 import com.ktun.ailabapp.presentation.ui.screens.admin.announcement.SendGlobalAnnouncementScreen
 
-import androidx.compose.animation.core.FastOutSlowInEasing // ✅ Import added
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
 
 @Composable
 fun NavGraph(
     navController: NavHostController,
     startDestination: String = Screen.Login.route
 ) {
-    android.util.Log.d("NavGraph", "🟢 NavGraph started with startDestination: $startDestination")
-
     val sharedAnnouncementViewModel: AnnouncementViewModel = hiltViewModel()
 
     LaunchedEffect(startDestination) {
         if (startDestination != Screen.Login.route && startDestination != Screen.Register.route) {
-            android.util.Log.d("NavGraph", "📥 Logged in - Loading announcements...")
             sharedAnnouncementViewModel.loadAnnouncements()
         }
     }
@@ -54,16 +48,16 @@ fun NavGraph(
         navController = navController,
         startDestination = startDestination,
         enterTransition = {
-            fadeIn(animationSpec = tween(300))
+            fadeIn(tween(200))
         },
         exitTransition = {
-            fadeOut(animationSpec = tween(300))
+            fadeOut(tween(200))
         },
         popEnterTransition = {
-            fadeIn(animationSpec = tween(300))
+            fadeIn(tween(200))
         },
         popExitTransition = {
-            fadeOut(animationSpec = tween(300))
+            fadeOut(tween(200))
         }
     ) {
         composable(route = Screen.Login.route) {
