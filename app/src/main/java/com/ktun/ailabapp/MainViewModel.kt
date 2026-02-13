@@ -6,8 +6,8 @@ import com.ktun.ailabapp.data.local.datastore.PreferencesManager
 import com.ktun.ailabapp.data.repository.AuthRepository
 import com.ktun.ailabapp.presentation.ui.screens.navigation.Screen
 import com.ktun.ailabapp.util.FirebaseAuthManager
+import com.ktun.ailabapp.util.Logger
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -36,7 +36,7 @@ class MainViewModel @Inject constructor(
     private fun observeSessionExpiry() {
         viewModelScope.launch {
             authRepository.sessionExpiredEvent.collect {
-                android.util.Log.e("MainViewModel", "🔴 Session Expired Event Received")
+                Logger.e("Session Expired Event Received", tag = "MainViewModel")
                 preferencesManager.clearAllData()
                 authManager.signOut()
                 _startDestination.value = Screen.Login.route
@@ -47,28 +47,21 @@ class MainViewModel @Inject constructor(
     private fun checkSession() {
         viewModelScope.launch {
             try {
-                // Küçük bir gecikme ekleyelim (yarış koşullarını önlemek için)
-                delay(500) 
-
+                // Firebase Auth state hazır olana kadar reaktif bekle
+                val firebaseUser = authManager.awaitCurrentUser()
                 val rememberMe = preferencesManager.getRememberMe().first()
-                val firebaseUser = authManager.currentUser
-
-                android.util.Log.d("MainViewModel", "CheckSession: RememberMe=$rememberMe, User=${firebaseUser?.uid}")
 
                 if (!rememberMe && firebaseUser != null) {
-                    android.util.Log.d("MainViewModel", "RememberMe FALSE -> Signing Out")
                     authManager.signOut()
                     preferencesManager.clearAllData()
                     _startDestination.value = Screen.Login.route
                 } else if (firebaseUser != null) {
-                    android.util.Log.d("MainViewModel", "User Found -> Home")
                     _startDestination.value = Screen.Home.route
                 } else {
-                    android.util.Log.d("MainViewModel", "No User -> Login")
                     _startDestination.value = Screen.Login.route
                 }
             } catch (e: Exception) {
-                android.util.Log.e("MainViewModel", "Session check error", e)
+                Logger.e("Session check error", e, "MainViewModel")
                 _startDestination.value = Screen.Login.route
             } finally {
                 _isLoading.value = false

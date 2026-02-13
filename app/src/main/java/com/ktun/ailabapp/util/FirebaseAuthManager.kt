@@ -8,10 +8,13 @@ import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import com.google.firebase.auth.FirebaseUser
+import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.tasks.await
+import kotlin.coroutines.resume
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -39,6 +42,20 @@ class FirebaseAuthManager @Inject constructor() {
 
     /** OkHttp interceptor için non-blocking token erişimi */
     fun getTokenSync(): String? = cachedToken
+
+    /** Firebase Auth hazır olana kadar bekler, ardından mevcut kullanıcıyı döner */
+    suspend fun awaitCurrentUser(): FirebaseUser? = suspendCancellableCoroutine { cont ->
+        val listener = object : FirebaseAuth.AuthStateListener {
+            override fun onAuthStateChanged(firebaseAuth: FirebaseAuth) {
+                firebaseAuth.removeAuthStateListener(this)
+                cont.resume(firebaseAuth.currentUser)
+            }
+        }
+        auth.addAuthStateListener(listener)
+        cont.invokeOnCancellation {
+            auth.removeAuthStateListener(listener)
+        }
+    }
 
     // Şu anki kullanıcı
     val currentUser: FirebaseUser?

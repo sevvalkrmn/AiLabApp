@@ -7,10 +7,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -349,20 +347,20 @@ fun CurrentTasksCard(
 
             if (tasks.isEmpty()) {
                 Box(
-                    modifier = Modifier.fillMaxWidth().height(screenHeight * 0.2f),
+                    modifier = Modifier.fillMaxWidth().height(screenHeight * 0.15f),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(text = "Aktif görev yok", fontSize = (screenWidth.value * 0.035f).sp, color = White.copy(alpha = 0.7f))
                 }
             } else {
-                Column(
+                LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(screenHeight * 0.28f)
-                        .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(screenHeight * 0.015f)
+                        .height(screenHeight * 0.18f),
+                    verticalArrangement = Arrangement.spacedBy(screenHeight * 0.01f)
                 ) {
-                    tasks.forEach { task ->
+                    items(tasks.size) { index ->
+                        val task = tasks[index]
                         TaskItem(
                             icon = Icons.Default.Create,
                             title = task.title,
@@ -405,19 +403,19 @@ fun TaskItem(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .background(White, RoundedCornerShape(screenWidth * 0.03f))
-            .padding(screenWidth * 0.03f),
+            .background(White, RoundedCornerShape(screenWidth * 0.025f))
+            .padding(horizontal = screenWidth * 0.025f, vertical = screenWidth * 0.018f),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(modifier = Modifier.size(screenWidth * 0.12f).background(PrimaryBlue, CircleShape), contentAlignment = Alignment.Center) {
-            Icon(icon, contentDescription = null, tint = White, modifier = Modifier.size(screenWidth * 0.06f))
+        Box(modifier = Modifier.size(screenWidth * 0.09f).background(PrimaryBlue, CircleShape), contentAlignment = Alignment.Center) {
+            Icon(icon, contentDescription = null, tint = White, modifier = Modifier.size(screenWidth * 0.045f))
         }
-        Spacer(modifier = Modifier.width(screenWidth * 0.03f))
+        Spacer(modifier = Modifier.width(screenWidth * 0.025f))
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = title, fontSize = (screenWidth.value * 0.04f).sp, fontWeight = FontWeight.Bold, color = PrimaryBlue, maxLines = 1)
-            Text(text = frequency, fontSize = (screenWidth.value * 0.03f).sp, color = Color.Gray, maxLines = 1)
+            Text(text = title, fontSize = (screenWidth.value * 0.035f).sp, fontWeight = FontWeight.Bold, color = PrimaryBlue, maxLines = 1)
+            Text(text = frequency, fontSize = (screenWidth.value * 0.025f).sp, color = Color.Gray, maxLines = 1)
         }
-        Text(text = status, fontSize = (screenWidth.value * 0.03f).sp, fontWeight = FontWeight.Bold, color = statusColor)
+        Text(text = status, fontSize = (screenWidth.value * 0.025f).sp, fontWeight = FontWeight.Bold, color = statusColor)
     }
 }
 
