@@ -21,7 +21,12 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ktun.ailabapp.presentation.ui.screens.admin.score.AdjustScoreViewModel
+import com.ktun.ailabapp.ui.theme.BackgroundLight
+import com.ktun.ailabapp.ui.theme.BorderGray
+import com.ktun.ailabapp.ui.theme.ErrorRed
+import com.ktun.ailabapp.ui.theme.InfoBlue
 import com.ktun.ailabapp.ui.theme.PrimaryBlue
+import com.ktun.ailabapp.ui.theme.SuccessGreen
 
 @Composable
 fun AdjustScoreDialog(
@@ -103,7 +108,7 @@ fun AdjustScoreDialog(
                             if (!uiState.isAdding) viewModel.toggleAddSubtract()
                         },
                         modifier = Modifier.weight(1f),
-                        color = Color(0xFF4CAF50)
+                        color = SuccessGreen
                     )
                     ToggleButton(
                         text = "Azalt",
@@ -112,7 +117,7 @@ fun AdjustScoreDialog(
                             if (uiState.isAdding) viewModel.toggleAddSubtract()
                         },
                         modifier = Modifier.weight(1f),
-                        color = Color(0xFFFF5252)
+                        color = ErrorRed
                     )
                 }
 
@@ -134,7 +139,7 @@ fun AdjustScoreDialog(
                     ),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = PrimaryBlue,
-                        unfocusedBorderColor = Color(0xFF9FA8DA)
+                        unfocusedBorderColor = BorderGray
                     )
                 )
 
@@ -156,7 +161,7 @@ fun AdjustScoreDialog(
                     ),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = PrimaryBlue,
-                        unfocusedBorderColor = Color(0xFF9FA8DA)
+                        unfocusedBorderColor = BorderGray
                     ),
                     maxLines = 2
                 )
@@ -171,7 +176,7 @@ fun AdjustScoreDialog(
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(8.dp),
-                            color = Color(0xFFE3F2FD)
+                            color = BackgroundLight
                         ) {
                             Row(
                                 modifier = Modifier.padding(12.dp),
@@ -180,13 +185,13 @@ fun AdjustScoreDialog(
                                 Text(
                                     text = "Yeni Puan:",
                                     fontSize = 14.sp,
-                                    color = Color(0xFF1976D2)
+                                    color = InfoBlue
                                 )
                                 Text(
                                     text = "$currentScore → $newScore",
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = if (uiState.isAdding) Color(0xFF4CAF50) else Color(0xFFFF5252)
+                                    color = if (uiState.isAdding) SuccessGreen else ErrorRed
                                 )
                             }
                         }

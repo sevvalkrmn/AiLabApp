@@ -29,6 +29,7 @@ import com.ktun.ailabapp.data.remote.dto.response.MyProjectsResponse
 import com.ktun.ailabapp.presentation.ui.components.BottomNavigationBar
 import com.ktun.ailabapp.presentation.ui.components.DebugButton
 import com.ktun.ailabapp.presentation.ui.components.FeedbackDialog
+import com.ktun.ailabapp.presentation.ui.components.ShimmerBox // ✅ Import
 import com.ktun.ailabapp.presentation.ui.screens.announcement.AnnouncementViewModel
 import com.ktun.ailabapp.ui.theme.BackgroundLight
 import com.ktun.ailabapp.ui.theme.PrimaryBlue
@@ -54,16 +55,15 @@ fun ProjectsScreen(
     val screenHeight = configuration.screenHeightDp.dp
     val screenWidth = configuration.screenWidthDp.dp
 
-    var showFeedbackDialog by remember { mutableStateOf(false) }  // ✅ YENİ
+    var showFeedbackDialog by remember { mutableStateOf(false) }
 
     val unreadCount = remember(announcementUiState.announcements) {
         announcementUiState.announcements.count { !it.isRead }
     }
 
-    // ✅ YENİ: Feedback Dialog
     if (showFeedbackDialog) {
         FeedbackDialog(
-            pageInfo = "projects-screen", // ✅ Sayfa bilgisi
+            pageInfo = "projects-screen",
             onDismiss = { showFeedbackDialog = false },
             onSubmit = { feedback ->
                 android.widget.Toast.makeText(context, "Geri bildiriminiz alındı!", android.widget.Toast.LENGTH_SHORT).show()
@@ -83,30 +83,36 @@ fun ProjectsScreen(
                 unreadAnnouncementCount = unreadCount
             )
         },
-        containerColor = PrimaryBlue,
+        containerColor = BackgroundLight, // ✅ Açık zemin
         contentWindowInsets = WindowInsets.systemBars
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .padding(bottom = paddingValues.calculateBottomPadding()) // ✅ Sadece alt boşluk
         ) {
-            // HEADER
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(PrimaryBlue)
-                    .padding(screenWidth * 0.04f)
+            // HEADER (Kıvrımlı ve Tam Ekran)
+            Surface(
+                color = PrimaryBlue,
+                shape = RoundedCornerShape(bottomStart = screenWidth * 0.1f, bottomEnd = screenWidth * 0.1f),
+                modifier = Modifier.fillMaxWidth()
             ) {
-                // Ortalanmış başlık
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = screenHeight * 0.02f),
+                        .windowInsetsPadding(WindowInsets.statusBars) // ✅ Beyaz çizgiyi yok eder
+                        .padding(screenWidth * 0.04f)
+                        .padding(top = screenHeight * 0.01f, bottom = screenHeight * 0.02f),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Spacer(modifier = Modifier.width(screenWidth * 0.1f))  // Sol boşluk (dengeleme için)
+                    // Ortalama için sol tarafa görünmez bir Spacer koyabiliriz veya Text'i ortalayabiliriz.
+                    // Mevcut tasarımda sol tarafta boşluk var, sağda buton var.
+                    // HomeScreen'de "Hi, User" sola yaslıydı. Burada "Projelerim" ortada olsun istenebilir ama
+                    // tutarlılık için sola yaslı veya mevcut yapıyı (başlık ortada) koruyarak yapalım.
+                    
+                    // Mevcut yapı: Spacer - Text - Button
+                    Spacer(modifier = Modifier.width(screenWidth * 0.1f)) // Sol dengeleyici
 
                     Text(
                         text = "Projelerim",
@@ -115,31 +121,23 @@ fun ProjectsScreen(
                         color = White
                     )
 
-                    // ✅ GÜNCELLEME: Debug butonu
                     DebugButton(
                         onClick = { showFeedbackDialog = true }
                     )
                 }
             }
 
-            // CONTENT - Filtreler kaldırıldı
+            // CONTENT
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .background(
-                        BackgroundLight,
-                        RoundedCornerShape(topStart = screenWidth * 0.075f, topEnd = screenWidth * 0.075f)
-                    )
+                    // .background(...) <-- Arka plan zaten Scaffold'dan geliyor, kaldırıldı.
             ) {
                 when {
                     uiState.isLoading -> {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator(color = PrimaryBlue)
-                        }
+                        // ✅ Shimmer Skeleton
+                        ProjectsScreenSkeleton(screenWidth, screenHeight)
                     }
                     uiState.errorMessage != null -> {
                         Box(
@@ -212,6 +210,25 @@ fun ProjectsScreen(
 }
 
 @Composable
+fun ProjectsScreenSkeleton(screenWidth: androidx.compose.ui.unit.Dp, screenHeight: androidx.compose.ui.unit.Dp) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(screenWidth * 0.04f),
+        verticalArrangement = Arrangement.spacedBy(screenHeight * 0.015f)
+    ) {
+        repeat(6) {
+            ShimmerBox(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(screenHeight * 0.1f),
+                shape = RoundedCornerShape(screenWidth * 0.03f)
+            )
+        }
+    }
+}
+
+@Composable
 fun ProjectCard(
     project: MyProjectsResponse,
     onClick: () -> Unit,
@@ -232,7 +249,6 @@ fun ProjectCard(
                 .padding(screenWidth * 0.04f),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Sol: Proje İkonu
             Box(
                 modifier = Modifier
                     .size(screenWidth * 0.12f)
@@ -249,7 +265,6 @@ fun ProjectCard(
 
             Spacer(modifier = Modifier.width(screenWidth * 0.03f))
 
-            // Orta: Proje Bilgileri
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = project.name.ifEmpty { "İsimsiz Proje" },
@@ -287,14 +302,13 @@ fun ProjectCard(
                 }
             }
 
-            // Sağ: Rol Badge
             Surface(
                 color = if (project.userRole == "Captain")
                     PrimaryBlue else PrimaryBlue.copy(alpha = 0.2f),
                 shape = RoundedCornerShape(screenWidth * 0.02f)
             ) {
                 Text(
-                    text = project.userRole ?: "Member",  // ✅ NULL CHECK
+                    text = project.userRole ?: "Member",
                     color = if (project.userRole == "Captain") White else PrimaryBlue,
                     fontSize = (screenWidth.value * 0.03f).sp,
                     fontWeight = FontWeight.Medium,

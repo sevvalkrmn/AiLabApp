@@ -17,6 +17,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.ktun.ailabapp.ui.theme.BorderGray
+import com.ktun.ailabapp.ui.theme.ErrorRed
 import com.ktun.ailabapp.ui.theme.PrimaryBlue // ✅ Import added
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -78,7 +80,7 @@ fun FeedbackDialog(
                         Icon(
                             imageVector = Icons.Default.BugReport,
                             contentDescription = null,
-                            tint = Color(0xFFE53935),
+                            tint = ErrorRed,
                             modifier = Modifier.size(28.dp)
                         )
                         Text(
@@ -110,7 +112,7 @@ fun FeedbackDialog(
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = PrimaryBlue,
-                            unfocusedBorderColor = Color(0xFFE0E0E0)
+                            unfocusedBorderColor = BorderGray
                         ),
                         modifier = Modifier.fillMaxWidth().menuAnchor()
                     )
@@ -144,7 +146,7 @@ fun FeedbackDialog(
                     placeholder = { Text("Lütfen hatayı detaylıca açıklayın...") },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = PrimaryBlue,
-                        unfocusedBorderColor = Color(0xFFE0E0E0)
+                        unfocusedBorderColor = BorderGray
                     ),
                     shape = RoundedCornerShape(12.dp),
                     maxLines = 6

@@ -1,14 +1,17 @@
 package com.ktun.ailabapp.util
 
 import androidx.compose.ui.graphics.Color
+import com.ktun.ailabapp.ui.theme.InfoBlue
+import com.ktun.ailabapp.ui.theme.SuccessGreen
+import com.ktun.ailabapp.ui.theme.WarningOrange
 import java.text.SimpleDateFormat
 import java.util.*
 
 fun getStatusColor(status: String): Color {
     return when (status) {
-        "Todo" -> Color(0xFFFF9800)
-        "InProgress" -> Color(0xFF2196F3)
-        "Done" -> Color(0xFF4CAF50)
+        "Todo" -> WarningOrange
+        "InProgress" -> InfoBlue
+        "Done" -> SuccessGreen
         else -> Color.Gray
     }
 }

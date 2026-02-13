@@ -1,5 +1,8 @@
 package com.ktun.ailabapp.presentation.ui.screens.home
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -30,7 +33,8 @@ import com.ktun.ailabapp.data.remote.dto.response.TaskResponse
 import com.ktun.ailabapp.presentation.ui.components.BottomNavigationBar
 import com.ktun.ailabapp.presentation.ui.components.DebugButton
 import com.ktun.ailabapp.presentation.ui.components.FeedbackDialog
-import com.ktun.ailabapp.presentation.ui.components.TaskDetailDialog // ✅ Import
+import com.ktun.ailabapp.presentation.ui.components.ShimmerBox
+import com.ktun.ailabapp.presentation.ui.components.TaskDetailDialog
 import com.ktun.ailabapp.presentation.ui.screens.announcement.AnnouncementViewModel
 import com.ktun.ailabapp.ui.theme.*
 import java.text.SimpleDateFormat
@@ -69,7 +73,7 @@ fun HomeScreen(
         announcementViewModel.loadAnnouncements()
     }
 
-    // ✅ YENİ: Görev Detay Dialog
+    // Görev Detay Dialog
     if (uiState.isTaskDetailLoading) {
         Box(
             modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.3f)),
@@ -109,60 +113,64 @@ fun HomeScreen(
                 unreadAnnouncementCount = unreadCount
             )
         },
-        containerColor = PrimaryBlue
+        containerColor = BackgroundLight // ✅ BackgroundLight yapıldı
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .padding(bottom = paddingValues.calculateBottomPadding()) // ✅ Sadece alt boşluğu koru
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(screenWidth * 0.04f)
-                    .padding(top = screenHeight * 0.02f),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            // ✅ KIVRIMLI HEADER (Durum çubuğuna kadar uzanır)
+            Surface(
+                color = PrimaryBlue,
+                shape = RoundedCornerShape(bottomStart = screenWidth * 0.1f, bottomEnd = screenWidth * 0.1f),
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Column {
-                    Text(
-                        text = "Hi, ${uiState.user?.fullName ?: ""}",
-                        fontSize = (screenWidth.value * 0.05f).sp,
-                        fontWeight = FontWeight.Bold,
-                        color = White
-                    )
-                    Text(
-                        text = uiState.greeting,
-                        fontSize = (screenWidth.value * 0.035f).sp,
-                        color = White.copy(alpha = 0.8f)
-                    )
-                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .windowInsetsPadding(WindowInsets.statusBars) // ✅ Üstteki beyaz çizgiyi kapatır
+                        .padding(screenWidth * 0.04f)
+                        .padding(top = screenHeight * 0.01f, bottom = screenHeight * 0.02f),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = "Hi, ${uiState.user?.fullName ?: ""}",
+                            fontSize = (screenWidth.value * 0.055f).sp,
+                            fontWeight = FontWeight.Bold,
+                            color = White
+                        )
+                        Text(
+                            text = uiState.greeting,
+                            fontSize = (screenWidth.value * 0.035f).sp,
+                            color = White.copy(alpha = 0.8f)
+                        )
+                    }
 
-                DebugButton(onClick = { showFeedbackDialog = true })
+                    DebugButton(onClick = { showFeedbackDialog = true })
+                }
             }
 
-            Card(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(top = screenHeight * 0.02f),
-                colors = CardDefaults.cardColors(containerColor = BackgroundLight),
-                shape = RoundedCornerShape(
-                    topStart = screenWidth * 0.08f,
-                    topEnd = screenWidth * 0.08f
-                )
+            // ✅ İÇERİK ALANI (Card kaldırıldı, doğrudan akış sağlandı)
+            androidx.compose.material3.pulltorefresh.PullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh = {
+                    isRefreshing = true
+                    viewModel.refreshUserData()
+                },
+                modifier = Modifier.fillMaxSize()
             ) {
-                androidx.compose.material3.pulltorefresh.PullToRefreshBox(
-                    isRefreshing = isRefreshing,
-                    onRefresh = {
-                        isRefreshing = true
-                        viewModel.refreshUserData()
-                    }
-                ) {
+                if (uiState.isLoading && !isRefreshing) {
+                    HomeScreenSkeleton(screenWidth, screenHeight)
+                } else {
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(screenWidth * 0.04f),
-                        verticalArrangement = Arrangement.spacedBy(screenHeight * 0.02f)
+                            .padding(horizontal = screenWidth * 0.04f),
+                        verticalArrangement = Arrangement.spacedBy(screenHeight * 0.02f),
+                        contentPadding = PaddingValues(top = screenHeight * 0.02f, bottom = screenHeight * 0.02f)
                     ) {
                         item {
                             LabOccupancyCard(
@@ -188,7 +196,7 @@ fun HomeScreen(
                         item {
                             CurrentTasksCard(
                                 tasks = uiState.currentTasks,
-                                onTaskClick = { task -> viewModel.loadTaskDetail(task.id) }, // ✅ Pass callback
+                                onTaskClick = { task -> viewModel.loadTaskDetail(task.id) },
                                 screenWidth = screenWidth,
                                 screenHeight = screenHeight
                             )
@@ -209,11 +217,37 @@ fun HomeScreen(
 }
 
 @Composable
+fun HomeScreenSkeleton(screenWidth: Dp, screenHeight: Dp) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(screenWidth * 0.04f),
+        verticalArrangement = Arrangement.spacedBy(screenHeight * 0.02f)
+    ) {
+        // Lab Occupancy Skeleton
+        Column {
+            ShimmerBox(modifier = Modifier.width(screenWidth * 0.5f).height(20.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+            ShimmerBox(modifier = Modifier.fillMaxWidth().height(screenHeight * 0.031f), shape = RoundedCornerShape(screenWidth * 0.08f))
+        }
+
+        // Profile Card Skeleton
+        ShimmerBox(modifier = Modifier.fillMaxWidth().height(screenHeight * 0.2f), shape = RoundedCornerShape(screenWidth * 0.04f))
+
+        // Tasks Skeleton
+        ShimmerBox(modifier = Modifier.fillMaxWidth().height(screenHeight * 0.3f), shape = RoundedCornerShape(screenWidth * 0.04f))
+
+        // Leaderboard Skeleton
+        ShimmerBox(modifier = Modifier.fillMaxWidth().height(screenHeight * 0.25f), shape = RoundedCornerShape(screenWidth * 0.04f))
+    }
+}
+
+@Composable
 fun LabOccupancyCard(currentOccupancy: Int, totalCapacity: Int, screenWidth: Dp, screenHeight: Dp) {
     val progress = if (totalCapacity > 0) (currentOccupancy.toFloat() / totalCapacity.toFloat()).coerceIn(0f, 1f) else 0f
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = screenWidth * 0.02f)) {
         Text(text = "Laboratuvar doluluğu oranı", fontSize = (screenWidth.value * 0.04f).sp, color = PrimaryBlue, fontWeight = FontWeight.Medium, modifier = Modifier.padding(bottom = screenHeight * 0.015f).padding(start = screenWidth * 0.02f))
-        Box(modifier = Modifier.fillMaxWidth().height(screenHeight * 0.031f).background(color = Color(0xFFB8C5D6), shape = RoundedCornerShape(screenWidth * 0.08f))) {
+        Box(modifier = Modifier.fillMaxWidth().height(screenHeight * 0.031f).background(color = LabBarBackground, shape = RoundedCornerShape(screenWidth * 0.08f))) {
             Box(modifier = Modifier.fillMaxWidth(progress).fillMaxHeight().background(color = PrimaryBlue, shape = RoundedCornerShape(screenWidth * 0.08f)))
             Row(modifier = Modifier.fillMaxSize().padding(horizontal = screenWidth * 0.035f), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Text(text = "$currentOccupancy", color = White, fontSize = (screenWidth.value * 0.035f).sp, fontWeight = FontWeight.Bold)
@@ -272,7 +306,7 @@ fun ProfileCard(totalScore: Double, avatarUrl: String?, lastEntryDate: String?, 
 @Composable
 fun CurrentTasksCard(
     tasks: List<TaskResponse>,
-    onTaskClick: (TaskResponse) -> Unit, // ✅ Add parameter
+    onTaskClick: (TaskResponse) -> Unit,
     screenWidth: Dp,
     screenHeight: Dp
 ) {
@@ -302,11 +336,10 @@ fun CurrentTasksCard(
                     Text(text = "Aktif görev yok", fontSize = (screenWidth.value * 0.035f).sp, color = White.copy(alpha = 0.7f))
                 }
             } else {
-                // ✅ Sabit yükseklik ve kaydırılabilir liste
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(screenHeight * 0.17f)
+                        .height(screenHeight * 0.28f)
                         .verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(screenHeight * 0.015f)
                 ) {
@@ -322,9 +355,9 @@ fun CurrentTasksCard(
                                 else -> task.status
                             },
                             statusColor = when (task.status) {
-                                "InProgress" -> Color(0xFFFFA726)
-                                "Done" -> Color(0xFF66BB6A)
-                                "Todo" -> Color(0xFF42A5F5)
+                                "InProgress" -> InfoBlue
+                                "Done" -> SuccessGreen
+                                "Todo" -> WarningOrange
                                 else -> Color.Gray
                             },
                             onClick = { onTaskClick(task) },
@@ -345,14 +378,14 @@ fun TaskItem(
     frequency: String,
     status: String,
     statusColor: Color,
-    onClick: () -> Unit, // ✅ Add parameter
+    onClick: () -> Unit,
     screenWidth: Dp,
     screenHeight: Dp
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick) // ✅ Clickable
+            .clickable(onClick = onClick)
             .background(White, RoundedCornerShape(screenWidth * 0.03f))
             .padding(screenWidth * 0.03f),
         verticalAlignment = Alignment.CenterVertically
@@ -374,16 +407,16 @@ fun BottomCard(topUsers: List<TopUserItem>, screenWidth: Dp, screenHeight: Dp) {
     Card(modifier = Modifier.fillMaxWidth().height(screenHeight * 0.25f), colors = CardDefaults.cardColors(containerColor = PrimaryBlue), shape = RoundedCornerShape(screenWidth * 0.04f)) {
         Column(modifier = Modifier.fillMaxSize().padding(screenWidth * 0.04f), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center, modifier = Modifier.padding(bottom = screenHeight * 0.015f)) {
-                Icon(imageVector = Icons.Default.Star, contentDescription = null, tint = Color(0xFFFFD700), modifier = Modifier.size(screenWidth * 0.05f))
+                Icon(imageVector = Icons.Default.Star, contentDescription = null, tint = Gold, modifier = Modifier.size(screenWidth * 0.05f))
                 Spacer(modifier = Modifier.width(screenWidth * 0.02f))
                 Text(text = "LEADERBOARD", fontSize = (screenWidth.value * 0.04f).sp, fontWeight = FontWeight.Light, color = White, letterSpacing = 1.5.sp)
                 Spacer(modifier = Modifier.width(screenWidth * 0.02f))
-                Icon(imageVector = Icons.Default.Star, contentDescription = null, tint = Color(0xFFFFD700), modifier = Modifier.size(screenWidth * 0.05f))
+                Icon(imageVector = Icons.Default.Star, contentDescription = null, tint = Gold, modifier = Modifier.size(screenWidth * 0.05f))
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.Bottom) {
-                LeaderboardUser(user = topUsers.getOrNull(1), borderColor = Color(0xFFC0C0C0), rank = 2, screenWidth = screenWidth, screenHeight = screenHeight)
-                LeaderboardUser(user = topUsers.getOrNull(0), borderColor = Color(0xFFFFD700), rank = 1, screenWidth = screenWidth, screenHeight = screenHeight, isFirst = true)
-                LeaderboardUser(user = topUsers.getOrNull(2), borderColor = Color(0xFFFF9800), rank = 3, screenWidth = screenWidth, screenHeight = screenHeight)
+                LeaderboardUser(user = topUsers.getOrNull(1), borderColor = Silver, rank = 2, screenWidth = screenWidth, screenHeight = screenHeight)
+                LeaderboardUser(user = topUsers.getOrNull(0), borderColor = Gold, rank = 1, screenWidth = screenWidth, screenHeight = screenHeight, isFirst = true)
+                LeaderboardUser(user = topUsers.getOrNull(2), borderColor = WarningOrange, rank = 3, screenWidth = screenWidth, screenHeight = screenHeight)
             }
         }
     }

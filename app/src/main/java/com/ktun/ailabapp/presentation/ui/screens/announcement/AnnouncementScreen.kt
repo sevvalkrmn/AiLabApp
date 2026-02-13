@@ -31,8 +31,8 @@ import com.ktun.ailabapp.data.model.AnnouncementType
 import com.ktun.ailabapp.presentation.ui.components.BottomNavigationBar
 import com.ktun.ailabapp.presentation.ui.components.DebugButton
 import com.ktun.ailabapp.presentation.ui.components.FeedbackDialog
-import com.ktun.ailabapp.presentation.ui.components.sendFeedbackEmail
-import com.ktun.ailabapp.ui.theme.PrimaryBlue
+import com.ktun.ailabapp.presentation.ui.components.ShimmerBox // ✅ Import
+import com.ktun.ailabapp.ui.theme.*
 
 @Composable
 fun AnnouncementScreen(
@@ -47,26 +47,22 @@ fun AnnouncementScreen(
     val context = LocalContext.current
 
     LaunchedEffect(Unit) {
-        android.util.Log.d("AnnouncementScreen", "📥 Reloading announcements...")
         viewModel.loadAnnouncements()
     }
 
-    // Ekran boyutlarını al
     val configuration = LocalConfiguration.current
     val screenHeight = configuration.screenHeightDp.dp
     val screenWidth = configuration.screenWidthDp.dp
 
-    // Dialog state
     var showFeedbackDialog by remember { mutableStateOf(false) }
 
     val unreadCount = remember(uiState.announcements) {
         uiState.announcements.count { !it.isRead }
     }
 
-    // Feedback Dialog
     if (showFeedbackDialog) {
         FeedbackDialog(
-            pageInfo = "announcements-screen", // ✅ Sayfa bilgisi
+            pageInfo = "announcements-screen",
             onDismiss = { showFeedbackDialog = false },
             onSubmit = { feedback ->
                 android.widget.Toast.makeText(context, "Geri bildiriminiz alındı!", android.widget.Toast.LENGTH_SHORT).show()
@@ -81,9 +77,7 @@ fun AnnouncementScreen(
 
     var selectedAnnouncement by remember { mutableStateOf<Announcement?>(null) }
 
-    // Dialog
     selectedAnnouncement?.let { announcement ->
-
         LaunchedEffect(announcement.id) {
             viewModel.loadAnnouncementDetail(announcement.id)
         }
@@ -99,46 +93,38 @@ fun AnnouncementScreen(
         )
     }
 
-    LaunchedEffect(uiState.announcements) {
-        val unreadCount = viewModel.getUnreadCount()
-        println("🔔 AnnouncementScreen - Unread count: $unreadCount")
-    }
-
     Scaffold(
         bottomBar = {
-
-            val unreadCount = viewModel.getUnreadCount()
-            println("🔔 BottomBar'a gönderilen count: $unreadCount")
-
+            val count = viewModel.getUnreadCount()
             BottomNavigationBar(
                 selectedItem = 2,
                 onHomeClick = onNavigateToHome,
                 onProjectsClick = onNavigateToProjects,
                 onChatClick = onNavigateToChat,
                 onProfileClick = onNavigateToProfile,
-                unreadAnnouncementCount = unreadCount
+                unreadAnnouncementCount = count
             )
         },
-        containerColor = PrimaryBlue,
+        containerColor = TaskHistoryBg, // ✅ Arka plan
         contentWindowInsets = WindowInsets.systemBars
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .padding(bottom = paddingValues.calculateBottomPadding())
         ) {
-            // ÜST KISIM - Koyu mavi header
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(PrimaryBlue)
-                    .padding(screenWidth * 0.04f)
+            // ✅ HEADER (Kıvrımlı ve Kesintisiz)
+            Surface(
+                color = PrimaryBlue,
+                shape = RoundedCornerShape(bottomStart = screenWidth * 0.1f, bottomEnd = screenWidth * 0.1f),
+                modifier = Modifier.fillMaxWidth()
             ) {
-                // Başlık ve debug butonu
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = screenHeight * 0.02f)
+                        .windowInsetsPadding(WindowInsets.statusBars) // ✅ Beyaz çizgiyi kapatır
+                        .padding(screenWidth * 0.04f)
+                        .padding(top = screenHeight * 0.01f, bottom = screenHeight * 0.02f)
                 ) {
                     Text(
                         text = "Duyurular",
@@ -155,20 +141,17 @@ fun AnnouncementScreen(
                 }
             }
 
-            // İÇERİK ALANI - ProfileScreen ile aynı yapı
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f)  // ← ProfileScreen gibi
-                    .clip(RoundedCornerShape(topStart = screenWidth * 0.075f, topEnd = screenWidth * 0.075f))
-                    .background(Color(0xFFE8EAF6))
-            ) {  // ← Burada padding yok, ProfileScreen gibi
+                    .weight(1f)
+                    // .clip(...) <-- Artık Header kıvrımlı, buna gerek yok
+            ) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(screenWidth * 0.04f)  // ← İçerideki Column'da padding
+                        .padding(screenWidth * 0.04f)
                 ) {
-                    // Filtre Butonları
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(screenWidth * 0.02f)
@@ -209,22 +192,43 @@ fun AnnouncementScreen(
 
                     Spacer(modifier = Modifier.height(screenHeight * 0.02f))
 
-                    // Duyuru Listesi
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.spacedBy(screenHeight * 0.015f)
-                    ) {
-                        items(filteredAnnouncements) { announcement ->
-                            AnnouncementCard(
-                                announcement = announcement,
-                                onClick = { selectedAnnouncement = announcement },
-                                screenWidth = screenWidth,
-                                screenHeight = screenHeight
-                            )
+                    // Duyuru Listesi veya Skeleton
+                    if (uiState.isLoading && uiState.announcements.isEmpty()) {
+                        // ✅ Shimmer Skeleton
+                        AnnouncementScreenSkeleton(screenWidth, screenHeight)
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            verticalArrangement = Arrangement.spacedBy(screenHeight * 0.015f)
+                        ) {
+                            items(filteredAnnouncements) { announcement ->
+                                AnnouncementCard(
+                                    announcement = announcement,
+                                    onClick = { selectedAnnouncement = announcement },
+                                    screenWidth = screenWidth,
+                                    screenHeight = screenHeight
+                                )
+                            }
                         }
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun AnnouncementScreenSkeleton(screenWidth: androidx.compose.ui.unit.Dp, screenHeight: androidx.compose.ui.unit.Dp) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(screenHeight * 0.015f)
+    ) {
+        repeat(6) {
+            ShimmerBox(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(screenHeight * 0.12f),
+                shape = RoundedCornerShape(screenWidth * 0.04f)
+            )
         }
     }
 }
@@ -242,7 +246,7 @@ fun AnnouncementFilterChip(
         onClick = onClick,
         modifier = modifier.height(screenHeight * 0.05f),
         colors = ButtonDefaults.buttonColors(
-            containerColor = if (isSelected) PrimaryBlue else Color(0xFFB0B8D4),
+            containerColor = if (isSelected) PrimaryBlue else FilterChipUnselected,
             contentColor = Color.White
         ),
         shape = RoundedCornerShape(screenWidth * 0.05f)
@@ -284,9 +288,7 @@ fun AnnouncementCard(
                 .padding(screenWidth * 0.03f),
             horizontalArrangement = Arrangement.spacedBy(screenWidth * 0.03f)
         ) {
-            // Sol taraf - İkon veya profil resmi
             if (announcement.type == AnnouncementType.PERSONAL && announcement.senderImage != null) {
-                // Profil resmi
                 AsyncImage(
                     model = announcement.senderImage,
                     contentDescription = "Profil",
@@ -296,7 +298,6 @@ fun AnnouncementCard(
                         .border(screenWidth * 0.005f, PrimaryBlue.copy(alpha = 0.1f), CircleShape)
                 )
             } else {
-                // Lab ikonu
                 Box(
                     modifier = Modifier
                         .size(screenWidth * 0.12f)
@@ -314,7 +315,6 @@ fun AnnouncementCard(
                 }
             }
 
-            // Sağ taraf - İçerik
             Column(
                 modifier = Modifier
                     .weight(1f)
@@ -355,7 +355,6 @@ fun AnnouncementDetailDialog(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(screenWidth * 0.03f)
             ) {
-                // İkon veya profil resmi
                 if (announcement.type == AnnouncementType.PERSONAL && announcement.senderImage != null) {
                     AsyncImage(
                         model = announcement.senderImage,
@@ -403,12 +402,11 @@ fun AnnouncementDetailDialog(
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState())
             ) {
-                // Kategori badge
                 Surface(
                     color = when (announcement.type) {
-                        AnnouncementType.ALL -> Color(0xFF9FA8DA).copy(alpha = 0.2f)
-                        AnnouncementType.TEAM -> Color(0xFFFF9800).copy(alpha = 0.2f)
-                        AnnouncementType.PERSONAL -> Color(0xFF4CAF50).copy(alpha = 0.2f)
+                        AnnouncementType.ALL -> AnnouncementBadgeBg.copy(alpha = 0.2f)
+                        AnnouncementType.TEAM -> WarningOrange.copy(alpha = 0.2f)
+                        AnnouncementType.PERSONAL -> SuccessGreen.copy(alpha = 0.2f)
                     },
                     shape = RoundedCornerShape(screenWidth * 0.03f)
                 ) {
@@ -421,9 +419,9 @@ fun AnnouncementDetailDialog(
                         fontSize = (screenWidth.value * 0.027f).sp,
                         fontWeight = FontWeight.Medium,
                         color = when (announcement.type) {
-                            AnnouncementType.ALL -> Color(0xFF5C6BC0)
-                            AnnouncementType.TEAM -> Color(0xFFFF9800)
-                            AnnouncementType.PERSONAL -> Color(0xFF4CAF50)
+                            AnnouncementType.ALL -> AnnouncementBadgeText
+                            AnnouncementType.TEAM -> WarningOrange
+                            AnnouncementType.PERSONAL -> SuccessGreen
                         },
                         modifier = Modifier.padding(
                             horizontal = screenWidth * 0.03f,

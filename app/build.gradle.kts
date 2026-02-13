@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -7,17 +9,24 @@ plugins {
     id("kotlin-kapt")
 }
 
+// local.properties'den keystore bilgilerini oku
+val localProperties = Properties().apply {
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        load(localPropertiesFile.inputStream())
+    }
+}
+
 android {
     namespace = "com.ktun.ailabapp"
     compileSdk = 36
 
-    // ✅ Signing Configs
     signingConfigs {
         create("release") {
-            storeFile = file("C:/Users/sevval/Desktop/ailab-keystore.jks")
-            storePassword = "AiLab2024#Secure"
-            keyAlias = "ailab-key"
-            keyPassword = "AiLab2024#Secure"
+            storeFile = file(localProperties.getProperty("KEYSTORE_FILE", ""))
+            storePassword = localProperties.getProperty("KEYSTORE_PASSWORD", "")
+            keyAlias = localProperties.getProperty("KEY_ALIAS", "")
+            keyPassword = localProperties.getProperty("KEY_PASSWORD", "")
         }
     }
 
@@ -34,24 +43,13 @@ android {
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("release")  // ✅ Ekle
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
         }
-    }
-
-    defaultConfig {
-        applicationId = "com.ktun.ailabapp"
-        minSdk = 24
-        targetSdk = 36
-        versionCode = 2
-        versionName = "1.1.0"
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField("String", "BASE_URL", "\"https://api.ailab.org.tr/\"")
     }
 
     compileOptions {

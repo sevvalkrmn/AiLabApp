@@ -15,7 +15,7 @@ private val LightColors = lightColorScheme(
     onSecondary = White,
     onBackground = Black,
     onSurface = Black,
-    error = Color(0xFFD32F2F)
+    error = ErrorRed
 )
 
 @Composable

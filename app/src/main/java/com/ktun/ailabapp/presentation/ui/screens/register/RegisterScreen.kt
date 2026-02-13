@@ -36,7 +36,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.ktun.ailabapp.presentation.ui.screens.register.RegisterViewModel
 import com.ktun.ailabapp.R
+import com.ktun.ailabapp.ui.theme.BackgroundLight
+import com.ktun.ailabapp.ui.theme.Black
+import com.ktun.ailabapp.ui.theme.BorderGray
+import com.ktun.ailabapp.ui.theme.LabelGray
 import com.ktun.ailabapp.ui.theme.PrimaryBlue
+import com.ktun.ailabapp.ui.theme.SecondaryBlue
+import com.ktun.ailabapp.ui.theme.TextGray
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -74,9 +80,9 @@ fun RegisterScreen(
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        Color(0xFFF4F6FC), // Top - light
-                        Color(0xFFF4F6FC), // Keep light
-                        Color(0xFFF4F6FC), // Still light
+                        BackgroundLight, // Top - light
+                        BackgroundLight, // Keep light
+                        BackgroundLight, // Still light
                         Color(0xFFE8E8EC), // Slight transition
                         Color(0xFFD4D4D8), // Mid gray
                         Color(0xFFC0C0C4)  // Bottom - light gray
@@ -125,14 +131,14 @@ fun RegisterScreen(
                 text = "Hesap Oluştur",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF1E3A8A),
+                color = PrimaryBlue,
                 modifier = Modifier.padding(bottom = 4.dp)
             )
 
             Text(
                 text = if (uiState.step == 1) "Adım 1/2: Giriş Bilgileri" else "Adım 2/2: Kişisel Bilgiler",
                 fontSize = 14.sp,
-                color = Color(0xFF64748B),
+                color = TextGray,
                 modifier = Modifier.padding(bottom = 24.dp)
             )
 
@@ -269,8 +275,8 @@ fun RegisterScreen(
                     .shadow(
                         elevation = 8.dp,
                         shape = RoundedCornerShape(12.dp),
-                        ambientColor = Color(0xFF0D24D8).copy(alpha = 0.3f),
-                        spotColor = Color(0xFF0D24D8).copy(alpha = 0.3f)
+                        ambientColor = SecondaryBlue.copy(alpha = 0.3f),
+                        spotColor = SecondaryBlue.copy(alpha = 0.3f)
                     ),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
@@ -283,7 +289,7 @@ fun RegisterScreen(
                         .background(
                             brush = Brush.radialGradient(
                                 colors = listOf(
-                                    Color(0xFF0D24D8),
+                                    SecondaryBlue,
                                     PrimaryBlue
                                 ),
                                 center = Offset(0.5f, 0.5f),
@@ -320,13 +326,13 @@ fun RegisterScreen(
                 Text(
                     text = "Zaten hesabınız var mı? ",
                     fontSize = 14.sp,
-                    color = Color(0xFF64748B)
+                    color = TextGray
                 )
                 Text(
                     text = "Giriş Yap",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF0D24D8),
+                    color = SecondaryBlue,
                     modifier = Modifier.clickable {
                         navController.navigate("login") {
                             popUpTo("register") { inclusive = true }
@@ -340,7 +346,7 @@ fun RegisterScreen(
             Text(
                 text = "Yapay Zeka ve Veri Bilimi Laboratuvarı, D114",
                 fontSize = 11.sp,
-                color = Color(0xFF1E3A8A),
+                color = PrimaryBlue,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.padding(bottom = 32.dp, top = 16.dp)
             )
@@ -369,25 +375,25 @@ fun RegisterInput(
         placeholder = {
             Text(
                 placeholder,
-                color = Color(0xFF94A3B8),
+                color = LabelGray,
                 fontSize = 13.sp
             )
         },
         prefix = if (prefix != null) {
-            { Text(prefix, color = Color(0xFF1E293B), fontSize = 13.sp) }
+            { Text(prefix, color = Black, fontSize = 13.sp) }
         } else null,
         modifier = Modifier
             .fillMaxWidth()
             .height(52.dp),
         shape = RoundedCornerShape(12.dp),
         colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = if (isError) Color.Red else Color(0xFFE2E8F0), // ✅ Hata rengi
-            unfocusedBorderColor = if (isError) Color.Red else Color(0xFFE2E8F0),
+            focusedBorderColor = if (isError) Color.Red else BorderGray, // ✅ Hata rengi
+            unfocusedBorderColor = if (isError) Color.Red else BorderGray,
             focusedContainerColor = Color.White,
             unfocusedContainerColor = Color.White,
-            focusedTextColor = Color(0xFF1E293B),
-            unfocusedTextColor = Color(0xFF1E293B),
-            cursorColor = Color(0xFF0D24D8)
+            focusedTextColor = Black,
+            unfocusedTextColor = Black,
+            cursorColor = SecondaryBlue
         ),
         visualTransformation = if (isPassword && !isPasswordVisible)
             PasswordVisualTransformation() else VisualTransformation.None,
@@ -402,7 +408,7 @@ fun RegisterInput(
                         imageVector = if (isPasswordVisible)
                             Icons.Default.Visibility else Icons.Default.VisibilityOff,
                         contentDescription = null,
-                        tint = Color(0xFF94A3B8)
+                        tint = LabelGray
                     )
                 }
             }

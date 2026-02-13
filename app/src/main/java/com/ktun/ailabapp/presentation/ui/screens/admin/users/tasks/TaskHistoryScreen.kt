@@ -19,6 +19,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.ktun.ailabapp.data.remote.dto.response.TaskHistory
 import com.ktun.ailabapp.data.remote.dto.response.TaskStatus
 import com.ktun.ailabapp.ui.theme.PrimaryBlue
+import com.ktun.ailabapp.ui.theme.TaskHistoryBg
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,7 +51,7 @@ fun TaskHistoryScreen(
                 )
             )
         },
-        containerColor = Color(0xFFE8EAF6)
+        containerColor = TaskHistoryBg
     ) { paddingValues ->
         Column(
             modifier = Modifier
