@@ -1,5 +1,3 @@
-// data/repository/UserRepository.kt
-
 package com.ktun.ailabapp.data.repository
 
 import com.ktun.ailabapp.data.model.User
@@ -14,7 +12,7 @@ import javax.inject.Singleton
 @Singleton
 class UserRepository @Inject constructor(
     private val usersApi: UsersApi,
-    private val projectRepository: ProjectRepository // ✅ Inject
+    private val projectRepository: ProjectRepository
 ) {
     suspend fun getAllUsers(
         pageNumber: Int = 1,
@@ -40,7 +38,6 @@ class UserRepository @Inject constructor(
         }
     }
 
-    // ✅ Kullanıcı detayı + Projeleri
     suspend fun getUserById(userId: String): NetworkResult<User> = withContext(Dispatchers.IO) {
         try {
             android.util.Log.d("UserRepository", "🔍 Fetching user: $userId")
@@ -60,20 +57,12 @@ class UserRepository @Inject constructor(
                 response.isSuccessful && response.body() != null -> {
                     var user = response.body()!!.toUser()
 
-                    // ✅ Kullanıcının projelerini çek
                     when (val projectsResult = projectRepository.getUserProjects(userId)) {
                         is NetworkResult.Success -> {
                             user = user.copy(projects = projectsResult.data)
-                            android.util.Log.d("UserRepository", "✅ User has ${projectsResult.data?.size ?: 0} projects")
                         }
-                        is NetworkResult.Error -> {
-                            android.util.Log.w("UserRepository", "⚠️ Projects fetch failed: ${projectsResult.message}")
-                            // Projeler yüklenemezse devam et (user yine dönecek)
-                        }
-                        is NetworkResult.Loading -> {}
+                        else -> {}
                     }
-
-                    android.util.Log.d("UserRepository", "✅ Loaded user: ${user.fullName} with ${user.projects?.size ?: 0} projects")
 
                     NetworkResult.Success(user)
                 }
@@ -105,5 +94,16 @@ class UserRepository @Inject constructor(
         }
     }
 
-
+    suspend fun deleteUser(userId: String): NetworkResult<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val response = usersApi.deleteUser(userId)
+            if (response.isSuccessful) {
+                NetworkResult.Success(Unit)
+            } else {
+                NetworkResult.Error("Kullanıcı silinemedi: ${response.code()}")
+            }
+        } catch (e: Exception) {
+            NetworkResult.Error(e.message ?: "Bilinmeyen hata")
+        }
+    }
 }

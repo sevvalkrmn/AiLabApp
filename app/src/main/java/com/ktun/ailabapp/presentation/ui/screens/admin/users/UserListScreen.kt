@@ -2,6 +2,7 @@
 
 package com.ktun.ailabapp.presentation.ui.screens.admin.users
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -20,16 +21,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.Lifecycle // ✅ Import
-import androidx.lifecycle.LifecycleEventObserver // ✅ Import
-import androidx.lifecycle.compose.LocalLifecycleOwner // ✅ Import
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import coil.compose.AsyncImage
 import com.ktun.ailabapp.data.model.User
-
+import com.ktun.ailabapp.presentation.ui.screens.admin.users.DeleteUserDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,15 +40,20 @@ fun UsersListScreen(
     onNavigateToSendAnnouncement: (String, String) -> Unit,
     onNavigateToManageRoles: (String) -> Unit,
     onNavigateToTaskHistory: (String, String) -> Unit,
-    onNavigateToProjectDetail: (String) -> Unit = {}, // ✅ YENİ PARAMETRE
+    onNavigateToProjectDetail: (String) -> Unit = {},
     viewModel: UsersListViewModel = hiltViewModel()
 )
 {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
 
     var selectedUser by remember { mutableStateOf<User?>(null) }
     var showBottomSheet by remember { mutableStateOf(false) }
     var isLoadingDetail by remember { mutableStateOf(false) }
+
+    // ✅ YENİ STATE: Silme Dialogu
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var userToDelete by remember { mutableStateOf<User?>(null) }
 
     // Navigation event listener
     LaunchedEffect(Unit) {
@@ -242,9 +249,45 @@ fun UsersListScreen(
                     viewModel.loadUsers()
                 }
             },
-            onProjectClick = { projectId -> // ✅ BAĞLA
+            onProjectClick = { projectId ->
                 showBottomSheet = false
                 onNavigateToProjectDetail(projectId)
+            },
+            onRfidClick = { userId ->
+                viewModel.startRfidRegistration(
+                    userId = userId,
+                    onSuccess = {
+                        Toast.makeText(context, "RFID Kayıt Modu Başlatıldı! Kartı okutun.", Toast.LENGTH_LONG).show()
+                    },
+                    onError = { message ->
+                        Toast.makeText(context, "Hata: $message", Toast.LENGTH_LONG).show()
+                    }
+                )
+            },
+            onDeleteClick = { userId -> // ✅ Silme Butonu Tıklandı
+                userToDelete = selectedUser // O anki seçili kullanıcı
+                showDeleteDialog = true
+                showBottomSheet = false // Bottom sheet'i kapat
+            }
+        )
+    }
+
+    // ✅ YENİ: Silme Onay Dialogu
+    if (showDeleteDialog && userToDelete != null) {
+        DeleteUserDialog(
+            userName = userToDelete!!.fullName,
+            onDismiss = { showDeleteDialog = false },
+            onConfirm = {
+                showDeleteDialog = false
+                viewModel.deleteUser(
+                    userId = userToDelete!!.id,
+                    onSuccess = {
+                        Toast.makeText(context, "Kullanıcı başarıyla silindi", Toast.LENGTH_SHORT).show()
+                    },
+                    onError = { error ->
+                        Toast.makeText(context, error, Toast.LENGTH_LONG).show()
+                    }
+                )
             }
         )
     }
@@ -308,7 +351,7 @@ private fun UsersList(
         items(
             items = users,
             key = { it.id }
-        ) { user ->
+        ) { user -> // ✅ Parametre eklendi
             UserListItem(
                 user = user,
                 onClick = { onUserClick(user) }

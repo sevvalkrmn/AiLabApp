@@ -1,5 +1,3 @@
-// data/remote/api/UsersApi.kt
-
 package com.ktun.ailabapp.data.remote.api
 
 import com.ktun.ailabapp.data.remote.dto.request.UpdateProfileImageRequest
@@ -8,6 +6,7 @@ import com.ktun.ailabapp.data.remote.dto.response.PaginatedResponse
 import com.ktun.ailabapp.data.remote.dto.response.UserResponse
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.PUT
 import retrofit2.http.Path
@@ -32,4 +31,8 @@ interface UsersApi {
         @Path("id") userId: String,
         @Body request: UpdateProfileImageRequest
     ): Response<UpdateProfileImageResponse>
+
+    // ✅ Kullanıcı Sil
+    @DELETE("api/Users/{id}")
+    suspend fun deleteUser(@Path("id") userId: String): Response<Unit>
 }

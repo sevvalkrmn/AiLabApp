@@ -37,7 +37,9 @@ fun UserDetailBottomSheet(
     onViewTaskHistory: (String, String) -> Unit,
     onImageUpdated: () -> Unit = {},
     onScoreUpdated: () -> Unit = {},
-    onProjectClick: (String) -> Unit = {} // ✅ EKLE
+    onProjectClick: (String) -> Unit = {},
+    onRfidClick: (String) -> Unit = {},
+    onDeleteClick: (String) -> Unit = {} // ✅ YENİ PARAMETRE
 ) {
     // ✅ STATE TANIMLA
     var showAdjustScoreDialog by remember { mutableStateOf(false) }
@@ -66,7 +68,7 @@ fun UserDetailBottomSheet(
             RolesSection(user = user)
             Spacer(modifier = Modifier.height(16.dp))
 
-            ProjectsSection(user = user, onProjectClick = onProjectClick) // ✅ Parametre geç
+            ProjectsSection(user = user, onProjectClick = onProjectClick)
             Spacer(modifier = Modifier.height(16.dp))
 
             ActionButtonsSection(
@@ -77,18 +79,22 @@ fun UserDetailBottomSheet(
                     onManageRoles(user.id)
                 },
                 onViewProfile = {
-                    showAdjustScoreDialog = true // ✅ Dialog aç
+                    showAdjustScoreDialog = true
                 },
                 onViewActivity = {
                     onViewTaskHistory(user.id, user.fullName)
                     onDismiss()
                 },
                 onEditPhoto = {
-                    showUpdateImageDialog = true // ✅ DEĞİŞTİR
+                    showUpdateImageDialog = true
                 },
-                onChangeRFID = { /* TODO */ },
+                onChangeRFID = {
+                    onRfidClick(user.id)
+                },
                 onDeactivate = { /* TODO */ },
-                onDeleteAccount = { /* TODO */ }
+                onDeleteAccount = {
+                    onDeleteClick(user.id) // ✅ BAĞLA
+                }
             )
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -100,10 +106,10 @@ fun UserDetailBottomSheet(
         AdjustScoreDialog(
             userId = user.id,
             userName = user.fullName,
-            currentScore = user.points ?: 0.0, // ✅ 0 -> 0.0 (Double mismatch fix)
+            currentScore = user.points ?: 0.0,
             onDismiss = {
                 showAdjustScoreDialog = false
-                onScoreUpdated() // ✅ Puan değişince haber ver
+                onScoreUpdated()
             }
         )
     }
@@ -115,7 +121,7 @@ fun UserDetailBottomSheet(
             currentImageUrl = user.profileImageUrl,
             onDismiss = {
                 showUpdateImageDialog = false
-                onImageUpdated() // ✅ Fotoğraf değişince haber ver
+                onImageUpdated()
             }
         )
     }
@@ -160,7 +166,7 @@ private fun UserInfoCard(user: User) {
                 Spacer(modifier = Modifier.height(4.dp))
                 InfoRow(label = "Status", value = if (user.isActive) "Active" else "Inactive")
                 Spacer(modifier = Modifier.height(4.dp))
-                InfoRow(label = "Point", value = "${user.points ?: 0.0}") // ✅ 0 -> 0.0
+                InfoRow(label = "Point", value = "${user.points ?: 0.0}")
             }
         }
     }
@@ -232,7 +238,7 @@ private fun RolesSection(user: User) {
 @Composable
 private fun ProjectsSection(
     user: User,
-    onProjectClick: (String) -> Unit // ✅ EKLE
+    onProjectClick: (String) -> Unit
 ) {
     Column {
         Text(
@@ -254,8 +260,8 @@ private fun ProjectsSection(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { onProjectClick(project.id) } // ✅ Tıklanabilir yap
-                        .padding(vertical = 4.dp), // Biraz padding ekle
+                        .clickable { onProjectClick(project.id) }
+                        .padding(vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
