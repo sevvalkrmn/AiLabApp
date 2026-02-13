@@ -6,6 +6,7 @@ import com.ktun.ailabapp.BuildConfig
 import com.ktun.ailabapp.data.local.datastore.PreferencesManager
 import com.ktun.ailabapp.data.remote.api.*
 import com.ktun.ailabapp.data.remote.interceptor.AuthInterceptor
+import com.ktun.ailabapp.util.FirebaseAuthManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -16,9 +17,8 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
+import javax.inject.Named
 import javax.inject.Singleton
-
-import com.ktun.ailabapp.util.FirebaseAuthManager // ✅ Import
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -27,7 +27,7 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideAuthInterceptor(
-        authManager: FirebaseAuthManager // ✅ Updated
+        authManager: FirebaseAuthManager
     ): AuthInterceptor {
         return AuthInterceptor(authManager)
     }
@@ -133,5 +133,27 @@ object NetworkModule {
     @Singleton
     fun provideBugReportApi(retrofit: Retrofit): BugReportApi {
         return retrofit.create(BugReportApi::class.java)
+    }
+
+    // --- RFID API (Raspberry Pi) ---
+
+    @Provides
+    @Singleton
+    @Named("RfidRetrofit")
+    fun provideRfidRetrofit(): Retrofit {
+        return Retrofit.Builder()
+            .baseUrl("http://192.168.5.172:5000/") // 🍓 Raspberry Pi IP
+            .client(OkHttpClient.Builder()
+                .connectTimeout(10, TimeUnit.SECONDS)
+                .readTimeout(10, TimeUnit.SECONDS)
+                .build())
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideRfidApi(@Named("RfidRetrofit") retrofit: Retrofit): RfidApi {
+        return retrofit.create(RfidApi::class.java)
     }
 }

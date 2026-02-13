@@ -5,6 +5,7 @@ package com.ktun.ailabapp.presentation.ui.screens.admin.users
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ktun.ailabapp.data.model.User
+import com.ktun.ailabapp.data.repository.RfidRepository
 import com.ktun.ailabapp.data.repository.UserRepository
 import com.ktun.ailabapp.util.NetworkResult
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -25,7 +26,6 @@ data class UsersListUiState(
     val searchQuery: String = ""
 )
 
-// ✅ YENİ - Sealed interface
 sealed interface AdminNavigationEvent {
     data class ToSendAnnouncement(val userId: String, val userName: String) : AdminNavigationEvent
     data class ToManageRoles(val userId: String) : AdminNavigationEvent
@@ -34,13 +34,13 @@ sealed interface AdminNavigationEvent {
 
 @HiltViewModel
 class UsersListViewModel @Inject constructor(
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val rfidRepository: RfidRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(UsersListUiState())
     val uiState: StateFlow<UsersListUiState> = _uiState.asStateFlow()
 
-    // ✅ YENİ - Navigation event
     private val _navigationEvent = MutableSharedFlow<AdminNavigationEvent>()
     val navigationEvent = _navigationEvent.asSharedFlow()
 
@@ -116,7 +116,6 @@ class UsersListViewModel @Inject constructor(
         }
     }
 
-    // ✅ YENİ FONKSIYON
     fun onSendAnnouncementClick(userId: String, userName: String) {
         viewModelScope.launch {
             _navigationEvent.emit(
@@ -138,6 +137,44 @@ class UsersListViewModel @Inject constructor(
             _navigationEvent.emit(
                 AdminNavigationEvent.ToTaskHistory(userId, userName)
             )
+        }
+    }
+
+    // ✅ RFID Kayıt Başlat
+    fun startRfidRegistration(userId: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
+        viewModelScope.launch {
+            when (val result = rfidRepository.startRegistration(userId)) {
+                is NetworkResult.Success -> {
+                    android.util.Log.d("UsersListVM", "✅ RFID Kayıt Modu Başlatıldı: $userId")
+                    onSuccess()
+                }
+                is NetworkResult.Error -> {
+                    android.util.Log.e("UsersListVM", "❌ RFID Hata: ${result.message}")
+                    onError(result.message ?: "Bilinmeyen hata")
+                }
+                is NetworkResult.Loading -> {}
+            }
+        }
+    }
+
+    // ✅ Kullanıcı Sil
+    fun deleteUser(userId: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            
+            when (val result = userRepository.deleteUser(userId)) {
+                is NetworkResult.Success -> {
+                    android.util.Log.d("UsersListVM", "✅ Kullanıcı silindi: $userId")
+                    loadUsers() // Listeyi yenile
+                    onSuccess()
+                }
+                is NetworkResult.Error -> {
+                    _uiState.update { it.copy(isLoading = false) }
+                    android.util.Log.e("UsersListVM", "❌ Silme hatası: ${result.message}")
+                    onError(result.message ?: "Silme işlemi başarısız")
+                }
+                is NetworkResult.Loading -> {}
+            }
         }
     }
 }
