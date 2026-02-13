@@ -24,7 +24,7 @@ data class HomeUiState(
 
     // Lab Stats
     val currentOccupancy: Int = 0,
-    val totalCapacity: Int = 0,
+    val totalCapacity: Int = 16, // ✅ Başlangıç değeri statik 16
     val lastEntryDate: String? = null,
     val teammatesInside: Int = 0,
     val totalTeammates: Int = 0,
@@ -248,7 +248,7 @@ class HomeViewModel @Inject constructor(
 
                         _uiState.value = _uiState.value.copy(
                             currentOccupancy = stats.currentOccupancyCount,
-                            totalCapacity = stats.totalCapacity
+                            totalCapacity = 16 // ✅ Kapasite artık statik 16
                         )
                     }
                 }

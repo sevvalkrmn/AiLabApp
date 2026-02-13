@@ -240,11 +240,10 @@ fun ProjectCard(
                     .background(PrimaryBlue),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    Icons.Default.Folder,
-                    contentDescription = null,
-                    tint = White,
-                    modifier = Modifier.size(screenWidth * 0.06f)
+                androidx.compose.foundation.Image(
+                    painter = androidx.compose.ui.res.painterResource(id = com.ktun.ailabapp.R.drawable.ailablogo),
+                    contentDescription = "AiLab Logo",
+                    modifier = Modifier.size(screenWidth * 0.08f)
                 )
             }
 

@@ -64,9 +64,9 @@ class MainActivity : ComponentActivity() {
                     }
 
                     if (isLoading || startDestination == null) {
-                        Log.d("MainActivity", "⏳ Showing loading indicator")
+                        Log.d("MainActivity", "⏳ Showing loading indicator (isLoading=$isLoading, startDest=$startDestination)")
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator()
+                            CircularProgressIndicator(color = androidx.compose.ui.graphics.Color.Red) // 🔴 Debug Rengi
                         }
                     } else {
                         Log.d("MainActivity", "✅ Creating NavGraph with: $startDestination")

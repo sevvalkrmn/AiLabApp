@@ -144,13 +144,23 @@ class ProfileViewModel @Inject constructor(
     }
 
     fun updateEmail(password: String, newEmail: String, onSuccess: () -> Unit) {
+// ...
+    }
+
+    // ✅ YENİ: Şifre Değiştirme
+    fun changePassword(oldPassword: String, newPassword: String, onSuccess: () -> Unit) {
+// ...
+    }
+
+    // ✅ YENİ: Telefon Güncelleme
+    fun updatePhone(newPhone: String, onSuccess: () -> Unit) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
 
-            when (val result = authRepository.updateEmail(password, newEmail)) {
+            when (val result = authRepository.updatePhone(newPhone)) {
                 is NetworkResult.Success -> {
-                    Logger.d("✅ Email updated successfully", "ProfileVM")
-                    loadUserProfile() // Refresh profile to show new email
+                    loadUserProfile()
+                    _uiState.value = _uiState.value.copy(isLoading = false)
                     onSuccess()
                 }
                 is NetworkResult.Error -> {

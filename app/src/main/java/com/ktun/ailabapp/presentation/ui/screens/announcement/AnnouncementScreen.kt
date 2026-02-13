@@ -32,6 +32,7 @@ import com.ktun.ailabapp.presentation.ui.components.BottomNavigationBar
 import com.ktun.ailabapp.presentation.ui.components.DebugButton
 import com.ktun.ailabapp.presentation.ui.components.FeedbackDialog
 import com.ktun.ailabapp.presentation.ui.components.sendFeedbackEmail
+import com.ktun.ailabapp.ui.theme.PrimaryBlue
 
 @Composable
 fun AnnouncementScreen(
@@ -118,7 +119,7 @@ fun AnnouncementScreen(
                 unreadAnnouncementCount = unreadCount
             )
         },
-        containerColor = Color(0xFF071372),
+        containerColor = PrimaryBlue,
         contentWindowInsets = WindowInsets.systemBars
     ) { paddingValues ->
         Column(
@@ -130,7 +131,7 @@ fun AnnouncementScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color(0xFF071372))
+                    .background(PrimaryBlue)
                     .padding(screenWidth * 0.04f)
             ) {
                 // Başlık ve debug butonu
@@ -241,7 +242,7 @@ fun AnnouncementFilterChip(
         onClick = onClick,
         modifier = modifier.height(screenHeight * 0.05f),
         colors = ButtonDefaults.buttonColors(
-            containerColor = if (isSelected) Color(0xFF071372) else Color(0xFFB0B8D4),
+            containerColor = if (isSelected) PrimaryBlue else Color(0xFFB0B8D4),
             contentColor = Color.White
         ),
         shape = RoundedCornerShape(screenWidth * 0.05f)
@@ -273,7 +274,7 @@ fun AnnouncementCard(
         ),
         shape = RoundedCornerShape(screenWidth * 0.04f),
         border = if (!announcement.isRead)
-            BorderStroke(screenWidth * 0.00125f, Color(0xFF071372))
+            BorderStroke(screenWidth * 0.00125f, PrimaryBlue)
         else
             null
     ) {
@@ -292,7 +293,7 @@ fun AnnouncementCard(
                     modifier = Modifier
                         .size(screenWidth * 0.12f)
                         .clip(CircleShape)
-                        .border(screenWidth * 0.005f, Color(0xFF071372).copy(alpha = 0.1f), CircleShape)
+                        .border(screenWidth * 0.005f, PrimaryBlue.copy(alpha = 0.1f), CircleShape)
                 )
             } else {
                 // Lab ikonu
@@ -300,14 +301,15 @@ fun AnnouncementCard(
                     modifier = Modifier
                         .size(screenWidth * 0.12f)
                         .background(
-                            Color(0xFF071372).copy(alpha = 0.1f),
+                            PrimaryBlue,
                             RoundedCornerShape(screenWidth * 0.03f)
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "🔬",
-                        fontSize = (screenWidth.value * 0.06f).sp
+                    androidx.compose.foundation.Image(
+                        painter = androidx.compose.ui.res.painterResource(id = com.ktun.ailabapp.R.drawable.ailablogo),
+                        contentDescription = "AiLab Logo",
+                        modifier = Modifier.size(screenWidth * 0.08f)
                     )
                 }
             }
@@ -322,7 +324,7 @@ fun AnnouncementCard(
                     text = announcement.title,
                     fontSize = (screenWidth.value * 0.04f).sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF071372)
+                    color = PrimaryBlue
                 )
 
                 Spacer(modifier = Modifier.height(screenHeight * 0.0075f))
@@ -330,7 +332,7 @@ fun AnnouncementCard(
                 Text(
                     text = announcement.content,
                     fontSize = (screenWidth.value * 0.032f).sp,
-                    color = Color(0xFF071372).copy(alpha = 0.7f),
+                    color = PrimaryBlue.copy(alpha = 0.7f),
                     maxLines = 2,
                     lineHeight = (screenWidth.value * 0.045f).sp
                 )
@@ -361,21 +363,22 @@ fun AnnouncementDetailDialog(
                         modifier = Modifier
                             .size(screenWidth * 0.12f)
                             .clip(CircleShape)
-                            .border(screenWidth * 0.005f, Color(0xFF071372).copy(alpha = 0.1f), CircleShape)
+                            .border(screenWidth * 0.005f, PrimaryBlue.copy(alpha = 0.1f), CircleShape)
                     )
                 } else {
                     Box(
                         modifier = Modifier
                             .size(screenWidth * 0.12f)
                             .background(
-                                Color(0xFF071372).copy(alpha = 0.1f),
+                                PrimaryBlue,
                                 RoundedCornerShape(screenWidth * 0.03f)
                             ),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = "🔬",
-                            fontSize = (screenWidth.value * 0.06f).sp
+                        androidx.compose.foundation.Image(
+                            painter = androidx.compose.ui.res.painterResource(id = com.ktun.ailabapp.R.drawable.ailablogo),
+                            contentDescription = "AiLab Logo",
+                            modifier = Modifier.size(screenWidth * 0.08f)
                         )
                     }
                 }
@@ -385,13 +388,13 @@ fun AnnouncementDetailDialog(
                         text = announcement.title,
                         fontSize = (screenWidth.value * 0.045f).sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF071372)
+                        color = PrimaryBlue
                     )
                     Spacer(modifier = Modifier.height(screenHeight * 0.0025f))
                     Text(
                         text = announcement.timestamp,
                         fontSize = (screenWidth.value * 0.03f).sp,
-                        color = Color(0xFF071372).copy(alpha = 0.5f)
+                        color = PrimaryBlue.copy(alpha = 0.5f)
                     )
                 }
             }
@@ -434,7 +437,7 @@ fun AnnouncementDetailDialog(
                 Text(
                     text = announcement.content,
                     fontSize = (screenWidth.value * 0.035f).sp,
-                    color = Color(0xFF071372).copy(alpha = 0.8f),
+                    color = PrimaryBlue.copy(alpha = 0.8f),
                     lineHeight = (screenWidth.value * 0.05f).sp
                 )
             }
@@ -443,7 +446,7 @@ fun AnnouncementDetailDialog(
             TextButton(onClick = onDismiss) {
                 Text(
                     "Kapat",
-                    color = Color(0xFF071372),
+                    color = PrimaryBlue,
                     fontWeight = FontWeight.Bold,
                     fontSize = (screenWidth.value * 0.035f).sp
                 )

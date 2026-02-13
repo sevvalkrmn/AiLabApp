@@ -5,6 +5,7 @@ import com.ktun.ailabapp.data.remote.dto.request.LoginRequest
 import com.ktun.ailabapp.data.remote.dto.request.RefreshTokenRequest
 import com.ktun.ailabapp.data.remote.dto.request.RegisterRequest
 import com.ktun.ailabapp.data.remote.dto.request.UpdateEmailRequest
+import com.ktun.ailabapp.data.remote.dto.request.UpdatePhoneRequest
 import com.ktun.ailabapp.data.remote.dto.request.UpdateProfileImageRequest
 import com.ktun.ailabapp.data.remote.dto.response.AuthResponse
 import com.ktun.ailabapp.data.remote.dto.response.DefaultAvatarsResponse
@@ -43,6 +44,9 @@ interface AuthApi {
 
     @PUT("api/profile/update-email")
     suspend fun updateEmail(@Body request: UpdateEmailRequest): Response<Unit>
+
+    @PUT("api/profile/update-phone")
+    suspend fun updatePhone(@Body request: UpdatePhoneRequest): Response<Unit>
 
     @GET("api/profile/avatars/defaults")
     suspend fun getDefaultAvatars(): Response<DefaultAvatarsResponse>

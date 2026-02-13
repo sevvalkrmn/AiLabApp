@@ -14,6 +14,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.ktun.ailabapp.ui.theme.PrimaryBlue
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,7 +43,7 @@ fun SendAnnouncementScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF071372),
+                    containerColor = PrimaryBlue,
                     titleContentColor = Color.White,
                     navigationIconContentColor = Color.White
                 )
@@ -65,10 +66,10 @@ fun SendAnnouncementScreen(
                 readOnly = true,
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFF071372),
+                    focusedBorderColor = PrimaryBlue,
                     unfocusedBorderColor = Color(0xFF9FA8DA),
                     disabledBorderColor = Color(0xFF9FA8DA),
-                    disabledTextColor = Color(0xFF071372)
+                    disabledTextColor = PrimaryBlue
                 ),
                 enabled = false
             )
@@ -87,7 +88,7 @@ fun SendAnnouncementScreen(
                     }
                 },
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFF071372),
+                    focusedBorderColor = PrimaryBlue,
                     unfocusedBorderColor = Color(0xFF9FA8DA)
                 ),
                 keyboardOptions = KeyboardOptions(
@@ -111,7 +112,7 @@ fun SendAnnouncementScreen(
                     }
                 },
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFF071372),
+                    focusedBorderColor = PrimaryBlue,
                     unfocusedBorderColor = Color(0xFF9FA8DA)
                 ),
                 maxLines = 8,
@@ -129,7 +130,7 @@ fun SendAnnouncementScreen(
                     .fillMaxWidth()
                     .height(56.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF071372)
+                    containerColor = PrimaryBlue
                 ),
                 shape = RoundedCornerShape(28.dp),
                 enabled = !uiState.isLoading
