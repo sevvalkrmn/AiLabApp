@@ -1,5 +1,9 @@
 package com.ktun.ailabapp.presentation.ui.components
 
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -7,7 +11,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -25,7 +31,6 @@ fun BottomNavigationBar(
     onProfileClick: () -> Unit = {},
     unreadAnnouncementCount: Int = 0
 ) {
-    // ✅ Altına açık renk zemin ekleyerek kıvrımların her yerde görünmesini sağladık
     Surface(
         color = BackgroundLight,
         modifier = Modifier.fillMaxWidth()
@@ -39,106 +44,80 @@ fun BottomNavigationBar(
                 containerColor = Color.Transparent,
                 tonalElevation = 0.dp
             ) {
-                // Home
-                NavigationBarItem(
-                    selected = selectedItem == 0,
-                    onClick = {
-                        if (selectedItem != 0) onHomeClick()
-                    },
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Default.Home,
-                            contentDescription = "Ana Sayfa",
-                            modifier = Modifier.size(24.dp)
-                        )
-                    },
-                    label = { Text("Ana Sayfa") },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = White,
-                        selectedTextColor = White,
-                        unselectedIconColor = White.copy(alpha = 0.6f),
-                        unselectedTextColor = White.copy(alpha = 0.6f),
-                        indicatorColor = White.copy(alpha = 0.2f)
-                    )
+                val items = listOf(
+                    NavItem(Icons.Default.Home, "Ana Sayfa", 0, { if (selectedItem != 0) onHomeClick() }),
+                    NavItem(Icons.Default.List, "Projeler", 1, { if (selectedItem != 1) onProjectsClick() }),
+                    NavItem(Icons.Filled.Notifications, "Duyurular", 2, onChatClick),
+                    NavItem(Icons.Default.Person, "Profil", 3, { if (selectedItem != 3) onProfileClick() })
                 )
 
-                // Projects
-                NavigationBarItem(
-                    selected = selectedItem == 1,
-                    onClick = {
-                        if (selectedItem != 1) onProjectsClick()
-                    },
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Default.List,
-                            contentDescription = "Projeler",
-                            modifier = Modifier.size(24.dp)
-                        )
-                    },
-                    label = { Text("Projeler") },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = White,
-                        selectedTextColor = White,
-                        unselectedIconColor = White.copy(alpha = 0.6f),
-                        unselectedTextColor = White.copy(alpha = 0.6f),
-                        indicatorColor = White.copy(alpha = 0.2f)
+                items.forEach { item ->
+                    val isSelected = selectedItem == item.index
+                    val iconScale by animateFloatAsState(
+                        targetValue = if (isSelected) 1.2f else 1f,
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                            stiffness = Spring.StiffnessLow
+                        ),
+                        label = "iconScale"
                     )
-                )
+                    val iconSize by animateDpAsState(
+                        targetValue = if (isSelected) 28.dp else 22.dp,
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                            stiffness = Spring.StiffnessMedium
+                        ),
+                        label = "iconSize"
+                    )
 
-                // Chat/Announcements
-                NavigationBarItem(
-                    selected = selectedItem == 2,
-                    onClick = onChatClick,
-                    icon = {
-                        BadgeIcon(
-                            icon = Icons.Filled.Notifications,
-                            contentDescription = "Duyurular",
-                            badgeCount = unreadAnnouncementCount,
-                            tint = if (selectedItem == 2) Color.White else Color.White.copy(alpha = 0.6f)
+                    NavigationBarItem(
+                        selected = isSelected,
+                        onClick = item.onClick,
+                        icon = {
+                            if (item.index == 2) {
+                                BadgeIcon(
+                                    icon = item.icon,
+                                    contentDescription = item.label,
+                                    badgeCount = unreadAnnouncementCount,
+                                    tint = if (isSelected) White else White.copy(alpha = 0.6f),
+                                    modifier = Modifier
+                                        .size(iconSize)
+                                        .scale(iconScale)
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = item.icon,
+                                    contentDescription = item.label,
+                                    modifier = Modifier
+                                        .size(iconSize)
+                                        .scale(iconScale)
+                                )
+                            }
+                        },
+                        label = {
+                            Text(
+                                item.label,
+                                fontSize = if (isSelected) 12.sp else 11.sp,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                            )
+                        },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = White,
+                            selectedTextColor = White,
+                            unselectedIconColor = White.copy(alpha = 0.6f),
+                            unselectedTextColor = White.copy(alpha = 0.6f),
+                            indicatorColor = White.copy(alpha = 0.2f)
                         )
-                    },
-                    label = {
-                        Text(
-                            "Duyurular",
-                            fontSize = 12.sp,
-                            fontWeight = if (selectedItem == 2) FontWeight.Bold else FontWeight.Normal
-                        )
-                    },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = Color.White,
-                        selectedTextColor = Color.White,
-                        unselectedIconColor = Color.White.copy(alpha = 0.6f),
-                        unselectedTextColor = Color.White.copy(alpha = 0.6f),
-                        indicatorColor = Color.White.copy(alpha = 0.2f)
                     )
-                )
-
-                // Profile
-                NavigationBarItem(
-                    selected = selectedItem == 3,
-                    onClick = {
-                        if (selectedItem != 3) onProfileClick()
-                    },
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = "Profil",
-                            modifier = Modifier.size(24.dp)
-                        )
-                    },
-                    label = { Text("Profil") },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = White,
-                        selectedTextColor = White,
-                        unselectedIconColor = White.copy(alpha = 0.6f),
-                        unselectedTextColor = White.copy(alpha = 0.6f),
-                        indicatorColor = White.copy(alpha = 0.2f)
-                    )
-                )
+                }
             }
         }
     }
 }
 
-
-
+private data class NavItem(
+    val icon: androidx.compose.ui.graphics.vector.ImageVector,
+    val label: String,
+    val index: Int,
+    val onClick: () -> Unit
+)

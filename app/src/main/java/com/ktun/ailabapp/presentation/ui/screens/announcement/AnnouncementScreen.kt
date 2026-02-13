@@ -31,9 +31,11 @@ import com.ktun.ailabapp.data.model.AnnouncementType
 import com.ktun.ailabapp.presentation.ui.components.BottomNavigationBar
 import com.ktun.ailabapp.presentation.ui.components.DebugButton
 import com.ktun.ailabapp.presentation.ui.components.FeedbackDialog
-import com.ktun.ailabapp.presentation.ui.components.ShimmerBox // ✅ Import
+import com.ktun.ailabapp.presentation.ui.components.ShimmerBox
+import com.ktun.ailabapp.presentation.ui.components.StaggeredAnimatedItem
 import com.ktun.ailabapp.ui.theme.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AnnouncementScreen(
     viewModel: AnnouncementViewModel,
@@ -45,9 +47,16 @@ fun AnnouncementScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+    var isRefreshing by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.loadAnnouncements()
+    }
+
+    LaunchedEffect(uiState.isLoading) {
+        if (!uiState.isLoading) {
+            isRefreshing = false
+        }
     }
 
     val configuration = LocalConfiguration.current
@@ -193,21 +202,31 @@ fun AnnouncementScreen(
                     Spacer(modifier = Modifier.height(screenHeight * 0.02f))
 
                     // Duyuru Listesi veya Skeleton
-                    if (uiState.isLoading && uiState.announcements.isEmpty()) {
-                        // ✅ Shimmer Skeleton
+                    if (uiState.isLoading && uiState.announcements.isEmpty() && !isRefreshing) {
                         AnnouncementScreenSkeleton(screenWidth, screenHeight)
                     } else {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            verticalArrangement = Arrangement.spacedBy(screenHeight * 0.015f)
+                        androidx.compose.material3.pulltorefresh.PullToRefreshBox(
+                            isRefreshing = isRefreshing,
+                            onRefresh = {
+                                isRefreshing = true
+                                viewModel.loadAnnouncements()
+                            },
+                            modifier = Modifier.fillMaxSize()
                         ) {
-                            items(filteredAnnouncements) { announcement ->
-                                AnnouncementCard(
-                                    announcement = announcement,
-                                    onClick = { selectedAnnouncement = announcement },
-                                    screenWidth = screenWidth,
-                                    screenHeight = screenHeight
-                                )
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize(),
+                                verticalArrangement = Arrangement.spacedBy(screenHeight * 0.015f)
+                            ) {
+                                items(filteredAnnouncements.size) { index ->
+                                    StaggeredAnimatedItem(index = index) {
+                                        AnnouncementCard(
+                                            announcement = filteredAnnouncements[index],
+                                            onClick = { selectedAnnouncement = filteredAnnouncements[index] },
+                                            screenWidth = screenWidth,
+                                            screenHeight = screenHeight
+                                        )
+                                    }
+                                }
                             }
                         }
                     }

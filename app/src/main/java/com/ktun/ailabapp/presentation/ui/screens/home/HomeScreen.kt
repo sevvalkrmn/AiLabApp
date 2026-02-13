@@ -4,7 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import com.ktun.ailabapp.presentation.ui.components.bounceClick
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -182,23 +182,16 @@ fun HomeScreen(
                 if (uiState.isLoading && !isRefreshing) {
                     HomeScreenSkeleton(screenWidth, screenHeight)
                 } else {
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = screenWidth * 0.04f),
-                        verticalArrangement = Arrangement.spacedBy(screenHeight * 0.02f),
-                        contentPadding = PaddingValues(top = screenHeight * 0.02f, bottom = screenHeight * 0.02f)
-                    ) {
-                        item {
+                    val cardItems = listOf<@Composable () -> Unit>(
+                        {
                             LabOccupancyCard(
                                 currentOccupancy = uiState.currentOccupancy,
                                 totalCapacity = uiState.totalCapacity,
                                 screenWidth = screenWidth,
                                 screenHeight = screenHeight
                             )
-                        }
-
-                        item {
+                        },
+                        {
                             ProfileCard(
                                 totalScore = uiState.user?.totalScore ?: 0.0,
                                 avatarUrl = uiState.user?.profileImageUrl,
@@ -208,23 +201,53 @@ fun HomeScreen(
                                 screenWidth = screenWidth,
                                 screenHeight = screenHeight
                             )
-                        }
-
-                        item {
+                        },
+                        {
                             CurrentTasksCard(
                                 tasks = uiState.currentTasks,
                                 onTaskClick = { task -> viewModel.loadTaskDetail(task.id) },
                                 screenWidth = screenWidth,
                                 screenHeight = screenHeight
                             )
-                        }
-
-                        item {
+                        },
+                        {
                             BottomCard(
                                 topUsers = uiState.topUsers,
                                 screenWidth = screenWidth,
                                 screenHeight = screenHeight
                             )
+                        }
+                    )
+
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = screenWidth * 0.04f),
+                        verticalArrangement = Arrangement.spacedBy(screenHeight * 0.02f),
+                        contentPadding = PaddingValues(top = screenHeight * 0.02f, bottom = screenHeight * 0.02f)
+                    ) {
+                        items(cardItems.size) { index ->
+                            var visible by remember { mutableStateOf(false) }
+                            LaunchedEffect(Unit) {
+                                kotlinx.coroutines.delay(index * 100L)
+                                visible = true
+                            }
+                            Box {
+                                androidx.compose.animation.AnimatedVisibility(
+                                    visible = visible,
+                                    enter = slideInVertically(
+                                        initialOffsetY = { it / 2 },
+                                        animationSpec = androidx.compose.animation.core.tween(
+                                            durationMillis = 400,
+                                            easing = androidx.compose.animation.core.FastOutSlowInEasing
+                                        )
+                                    ) + fadeIn(
+                                        animationSpec = androidx.compose.animation.core.tween(400)
+                                    )
+                                ) {
+                                    cardItems[index]()
+                                }
+                            }
                         }
                     }
                 }
@@ -402,7 +425,7 @@ fun TaskItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .bounceClick(onClick = onClick)
             .background(White, RoundedCornerShape(screenWidth * 0.025f))
             .padding(horizontal = screenWidth * 0.025f, vertical = screenWidth * 0.018f),
         verticalAlignment = Alignment.CenterVertically
@@ -444,6 +467,15 @@ fun LeaderboardUser(user: TopUserItem?, borderColor: Color, rank: Int, screenWid
     val avatarSize = if (isFirst) screenWidth * 0.2f else screenWidth * 0.16f
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(screenWidth * 0.28f)) {
         if (user != null) {
+            val animatedScore by androidx.compose.animation.core.animateIntAsState(
+                targetValue = user.score.toInt(),
+                animationSpec = androidx.compose.animation.core.tween(
+                    durationMillis = 1200,
+                    easing = androidx.compose.animation.core.FastOutSlowInEasing
+                ),
+                label = "scoreCount"
+            )
+
             Box(contentAlignment = Alignment.Center) {
                 if (!user.avatarUrl.isNullOrEmpty()) {
                     AsyncImage(model = user.avatarUrl, contentDescription = "Avatar", modifier = Modifier.size(avatarSize).clip(CircleShape).background(borderColor).padding(3.dp).clip(CircleShape), contentScale = ContentScale.Crop)
@@ -457,7 +489,7 @@ fun LeaderboardUser(user: TopUserItem?, borderColor: Color, rank: Int, screenWid
             Text(text = user.name.split(" ").firstOrNull() ?: user.name, fontSize = (screenWidth.value * 0.032f).sp, fontWeight = FontWeight.Bold, color = White, maxLines = 1)
             Spacer(modifier = Modifier.height(screenHeight * 0.005f))
             Box(modifier = Modifier.background(borderColor, RoundedCornerShape(50)).padding(horizontal = screenWidth * 0.025f, vertical = screenHeight * 0.004f)) {
-                Text(text = "${user.score.toInt()} pts", fontSize = (screenWidth.value * 0.028f).sp, fontWeight = FontWeight.Bold, color = PrimaryBlue)
+                Text(text = "$animatedScore pts", fontSize = (screenWidth.value * 0.028f).sp, fontWeight = FontWeight.Bold, color = PrimaryBlue)
             }
         } else {
             Box(modifier = Modifier.size(avatarSize).background(White.copy(alpha = 0.2f), CircleShape))

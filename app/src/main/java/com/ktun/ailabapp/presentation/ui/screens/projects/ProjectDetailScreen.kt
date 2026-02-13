@@ -36,7 +36,8 @@ import com.ktun.ailabapp.ui.theme.PrimaryBlue
 import com.ktun.ailabapp.ui.theme.White
 import java.util.Calendar
 
-import com.ktun.ailabapp.presentation.ui.components.TaskDetailDialog // ✅ Import added
+import com.ktun.ailabapp.presentation.ui.components.StaggeredAnimatedItem
+import com.ktun.ailabapp.presentation.ui.components.TaskDetailDialog
 import com.ktun.ailabapp.ui.theme.InfoBlue
 import com.ktun.ailabapp.ui.theme.SuccessGreen
 import com.ktun.ailabapp.ui.theme.WarningOrange
@@ -55,8 +56,16 @@ fun ProjectDetailScreen(
     val screenHeight = configuration.screenHeightDp.dp
     val screenWidth = configuration.screenWidthDp.dp
 
+    var isRefreshing by remember { mutableStateOf(false) }
+
     LaunchedEffect(projectId) {
         viewModel.loadProjectDetail(projectId)
+    }
+
+    LaunchedEffect(uiState.isLoading) {
+        if (!uiState.isLoading) {
+            isRefreshing = false
+        }
     }
 
     Scaffold(
@@ -123,136 +132,167 @@ fun ProjectDetailScreen(
             }
 
             uiState.project != null -> {
-                LazyColumn(
+                androidx.compose.material3.pulltorefresh.PullToRefreshBox(
+                    isRefreshing = isRefreshing,
+                    onRefresh = {
+                        isRefreshing = true
+                        viewModel.refreshProject()
+                    },
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues)
-                        .padding(screenWidth * 0.04f),
-                    verticalArrangement = Arrangement.spacedBy(screenHeight * 0.02f)
                 ) {
-                    item {
-                        ProjectInfoCard(
-                            project = uiState.project!!,
-                            screenWidth = screenWidth,
-                            screenHeight = screenHeight
-                        )
-                    }
-
-                    item {
-                        TaskStatisticsCard(
-                            statistics = uiState.project!!.taskStatistics,
-                            screenWidth = screenWidth,
-                            screenHeight = screenHeight
-                        )
-                    }
-
-                    item {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "Görevler",
-                                fontSize = (screenWidth.value * 0.045f).sp,
-                                fontWeight = FontWeight.Bold,
-                                color = PrimaryBlue
-                            )
-
-                            if (uiState.canEdit) {
-                                IconButton(onClick = { viewModel.showCreateTaskDialog() }) {
-                                    Icon(
-                                        imageVector = Icons.Default.Add,
-                                        contentDescription = "Görev Ekle",
-                                        tint = PrimaryBlue
-                                    )
-                                }
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(screenWidth * 0.04f),
+                        verticalArrangement = Arrangement.spacedBy(screenHeight * 0.02f)
+                    ) {
+                        item {
+                            StaggeredAnimatedItem(index = 0) {
+                                ProjectInfoCard(
+                                    project = uiState.project!!,
+                                    screenWidth = screenWidth,
+                                    screenHeight = screenHeight
+                                )
                             }
                         }
-                    }
 
-                    if (uiState.tasks.isEmpty()) {
                         item {
-                            Card(
-                                modifier = Modifier.fillMaxWidth(),
-                                colors = CardDefaults.cardColors(containerColor = White)
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(screenWidth * 0.08f),
-                                    contentAlignment = Alignment.Center
+                            StaggeredAnimatedItem(index = 1) {
+                                TaskStatisticsCard(
+                                    statistics = uiState.project!!.taskStatistics,
+                                    screenWidth = screenWidth,
+                                    screenHeight = screenHeight
+                                )
+                            }
+                        }
+
+                        item {
+                            StaggeredAnimatedItem(index = 2) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                        Icon(
-                                            Icons.Default.CheckCircle,
-                                            contentDescription = null,
-                                            tint = PrimaryBlue.copy(alpha = 0.3f),
-                                            modifier = Modifier.size(screenWidth * 0.15f)
-                                        )
-                                        Spacer(modifier = Modifier.height(screenHeight * 0.01f))
-                                        Text(
-                                            text = "Henüz görev yok",
-                                            color = PrimaryBlue.copy(alpha = 0.5f)
-                                        )
+                                    Text(
+                                        text = "Görevler",
+                                        fontSize = (screenWidth.value * 0.045f).sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = PrimaryBlue
+                                    )
+
+                                    if (uiState.canEdit) {
+                                        IconButton(onClick = { viewModel.showCreateTaskDialog() }) {
+                                            Icon(
+                                                imageVector = Icons.Default.Add,
+                                                contentDescription = "Görev Ekle",
+                                                tint = PrimaryBlue
+                                            )
+                                        }
                                     }
                                 }
                             }
                         }
-                    } else {
-                        items(uiState.tasks) { task ->
-                            TaskCard(
-                                task = task,
-                                onStatusChange = { newStatus ->
-                                    viewModel.updateTaskStatus(task.id, newStatus)
-                                },
-                                onClick = { 
-                                    // ✅ Görev detayını API'den çek
-                                    viewModel.loadTaskDetail(task.id) 
-                                },
-                                screenWidth = screenWidth,
-                                screenHeight = screenHeight
-                            )
+
+                        if (uiState.tasks.isEmpty()) {
+                            item {
+                                StaggeredAnimatedItem(index = 3) {
+                                    Card(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        colors = CardDefaults.cardColors(containerColor = White)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(screenWidth * 0.08f),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                                Icon(
+                                                    Icons.Default.CheckCircle,
+                                                    contentDescription = null,
+                                                    tint = PrimaryBlue.copy(alpha = 0.3f),
+                                                    modifier = Modifier.size(screenWidth * 0.15f)
+                                                )
+                                                Spacer(modifier = Modifier.height(screenHeight * 0.01f))
+                                                Text(
+                                                    text = "Henüz görev yok",
+                                                    color = PrimaryBlue.copy(alpha = 0.5f)
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            items(uiState.tasks.size) { index ->
+                                StaggeredAnimatedItem(index = index + 3) {
+                                    TaskCard(
+                                        task = uiState.tasks[index],
+                                        onStatusChange = { newStatus ->
+                                            viewModel.updateTaskStatus(uiState.tasks[index].id, newStatus)
+                                        },
+                                        onClick = {
+                                            viewModel.loadTaskDetail(uiState.tasks[index].id)
+                                        },
+                                        screenWidth = screenWidth,
+                                        screenHeight = screenHeight
+                                    )
+                                }
+                            }
                         }
-                    }
 
-                    item {
-                        Spacer(modifier = Modifier.height(screenHeight * 0.01f))
-                        Text(
-                            text = "Proje Üyeleri",
-                            fontSize = (screenWidth.value * 0.045f).sp,
-                            fontWeight = FontWeight.Bold,
-                            color = PrimaryBlue
-                        )
-                    }
-
-                    items(uiState.project!!.captains) { captain ->
-                        MemberCard(
-                            member = captain,
-                            screenWidth = screenWidth,
-                            screenHeight = screenHeight
-                        )
-                    }
-
-                    items(uiState.project!!.members) { member ->
-                        MemberCard(
-                            member = member,
-                            screenWidth = screenWidth,
-                            screenHeight = screenHeight
-                        )
-                    }
-
-                    if (uiState.canEdit) {
                         item {
-                            AdminActionsSection(
-                                onAddMember = { viewModel.showAddMemberDialog() },
-                                onRemoveMember = { viewModel.showRemoveMemberDialog() },
-                                onDeleteProject = { viewModel.showDeleteProjectDialog() },
-                                screenWidth = screenWidth,
-                                screenHeight = screenHeight,
-                                isCaptain = uiState.isCaptain,
-                                isAdmin = uiState.isAdmin
-                            )
+                            StaggeredAnimatedItem(index = uiState.tasks.size + 3) {
+                                Column {
+                                    Spacer(modifier = Modifier.height(screenHeight * 0.01f))
+                                    Text(
+                                        text = "Proje Üyeleri",
+                                        fontSize = (screenWidth.value * 0.045f).sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = PrimaryBlue
+                                    )
+                                }
+                            }
+                        }
+
+                        val captains = uiState.project!!.captains
+                        items(captains.size) { index ->
+                            StaggeredAnimatedItem(index = uiState.tasks.size + 4 + index) {
+                                MemberCard(
+                                    member = captains[index],
+                                    screenWidth = screenWidth,
+                                    screenHeight = screenHeight
+                                )
+                            }
+                        }
+
+                        val members = uiState.project!!.members
+                        items(members.size) { index ->
+                            StaggeredAnimatedItem(index = uiState.tasks.size + 4 + captains.size + index) {
+                                MemberCard(
+                                    member = members[index],
+                                    screenWidth = screenWidth,
+                                    screenHeight = screenHeight
+                                )
+                            }
+                        }
+
+                        if (uiState.canEdit) {
+                            item {
+                                StaggeredAnimatedItem(index = uiState.tasks.size + 4 + captains.size + members.size) {
+                                    AdminActionsSection(
+                                        onAddMember = { viewModel.showAddMemberDialog() },
+                                        onRemoveMember = { viewModel.showRemoveMemberDialog() },
+                                        onDeleteProject = { viewModel.showDeleteProjectDialog() },
+                                        screenWidth = screenWidth,
+                                        screenHeight = screenHeight,
+                                        isCaptain = uiState.isCaptain,
+                                        isAdmin = uiState.isAdmin
+                                    )
+                                }
+                            }
                         }
                     }
                 }

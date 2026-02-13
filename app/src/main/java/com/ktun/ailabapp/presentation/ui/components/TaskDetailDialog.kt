@@ -21,32 +21,36 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskDetailDialog(
     task: TaskResponse,
     onDismiss: () -> Unit
 ) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                text = task.title,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = PrimaryBlue
-            )
-        },
-        text = {
+    AnimatedDialog(onDismiss = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth(0.9f)
+                .wrapContentHeight(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = White)
+        ) {
             Column(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.padding(24.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Açıklama
+                // Baslik
+                Text(
+                    text = task.title,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = PrimaryBlue
+                )
+
+                // Aciklama
                 if (!task.description.isNullOrEmpty()) {
                     Column {
                         Text(
-                            text = "Açıklama",
+                            text = "Aciklama",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = PrimaryBlue
@@ -60,7 +64,7 @@ fun TaskDetailDialog(
                     }
                 } else {
                     Text(
-                        text = "Açıklama yok",
+                        text = "Aciklama yok",
                         fontSize = 14.sp,
                         fontStyle = FontStyle.Italic,
                         color = Color.Gray
@@ -112,7 +116,7 @@ fun TaskDetailDialog(
                     )
                 }
 
-                // Puan (Varsa)
+                // Puan
                 if (task.score != null && task.score > 0) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -132,14 +136,18 @@ fun TaskDetailDialog(
                         )
                     }
                 }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Kapat")
+
+                // Kapat butonu
+                Spacer(Modifier.height(4.dp))
+                TextButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.align(Alignment.End)
+                ) {
+                    Text("Kapat")
+                }
             }
         }
-    )
+    }
 }
 
 fun getStatusColor(status: String): Color {
@@ -153,9 +161,9 @@ fun getStatusColor(status: String): Color {
 
 fun getStatusText(status: String): String {
     return when (status) {
-        "Todo" -> "Yapılacak"
+        "Todo" -> "Yapilacak"
         "InProgress" -> "Devam Ediyor"
-        "Done" -> "Tamamlandı"
+        "Done" -> "Tamamlandi"
         else -> status
     }
 }
@@ -163,15 +171,12 @@ fun getStatusText(status: String): String {
 private fun formatDate(isoDate: String?): String {
     if (isoDate.isNullOrEmpty()) return "Tarih Yok"
     return try {
-        // Try parsing with milliseconds
         val parserMillis = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
         parserMillis.timeZone = TimeZone.getTimeZone("UTC")
-        
-        // Try parsing without milliseconds
+
         val parserNoMillis = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault())
         parserNoMillis.timeZone = TimeZone.getTimeZone("UTC")
 
-        // Try simple date
         val parserSimple = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
         val date = try {
@@ -187,9 +192,9 @@ private fun formatDate(isoDate: String?): String {
         if (date != null) {
             SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(date)
         } else {
-            isoDate // Parsing failed, return original
+            isoDate
         }
     } catch (e: Exception) {
-        isoDate // Fallback
+        isoDate
     }
 }

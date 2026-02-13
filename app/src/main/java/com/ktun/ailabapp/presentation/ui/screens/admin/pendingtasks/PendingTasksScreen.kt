@@ -19,6 +19,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ktun.ailabapp.data.remote.dto.response.PendingTaskResponse
+import com.ktun.ailabapp.presentation.ui.components.StaggeredAnimatedItem
 import com.ktun.ailabapp.ui.theme.BackgroundLight
 import com.ktun.ailabapp.ui.theme.InfoBlue
 import com.ktun.ailabapp.ui.theme.PrimaryBlue
@@ -35,6 +36,13 @@ fun PendingTasksScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var selectedTask by remember { mutableStateOf<PendingTaskResponse?>(null) }
+    var isRefreshing by remember { mutableStateOf(false) }
+
+    LaunchedEffect(uiState.isLoading) {
+        if (!uiState.isLoading) {
+            isRefreshing = false
+        }
+    }
 
     LaunchedEffect(uiState.successMessage) {
         if (uiState.successMessage != null) {
@@ -57,28 +65,38 @@ fun PendingTasksScreen(
         },
         containerColor = BackgroundLight
     ) { paddingValues ->
-        Box(
+        androidx.compose.material3.pulltorefresh.PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = {
+                isRefreshing = true
+                viewModel.loadPendingTasks()
+            },
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
             when {
-                uiState.isLoading -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center),
-                        color = PrimaryBlue
-                    )
+                uiState.isLoading && !isRefreshing -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = PrimaryBlue)
+                    }
                 }
                 uiState.errorMessage != null -> {
-                    Column(
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Text(text = "Hata: ${uiState.errorMessage}", color = Color.Red)
-                        Button(onClick = { viewModel.loadPendingTasks() }) {
-                            Text("Tekrar Dene")
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(text = "Hata: ${uiState.errorMessage}", color = Color.Red)
+                            Button(onClick = { viewModel.loadPendingTasks() }) {
+                                Text("Tekrar Dene")
+                            }
                         }
                     }
                 }
@@ -96,11 +114,13 @@ fun PendingTasksScreen(
                         contentPadding = PaddingValues(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        items(uiState.tasks) { task ->
-                            PendingTaskItem(
-                                task = task,
-                                onRateClick = { selectedTask = task }
-                            )
+                        items(uiState.tasks.size) { index ->
+                            StaggeredAnimatedItem(index = index) {
+                                PendingTaskItem(
+                                    task = uiState.tasks[index],
+                                    onRateClick = { selectedTask = uiState.tasks[index] }
+                                )
+                            }
                         }
                     }
                 }

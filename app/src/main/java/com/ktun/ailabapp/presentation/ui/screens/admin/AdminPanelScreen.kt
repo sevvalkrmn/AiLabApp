@@ -6,9 +6,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
@@ -24,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import android.widget.Toast
+import com.ktun.ailabapp.presentation.ui.components.StaggeredAnimatedItem
 import com.ktun.ailabapp.ui.theme.BackgroundLight
 import com.ktun.ailabapp.ui.theme.ErrorRed
 import com.ktun.ailabapp.ui.theme.PrimaryBlue
@@ -120,71 +120,87 @@ fun AdminPanelScreen(
                     topEnd = screenWidth * 0.08f
                 )
             ) {
-                Column(
+                LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
                         .padding(horizontal = screenWidth * 0.04f, vertical = screenHeight * 0.03f),
                     verticalArrangement = Arrangement.spacedBy(screenHeight * 0.015f)
                 ) {
-                    AdminPanelItem(
-                        title = "Tüm Kullanıcıları Listele",
-                        subtitle = "Tüm Kullanıcıları Sayfalar Bir Şekilde Listeler.",
-                        onClick = onNavigateToUsersList,
-                        screenWidth = screenWidth
-                    )
-                    AdminPanelItem(
-                        title = "Proje Oluştur",
-                        subtitle = "Yeni bir proje oluşturur.",
-                        onClick = onNavigateToCreateProject,
-                        screenWidth = screenWidth
+                    val adminItems = listOf<@Composable () -> Unit>(
+                        {
+                            AdminPanelItem(
+                                title = "Tüm Kullanıcıları Listele",
+                                subtitle = "Tüm Kullanıcıları Sayfalar Bir Şekilde Listeler.",
+                                onClick = onNavigateToUsersList,
+                                screenWidth = screenWidth
+                            )
+                        },
+                        {
+                            AdminPanelItem(
+                                title = "Proje Oluştur",
+                                subtitle = "Yeni bir proje oluşturur.",
+                                onClick = onNavigateToCreateProject,
+                                screenWidth = screenWidth
+                            )
+                        },
+                        {
+                            AdminPanelItem(
+                                title = "Tüm Projeleri Listele",
+                                subtitle = "Tüm Projeleri Sayfalı Olarak Listeler.",
+                                onClick = onNavigateToAllProjects,
+                                screenWidth = screenWidth
+                            )
+                        },
+                        {
+                            AdminPanelItem(
+                                title = "Lab'da Bulunan Kişileri Listele",
+                                subtitle = "Anlık Olarak Lab İçerisinde Bulunan Kişileri Gösterir.",
+                                onClick = onNavigateToLabPeople,
+                                screenWidth = screenWidth
+                            )
+                        },
+                        {
+                            AdminPanelItem(
+                                title = "Mevcut Görevleri Puanlandır",
+                                subtitle = "Üyelere Atanan Görevlerin Önem Derecesini Belirle",
+                                onClick = onNavigateToPendingTasks,
+                                screenWidth = screenWidth
+                            )
+                        },
+                        {
+                            AdminPanelItem(
+                                title = "Tüm Kullanıcılara Duyuru Gönder",
+                                subtitle = "Sisteme Kayıtlı Tüm Kullanıcılara Duyuru Gönderir.",
+                                onClick = onNavigateToSendAnnouncement,
+                                screenWidth = screenWidth
+                            )
+                        },
+                        {
+                            AdminPanelItem(
+                                title = "Lab'a Giriş İznini Ayarla",
+                                subtitle = "Laboratuvara Giriş Yetkisini Düzenler.",
+                                onClick = { viewModel.toggleAccessMode() },
+                                badge = if (uiState.accessMode == 0) "Tüm Üyelere Açık" else "Sadece Adminlere Açık",
+                                badgeColor = if (uiState.accessMode == 0) SuccessGreen else ErrorRed,
+                                screenWidth = screenWidth,
+                                isLoading = uiState.isLoading
+                            )
+                        },
+                        {
+                            AdminPanelItem(
+                                title = "Kapı Kontrolcüsünü Yeniden Başlat",
+                                subtitle = "Kapının Kontrolünü Sağlayan Cihazı Yeniden Başlatır.",
+                                onClick = { /* TODO */ },
+                                screenWidth = screenWidth
+                            )
+                        }
                     )
 
-                    AdminPanelItem(
-                        title = "Tüm Projeleri Listele",
-                        subtitle = "Tüm Projeleri Sayfalı Olarak Listeler.",
-                        onClick = onNavigateToAllProjects,
-                        screenWidth = screenWidth
-                    )
-
-                    AdminPanelItem(
-                        title = "Lab'da Bulunan Kişileri Listele",
-                        subtitle = "Anlık Olarak Lab İçerisinde Bulunan Kişileri Gösterir.",
-                        onClick = onNavigateToLabPeople,
-                        screenWidth = screenWidth
-                    )
-
-                    AdminPanelItem(
-                        title = "Mevcut Görevleri Puanlandır",
-                        subtitle = "Üyelere Atanan Görevlerin Önem Derecesini Belirle",
-                        onClick = onNavigateToPendingTasks,
-                        screenWidth = screenWidth
-                    )
-
-                    AdminPanelItem(
-                        title = "Tüm Kullanıcılara Duyuru Gönder",
-                        subtitle = "Sisteme Kayıtlı Tüm Kullanıcılara Duyuru Gönderir.",
-                        onClick = onNavigateToSendAnnouncement,
-                        screenWidth = screenWidth
-                    )
-
-                    // ✅ DİNAMİK BUTON (Düzeltildi: 0 = Tüm Üyeler)
-                    AdminPanelItem(
-                        title = "Lab'a Giriş İznini Ayarla",
-                        subtitle = "Laboratuvara Giriş Yetkisini Düzenler.",
-                        onClick = { viewModel.toggleAccessMode() },
-                        badge = if (uiState.accessMode == 0) "Tüm Üyelere Açık" else "Sadece Adminlere Açık",
-                        badgeColor = if (uiState.accessMode == 0) SuccessGreen else ErrorRed, // 0: Yeşil, 1: Kırmızı
-                        screenWidth = screenWidth,
-                        isLoading = uiState.isLoading
-                    )
-
-                    AdminPanelItem(
-                        title = "Kapı Kontrolcüsünü Yeniden Başlat",
-                        subtitle = "Kapının Kontrolünü Sağlayan Cihazı Yeniden Başlatır.",
-                        onClick = { /* TODO */ },
-                        screenWidth = screenWidth
-                    )
+                    items(adminItems.size) { index ->
+                        StaggeredAnimatedItem(index = index) {
+                            adminItems[index]()
+                        }
+                    }
                 }
             }
         }

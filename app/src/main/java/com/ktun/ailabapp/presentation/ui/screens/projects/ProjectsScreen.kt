@@ -29,7 +29,8 @@ import com.ktun.ailabapp.data.remote.dto.response.MyProjectsResponse
 import com.ktun.ailabapp.presentation.ui.components.BottomNavigationBar
 import com.ktun.ailabapp.presentation.ui.components.DebugButton
 import com.ktun.ailabapp.presentation.ui.components.FeedbackDialog
-import com.ktun.ailabapp.presentation.ui.components.ShimmerBox // ✅ Import
+import com.ktun.ailabapp.presentation.ui.components.ShimmerBox
+import com.ktun.ailabapp.presentation.ui.components.StaggeredAnimatedItem
 import com.ktun.ailabapp.presentation.ui.screens.announcement.AnnouncementViewModel
 import com.ktun.ailabapp.ui.theme.BackgroundLight
 import com.ktun.ailabapp.ui.theme.PrimaryBlue
@@ -37,6 +38,7 @@ import com.ktun.ailabapp.ui.theme.White
 import java.text.SimpleDateFormat
 import java.util.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProjectsScreen(
     onNavigateToHome: () -> Unit = {},
@@ -56,6 +58,13 @@ fun ProjectsScreen(
     val screenWidth = configuration.screenWidthDp.dp
 
     var showFeedbackDialog by remember { mutableStateOf(false) }
+    var isRefreshing by remember { mutableStateOf(false) }
+
+    LaunchedEffect(uiState.isLoading) {
+        if (!uiState.isLoading) {
+            isRefreshing = false
+        }
+    }
 
     val unreadCount = remember(announcementUiState.announcements) {
         announcementUiState.announcements.count { !it.isRead }
@@ -128,15 +137,18 @@ fun ProjectsScreen(
             }
 
             // CONTENT
-            Column(
+            androidx.compose.material3.pulltorefresh.PullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh = {
+                    isRefreshing = true
+                    viewModel.refreshProjects()
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    // .background(...) <-- Arka plan zaten Scaffold'dan geliyor, kaldırıldı.
             ) {
                 when {
-                    uiState.isLoading -> {
-                        // ✅ Shimmer Skeleton
+                    uiState.isLoading && !isRefreshing -> {
                         ProjectsScreenSkeleton(screenWidth, screenHeight)
                     }
                     uiState.errorMessage != null -> {
@@ -193,13 +205,15 @@ fun ProjectsScreen(
                                 .padding(screenWidth * 0.04f),
                             verticalArrangement = Arrangement.spacedBy(screenHeight * 0.015f)
                         ) {
-                            items(uiState.projects) { project ->
-                                ProjectCard(
-                                    project = project,
-                                    onClick = { onNavigateToProjectDetail(project.id) },
-                                    screenWidth = screenWidth,
-                                    screenHeight = screenHeight
-                                )
+                            items(uiState.projects.size) { index ->
+                                StaggeredAnimatedItem(index = index) {
+                                    ProjectCard(
+                                        project = uiState.projects[index],
+                                        onClick = { onNavigateToProjectDetail(uiState.projects[index].id) },
+                                        screenWidth = screenWidth,
+                                        screenHeight = screenHeight
+                                    )
+                                }
                             }
                         }
                     }
