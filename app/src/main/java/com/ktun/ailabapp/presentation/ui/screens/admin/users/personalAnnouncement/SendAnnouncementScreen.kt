@@ -14,7 +14,9 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.ktun.ailabapp.ui.theme.BorderGray
 import com.ktun.ailabapp.ui.theme.PrimaryBlue
+import com.ktun.ailabapp.ui.theme.TaskHistoryBg
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,7 +51,7 @@ fun SendAnnouncementScreen(
                 )
             )
         },
-        containerColor = Color(0xFFE8EAF6)
+        containerColor = TaskHistoryBg
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -67,8 +69,8 @@ fun SendAnnouncementScreen(
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = PrimaryBlue,
-                    unfocusedBorderColor = Color(0xFF9FA8DA),
-                    disabledBorderColor = Color(0xFF9FA8DA),
+                    unfocusedBorderColor = BorderGray,
+                    disabledBorderColor = BorderGray,
                     disabledTextColor = PrimaryBlue
                 ),
                 enabled = false
@@ -89,7 +91,7 @@ fun SendAnnouncementScreen(
                 },
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = PrimaryBlue,
-                    unfocusedBorderColor = Color(0xFF9FA8DA)
+                    unfocusedBorderColor = BorderGray
                 ),
                 keyboardOptions = KeyboardOptions(
                     capitalization = KeyboardCapitalization.Sentences
@@ -113,7 +115,7 @@ fun SendAnnouncementScreen(
                 },
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = PrimaryBlue,
-                    unfocusedBorderColor = Color(0xFF9FA8DA)
+                    unfocusedBorderColor = BorderGray
                 ),
                 maxLines = 8,
                 keyboardOptions = KeyboardOptions(

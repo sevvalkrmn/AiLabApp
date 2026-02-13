@@ -25,7 +25,9 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import android.widget.Toast
 import com.ktun.ailabapp.ui.theme.BackgroundLight
+import com.ktun.ailabapp.ui.theme.ErrorRed
 import com.ktun.ailabapp.ui.theme.PrimaryBlue
+import com.ktun.ailabapp.ui.theme.SuccessGreen
 import com.ktun.ailabapp.ui.theme.White
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -172,7 +174,7 @@ fun AdminPanelScreen(
                         subtitle = "Laboratuvara Giriş Yetkisini Düzenler.",
                         onClick = { viewModel.toggleAccessMode() },
                         badge = if (uiState.accessMode == 0) "Tüm Üyelere Açık" else "Sadece Adminlere Açık",
-                        badgeColor = if (uiState.accessMode == 0) Color(0xFF4CAF50) else Color(0xFFE53935), // 0: Yeşil, 1: Kırmızı
+                        badgeColor = if (uiState.accessMode == 0) SuccessGreen else ErrorRed, // 0: Yeşil, 1: Kırmızı
                         screenWidth = screenWidth,
                         isLoading = uiState.isLoading
                     )
@@ -195,7 +197,7 @@ private fun AdminPanelItem(
     subtitle: String,
     onClick: () -> Unit,
     badge: String? = null,
-    badgeColor: Color = Color(0xFFE53935),
+    badgeColor: Color = ErrorRed,
     screenWidth: androidx.compose.ui.unit.Dp,
     isLoading: Boolean = false
 ) {

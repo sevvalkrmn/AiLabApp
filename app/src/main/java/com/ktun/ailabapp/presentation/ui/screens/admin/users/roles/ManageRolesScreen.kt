@@ -21,7 +21,9 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ktun.ailabapp.data.model.User
 import com.ktun.ailabapp.presentation.ui.screens.admin.roles.ManageRolesViewModel
+import com.ktun.ailabapp.ui.theme.ErrorRed
 import com.ktun.ailabapp.ui.theme.PrimaryBlue
+import com.ktun.ailabapp.ui.theme.TaskHistoryBg
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -67,7 +69,7 @@ fun ManageRolesScreen(
                 )
             )
         },
-        containerColor = Color(0xFFE8EAF6)
+        containerColor = TaskHistoryBg
     ) { paddingValues ->
         if (uiState.isLoadingUser) {
             Box(
@@ -306,7 +308,7 @@ private fun EmptyProjectsCard() {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
-        color = Color(0xFFFFEBEE)
+        color = ErrorRed.copy(alpha = 0.1f)
     ) {
         Box(
             modifier = Modifier.padding(16.dp),
@@ -315,7 +317,7 @@ private fun EmptyProjectsCard() {
             Text(
                 text = "Bu kullanıcının henüz projesi yok",
                 fontSize = 14.sp,
-                color = Color(0xFFD32F2F)
+                color = ErrorRed
             )
         }
     }

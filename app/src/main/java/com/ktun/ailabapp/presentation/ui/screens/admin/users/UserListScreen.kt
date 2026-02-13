@@ -32,6 +32,8 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import coil.compose.AsyncImage
 import com.ktun.ailabapp.data.model.User
 import com.ktun.ailabapp.presentation.ui.screens.admin.users.DeleteUserDialog
+import com.ktun.ailabapp.ui.theme.BackgroundLight
+import com.ktun.ailabapp.ui.theme.PrimaryBlue
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -108,11 +110,11 @@ fun UsersListScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF1A237E)
+                    containerColor = PrimaryBlue
                 )
             )
         },
-        containerColor = Color(0xFF1A237E)
+        containerColor = PrimaryBlue
     ) { paddingValues ->
         Box(modifier = Modifier.fillMaxSize()) {
             Column(
@@ -124,7 +126,7 @@ fun UsersListScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color(0xFF1A237E))
+                        .background(PrimaryBlue)
                         .padding(horizontal = 16.dp, vertical = 20.dp)
                 ) {
                     Text(
@@ -152,7 +154,7 @@ fun UsersListScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)),
-                    color = Color(0xFFF5F5FF)
+                    color = BackgroundLight
                 ) {
                     when {
                         uiState.isLoading -> {
@@ -160,7 +162,7 @@ fun UsersListScreen(
                                 modifier = Modifier.fillMaxSize(),
                                 contentAlignment = Alignment.Center
                             ) {
-                                CircularProgressIndicator(color = Color(0xFF1A237E))
+                                CircularProgressIndicator(color = PrimaryBlue)
                             }
                         }
 
@@ -399,7 +401,7 @@ private fun UserListItem(
                     text = user.fullName,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF1A237E)
+                    color = PrimaryBlue
                 )
 
                 user.email.takeIf { it.isNotBlank() }?.let {
@@ -417,7 +419,7 @@ private fun UserListItem(
             Icon(
                 imageVector = Icons.Default.ChevronRight,
                 contentDescription = "Detay",
-                tint = Color(0xFF1A237E)
+                tint = PrimaryBlue
             )
         }
     }
@@ -480,7 +482,7 @@ private fun ErrorState(
             Button(
                 onClick = onRetry,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF1A237E)
+                    containerColor = PrimaryBlue
                 )
             ) {
                 Text("Tekrar Dene")

@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.ktun.ailabapp.ui.theme.BackgroundLight
 
 @Composable
 fun DebugButton(
@@ -22,7 +23,7 @@ fun DebugButton(
         Icon(
             Icons.Default.BugReport,
             contentDescription = "Hata Bildir",
-            tint = Color(0xFFF4F6FC),  // Açık gri/beyaz renk
+            tint = BackgroundLight,  // Açık gri/beyaz renk
             modifier = Modifier.size(28.dp)  // İkon boyutu
         )
     }

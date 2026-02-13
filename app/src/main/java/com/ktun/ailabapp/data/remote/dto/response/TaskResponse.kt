@@ -51,9 +51,9 @@ data class TaskResponse(
     // UI'da kullanmak için renk
     val statusColor: androidx.compose.ui.graphics.Color
         get() = when (_status) {
-            0 -> androidx.compose.ui.graphics.Color(0xFFFF9800) // Turuncu
-            1 -> androidx.compose.ui.graphics.Color(0xFF2196F3) // Mavi
-            2 -> androidx.compose.ui.graphics.Color(0xFF4CAF50) // Yeşil
+            0 -> com.ktun.ailabapp.ui.theme.WarningOrange // Turuncu
+            1 -> com.ktun.ailabapp.ui.theme.InfoBlue // Mavi
+            2 -> com.ktun.ailabapp.ui.theme.SuccessGreen // Yeşil
             else -> androidx.compose.ui.graphics.Color.Gray
         }
 }

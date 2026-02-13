@@ -27,6 +27,13 @@ import com.ktun.ailabapp.presentation.ui.screens.admin.lab.LabPeopleScreen
 import com.ktun.ailabapp.presentation.ui.screens.admin.pendingtasks.PendingTasksScreen
 import com.ktun.ailabapp.presentation.ui.screens.admin.announcement.SendGlobalAnnouncementScreen
 
+import androidx.compose.animation.core.FastOutSlowInEasing // ✅ Import added
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+
 @Composable
 fun NavGraph(
     navController: NavHostController,
@@ -45,7 +52,19 @@ fun NavGraph(
 
     NavHost(
         navController = navController,
-        startDestination = startDestination
+        startDestination = startDestination,
+        enterTransition = {
+            fadeIn(animationSpec = tween(300))
+        },
+        exitTransition = {
+            fadeOut(animationSpec = tween(300))
+        },
+        popEnterTransition = {
+            fadeIn(animationSpec = tween(300))
+        },
+        popExitTransition = {
+            fadeOut(animationSpec = tween(300))
+        }
     ) {
         composable(route = Screen.Login.route) {
             LoginScreen(

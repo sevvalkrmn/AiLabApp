@@ -37,6 +37,9 @@ import com.ktun.ailabapp.ui.theme.White
 import java.util.Calendar
 
 import com.ktun.ailabapp.presentation.ui.components.TaskDetailDialog // ✅ Import added
+import com.ktun.ailabapp.ui.theme.InfoBlue
+import com.ktun.ailabapp.ui.theme.SuccessGreen
+import com.ktun.ailabapp.ui.theme.WarningOrange
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -631,9 +634,9 @@ fun TaskStatisticsCard(
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 StatItem("Toplam", statistics.total.toString(), Color.Gray, screenWidth)
-                StatItem("Yapılacak", statistics.todo.toString(), Color(0xFFFF9800), screenWidth)
-                StatItem("Devam Eden", statistics.inProgress.toString(), Color(0xFF2196F3), screenWidth)
-                StatItem("Tamamlanan", statistics.done.toString(), Color(0xFF4CAF50), screenWidth)
+                StatItem("Yapılacak", statistics.todo.toString(), WarningOrange, screenWidth)
+                StatItem("Devam Eden", statistics.inProgress.toString(), InfoBlue, screenWidth)
+                StatItem("Tamamlanan", statistics.done.toString(), SuccessGreen, screenWidth)
             }
         }
     }
@@ -781,7 +784,7 @@ fun AdminActionsSection(
                 .fillMaxWidth()
                 .height(screenHeight * 0.06f),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFFFF9800)
+                containerColor = WarningOrange
             )
         ) {
             Icon(Icons.Default.PersonRemove, contentDescription = null)
@@ -1056,9 +1059,9 @@ fun DeleteProjectDialog(
 
 fun getStatusColor(status: String): Color {
     return when (status) {
-        "Todo" -> Color(0xFFFF9800)
-        "InProgress" -> Color(0xFF2196F3)
-        "Done" -> Color(0xFF4CAF50)
+        "Todo" -> WarningOrange
+        "InProgress" -> InfoBlue
+        "Done" -> SuccessGreen
         else -> Color.Gray
     }
 }

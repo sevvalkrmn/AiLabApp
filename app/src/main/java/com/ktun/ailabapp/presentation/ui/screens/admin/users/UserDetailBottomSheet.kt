@@ -25,6 +25,13 @@ import coil.compose.AsyncImage
 import com.ktun.ailabapp.data.model.User
 import com.ktun.ailabapp.presentation.ui.screens.admin.users.profile.UpdateProfileImageDialog
 import com.ktun.ailabapp.presentation.ui.screens.admin.users.score.AdjustScoreDialog
+import com.ktun.ailabapp.ui.theme.BackgroundLight
+import com.ktun.ailabapp.ui.theme.BorderGray
+import com.ktun.ailabapp.ui.theme.CaptainGold
+import com.ktun.ailabapp.ui.theme.ErrorRed
+import com.ktun.ailabapp.ui.theme.Gold
+import com.ktun.ailabapp.ui.theme.PrimaryBlue
+import com.ktun.ailabapp.ui.theme.WarningOrange
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -132,7 +139,7 @@ private fun UserInfoCard(user: User) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        color = Color(0xFFF5F5FF),
+        color = BackgroundLight,
         shadowElevation = 2.dp
     ) {
         Row(
@@ -148,7 +155,7 @@ private fun UserInfoCard(user: User) {
                 modifier = Modifier
                     .size(80.dp)
                     .clip(CircleShape)
-                    .border(2.dp, Color(0xFF1A237E), CircleShape),
+                    .border(2.dp, PrimaryBlue, CircleShape),
                 contentScale = ContentScale.Crop
             )
 
@@ -184,7 +191,7 @@ private fun InfoRow(label: String, value: String) {
         Text(
             text = value,
             fontSize = 12.sp,
-            color = Color(0xFF1A237E),
+            color = PrimaryBlue,
             fontWeight = FontWeight.Normal
         )
     }
@@ -197,7 +204,7 @@ private fun LabInfoSection(user: User) {
             text = "Lab's Son Giriş:",
             fontSize = 14.sp,
             fontWeight = FontWeight.SemiBold,
-            color = Color(0xFF1A237E)
+            color = PrimaryBlue
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
@@ -215,7 +222,7 @@ private fun RolesSection(user: User) {
             text = "Roles:",
             fontSize = 14.sp,
             fontWeight = FontWeight.SemiBold,
-            color = Color(0xFF1A237E)
+            color = PrimaryBlue
         )
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -245,7 +252,7 @@ private fun ProjectsSection(
             text = "Projects:",
             fontSize = 14.sp,
             fontWeight = FontWeight.SemiBold,
-            color = Color(0xFF1A237E)
+            color = PrimaryBlue
         )
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -275,14 +282,14 @@ private fun ProjectsSection(
                         Surface(
                             shape = RoundedCornerShape(12.dp),
                             color = if (role.equals("Captain", ignoreCase = true)) {
-                                Color(0xFFFFD700).copy(alpha = 0.2f)
+                                Gold.copy(alpha = 0.2f)
                             } else {
-                                Color(0xFFE0E0E0)
+                                BorderGray
                             },
                             border = BorderStroke(
                                 width = 1.dp,
                                 color = if (role.equals("Captain", ignoreCase = true)) {
-                                    Color(0xFFFFD700)
+                                    Gold
                                 } else {
                                     Color.Gray.copy(alpha = 0.5f)
                                 }
@@ -293,7 +300,7 @@ private fun ProjectsSection(
                                 text = role,
                                 fontSize = 10.sp,
                                 color = if (role.equals("Captain", ignoreCase = true)) {
-                                    Color(0xFFB8860B)
+                                    CaptainGold
                                 } else {
                                     Color.Gray
                                 },
@@ -386,13 +393,13 @@ private fun ActionButtonsSection(
                 text = "Deactive Duruma Getir",
                 onClick = onDeactivate,
                 modifier = Modifier.weight(1f),
-                color = Color(0xFFFF9800)
+                color = WarningOrange
             )
             ActionButton(
                 text = "Sistemden Sil",
                 onClick = onDeleteAccount,
                 modifier = Modifier.weight(1f),
-                color = Color(0xFFD32F2F)
+                color = ErrorRed
             )
         }
     }
@@ -403,7 +410,7 @@ private fun ActionButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    color: Color = Color(0xFF1A237E)
+    color: Color = PrimaryBlue
 ) {
     OutlinedButton(
         onClick = onClick,
