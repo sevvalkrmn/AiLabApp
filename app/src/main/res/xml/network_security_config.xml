@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+
+    <!-- Varsayılan: Tüm trafik HTTPS zorunlu -->
+    <base-config cleartextTrafficPermitted="false" />
+
+    <!-- Sadece Raspberry Pi (RFID) için HTTP izni -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">192.168.5.172</domain>
+    </domain-config>
+
+</network-security-config>
