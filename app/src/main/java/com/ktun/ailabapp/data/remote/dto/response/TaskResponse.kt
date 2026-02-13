@@ -48,14 +48,6 @@ data class TaskResponse(
             else -> "Todo"
         }
 
-    // UI'da kullanmak için renk
-    val statusColor: androidx.compose.ui.graphics.Color
-        get() = when (_status) {
-            0 -> com.ktun.ailabapp.ui.theme.WarningOrange // Turuncu
-            1 -> com.ktun.ailabapp.ui.theme.InfoBlue // Mavi
-            2 -> com.ktun.ailabapp.ui.theme.SuccessGreen // Yeşil
-            else -> androidx.compose.ui.graphics.Color.Gray
-        }
 }
 
 data class AssignedUser(

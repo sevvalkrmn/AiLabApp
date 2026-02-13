@@ -6,7 +6,7 @@ import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.media.ExifInterface
 import android.net.Uri
-import androidx.core.net.toFile
+import android.os.Build
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -39,7 +39,13 @@ object ImageCompressor {
 
             // 4. WebP formatına çevir ve sıkıştır (%75 kalite)
             val outputStream = ByteArrayOutputStream()
-            scaledBitmap.compress(Bitmap.CompressFormat.WEBP, 75, outputStream)
+            val format = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                Bitmap.CompressFormat.WEBP_LOSSY
+            } else {
+                @Suppress("DEPRECATION")
+                Bitmap.CompressFormat.WEBP
+            }
+            scaledBitmap.compress(format, 75, outputStream)
             val webpBytes = outputStream.toByteArray()
 
             // 5. Geçici dosyaya kaydet
@@ -55,11 +61,11 @@ object ImageCompressor {
             }
             scaledBitmap.recycle()
 
-            android.util.Log.d("ImageCompressor", "Image compressed and rotated successfully")
+            Logger.d("Image compressed and rotated successfully", "ImageCompressor")
             Result.success(Uri.fromFile(tempFile))
 
         } catch (e: Exception) {
-            android.util.Log.e("ImageCompressor", "Compression error", e)
+            Logger.e("Compression error", e, "ImageCompressor")
             Result.failure(e)
         }
     }
@@ -85,7 +91,7 @@ object ImageCompressor {
                 else -> 0
             }
 
-            android.util.Log.d("ImageCompressor", "EXIF Orientation: $orientation, Rotation: $rotationDegrees°")
+            Logger.d("EXIF Orientation: $orientation, Rotation: $rotationDegrees", "ImageCompressor")
 
             if (rotationDegrees != 0) {
                 val matrix = Matrix().apply {
@@ -97,7 +103,7 @@ object ImageCompressor {
             }
 
         } catch (e: Exception) {
-            android.util.Log.e("ImageCompressor", "Error reading EXIF data, using original bitmap", e)
+            Logger.e("Error reading EXIF data, using original bitmap", e, "ImageCompressor")
             bitmap // Hata olursa orijinal bitmap'i döndür
         }
     }
