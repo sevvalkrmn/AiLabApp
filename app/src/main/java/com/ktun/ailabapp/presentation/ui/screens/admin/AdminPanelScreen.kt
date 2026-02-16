@@ -52,6 +52,13 @@ fun AdminPanelScreen(
         }
     }
 
+    LaunchedEffect(uiState.successMessage) {
+        uiState.successMessage?.let { message ->
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            viewModel.clearSuccess()
+        }
+    }
+
     val configuration = LocalConfiguration.current
     val screenHeight = configuration.screenHeightDp.dp
     val screenWidth = configuration.screenWidthDp.dp
@@ -123,8 +130,12 @@ fun AdminPanelScreen(
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(horizontal = screenWidth * 0.04f, vertical = screenHeight * 0.03f),
-                    verticalArrangement = Arrangement.spacedBy(screenHeight * 0.015f)
+                        .padding(horizontal = screenWidth * 0.04f),
+                    verticalArrangement = Arrangement.spacedBy(screenHeight * 0.015f),
+                    contentPadding = PaddingValues(
+                        top = screenHeight * 0.03f,
+                        bottom = screenHeight * 0.05f
+                    )
                 ) {
                     val adminItems = listOf<@Composable () -> Unit>(
                         {
@@ -190,8 +201,9 @@ fun AdminPanelScreen(
                             AdminPanelItem(
                                 title = "Kapı Kontrolcüsünü Yeniden Başlat",
                                 subtitle = "Kapının Kontrolünü Sağlayan Cihazı Yeniden Başlatır.",
-                                onClick = { /* TODO */ },
-                                screenWidth = screenWidth
+                                onClick = { viewModel.restartDoorController() },
+                                screenWidth = screenWidth,
+                                isLoading = uiState.isDoorControllerLoading
                             )
                         }
                     )

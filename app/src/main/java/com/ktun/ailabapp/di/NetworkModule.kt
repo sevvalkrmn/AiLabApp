@@ -135,6 +135,12 @@ object NetworkModule {
         return retrofit.create(BugReportApi::class.java)
     }
 
+    @Provides
+    @Singleton
+    fun provideElectricityApi(retrofit: Retrofit): ElectricityApi {
+        return retrofit.create(ElectricityApi::class.java)
+    }
+
     // --- RFID API (Raspberry Pi) ---
 
     @Provides

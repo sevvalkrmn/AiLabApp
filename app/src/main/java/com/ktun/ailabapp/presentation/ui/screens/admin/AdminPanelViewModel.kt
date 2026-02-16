@@ -2,6 +2,7 @@ package com.ktun.ailabapp.presentation.ui.screens.admin
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ktun.ailabapp.data.repository.ElectricityRepository
 import com.ktun.ailabapp.data.repository.LabStatsRepository
 import com.ktun.ailabapp.util.NetworkResult
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -15,13 +16,17 @@ import javax.inject.Inject
 data class AdminPanelUiState(
     val accessMode: Int = 0, // 0: Admin Only, 1: All Members
     val roomId: String = "313b8f7a-ff7e-4fd4-bb83-e4dda21e5b7e", // ✅ Sabit Oda ID
+    val doorControllerDeviceId: String = "e2daaff1-bf02-4cfe-ab45-d7fdcf5d798e",
     val isLoading: Boolean = false,
-    val errorMessage: String? = null
+    val isDoorControllerLoading: Boolean = false,
+    val errorMessage: String? = null,
+    val successMessage: String? = null
 )
 
 @HiltViewModel
 class AdminPanelViewModel @Inject constructor(
-    private val labStatsRepository: LabStatsRepository
+    private val labStatsRepository: LabStatsRepository,
+    private val electricityRepository: ElectricityRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AdminPanelUiState())
@@ -94,7 +99,38 @@ class AdminPanelViewModel @Inject constructor(
 
     private fun newPasswordMode(mode: Int): Int = mode // Helper for readability
     
+    fun restartDoorController() {
+        val deviceId = _uiState.value.doorControllerDeviceId
+        viewModelScope.launch {
+            _uiState.update { it.copy(isDoorControllerLoading = true) }
+
+            when (val result = electricityRepository.controlDevice(deviceId, turnOn = true)) {
+                is NetworkResult.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            isDoorControllerLoading = false,
+                            successMessage = "Kapı kontrolcüsü yeniden başlatıldı"
+                        )
+                    }
+                }
+                is NetworkResult.Error -> {
+                    _uiState.update {
+                        it.copy(
+                            isDoorControllerLoading = false,
+                            errorMessage = result.message
+                        )
+                    }
+                }
+                is NetworkResult.Loading -> {}
+            }
+        }
+    }
+
     fun clearError() {
         _uiState.update { it.copy(errorMessage = null) }
+    }
+
+    fun clearSuccess() {
+        _uiState.update { it.copy(successMessage = null) }
     }
 }

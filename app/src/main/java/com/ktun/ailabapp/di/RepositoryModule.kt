@@ -72,4 +72,12 @@ object RepositoryModule {
     ): BugReportRepository {
         return BugReportRepository(bugReportApi)
     }
+
+    @Provides
+    @Singleton
+    fun provideElectricityRepository(
+        electricityApi: ElectricityApi
+    ): ElectricityRepository {
+        return ElectricityRepository(electricityApi)
+    }
 }
