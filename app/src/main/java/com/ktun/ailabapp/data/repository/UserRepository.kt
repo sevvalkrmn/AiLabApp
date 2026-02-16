@@ -3,6 +3,7 @@ package com.ktun.ailabapp.data.repository
 import com.ktun.ailabapp.data.model.User
 import com.ktun.ailabapp.data.remote.api.UsersApi
 import com.ktun.ailabapp.data.remote.dto.response.toUser
+import com.ktun.ailabapp.util.Logger
 import com.ktun.ailabapp.util.NetworkResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -40,7 +41,7 @@ class UserRepository @Inject constructor(
 
     suspend fun getUserById(userId: String): NetworkResult<User> = withContext(Dispatchers.IO) {
         try {
-            android.util.Log.d("UserRepository", "🔍 Fetching user: $userId")
+            Logger.d("Fetching user: $userId", tag = "UserRepository")
 
             val response = usersApi.getUserById(userId)
 
@@ -71,7 +72,7 @@ class UserRepository @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            android.util.Log.e("UserRepository", "❌ Error: ${e.message}", e)
+            Logger.e("Error: ${e.message}", throwable = e, tag = "UserRepository")
             NetworkResult.Error(e.message ?: "Bilinmeyen hata")
         }
     }

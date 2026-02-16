@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ktun.ailabapp.data.remote.api.AdminScoreApi
 import com.ktun.ailabapp.data.remote.dto.request.AdjustScoreRequest
+import com.ktun.ailabapp.util.Logger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -106,7 +107,7 @@ class AdjustScoreViewModel @Inject constructor(
                 )
 
                 if (response.isSuccessful) {
-                    android.util.Log.d("AdjustScoreVM", "✅ Score adjusted: $finalScore, reason: $reasonInput")
+                    Logger.d( "✅ Score adjusted: $finalScore, reason: $reasonInput")
                     _uiState.update {
                         it.copy(
                             isLoading = false,
@@ -115,7 +116,7 @@ class AdjustScoreViewModel @Inject constructor(
                     }
                 } else {
                     val errorBody = response.errorBody()?.string()
-                    android.util.Log.e("AdjustScoreVM", "❌ Error ${response.code()}: $errorBody")
+                    Logger.e( "❌ Error ${response.code()}: $errorBody")
 
                     _uiState.update {
                         it.copy(
@@ -125,7 +126,7 @@ class AdjustScoreViewModel @Inject constructor(
                     }
                 }
             } catch (e: Exception) {
-                android.util.Log.e("AdjustScoreVM", "❌ Exception: ${e.message}")
+                Logger.e( "❌ Exception: ${e.message}")
                 _uiState.update {
                     it.copy(
                         isLoading = false,

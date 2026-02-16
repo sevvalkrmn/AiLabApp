@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.ktun.ailabapp.data.remote.dto.response.MyProjectsResponse
 import com.ktun.ailabapp.data.repository.AuthRepository
 import com.ktun.ailabapp.data.repository.ProjectRepository
+import com.ktun.ailabapp.util.Logger
 import com.ktun.ailabapp.util.NetworkResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -48,14 +49,14 @@ class ProjectsViewModel @Inject constructor(
                 is NetworkResult.Success -> {
                     profileResult.data?.let { profile ->
                         currentUserId = profile.id
-                        android.util.Log.d("ProjectsViewModel", "Current User ID: $currentUserId")
+                        Logger.d( "Current User ID: $currentUserId")
 
                         // UserId alındıktan sonra projeleri yükle
                         loadProjects()
                     }
                 }
                 is NetworkResult.Error -> {
-                    android.util.Log.e("ProjectsViewModel", "Profile alınamadı: ${profileResult.message}")
+                    Logger.e( "Profile alınamadı: ${profileResult.message}")
                     // Yine de projeleri yüklemeyi dene
                     loadProjects()
                 }
@@ -81,7 +82,7 @@ class ProjectsViewModel @Inject constructor(
             when (val result = projectRepository.getMyProjects(roleFilter)) {
                 is NetworkResult.Success -> {
                     result.data?.let { projects ->
-                        android.util.Log.d("ProjectsViewModel", "Projeler yüklendi: ${projects.size}")
+                        Logger.d( "Projeler yüklendi: ${projects.size}")
 
                         // Her proje için üye bilgisini çek ve kullanıcının rolünü bul
                         val projectsWithRoles = mutableListOf<MyProjectsResponse>()
@@ -97,7 +98,7 @@ class ProjectsViewModel @Inject constructor(
 
                                         projectsWithRoles.add(project.copy(userRole = userRole))
 
-                                        android.util.Log.d("ProjectsViewModel", """
+                                        Logger.d( """
                                             Proje: ${project.name}
                                             User ID: $currentUserId
                                             User Role: $userRole
@@ -105,7 +106,7 @@ class ProjectsViewModel @Inject constructor(
                                     }
                                 }
                                 is NetworkResult.Error -> {
-                                    android.util.Log.e("ProjectsViewModel", "Üyeler alınamadı: ${membersResult.message}")
+                                    Logger.e( "Üyeler alınamadı: ${membersResult.message}")
                                     // Üyeler alınamazsa default role kullan
                                     projectsWithRoles.add(project.copy(userRole = "Member"))
                                 }
@@ -119,11 +120,11 @@ class ProjectsViewModel @Inject constructor(
                             errorMessage = null
                         )
 
-                        android.util.Log.d("ProjectsViewModel", "Tüm projeler rolleriyle yüklendi: ${projectsWithRoles.size}")
+                        Logger.d( "Tüm projeler rolleriyle yüklendi: ${projectsWithRoles.size}")
                     }
                 }
                 is NetworkResult.Error -> {
-                    android.util.Log.e("ProjectsViewModel", "Proje yükleme hatası: ${result.message}")
+                    Logger.e( "Proje yükleme hatası: ${result.message}")
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         errorMessage = result.message

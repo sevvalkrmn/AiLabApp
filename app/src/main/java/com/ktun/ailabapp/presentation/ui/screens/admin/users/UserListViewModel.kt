@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.ktun.ailabapp.data.model.User
 import com.ktun.ailabapp.data.repository.RfidRepository
 import com.ktun.ailabapp.data.repository.UserRepository
+import com.ktun.ailabapp.util.Logger
 import com.ktun.ailabapp.util.NetworkResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -62,7 +63,7 @@ class UsersListViewModel @Inject constructor(
                             isLoading = false
                         )
                     }
-                    android.util.Log.d("UsersListVM", "✅ ${users.size} kullanıcı yüklendi")
+                    Logger.d( "✅ ${users.size} kullanıcı yüklendi")
                 }
                 is NetworkResult.Error -> {
                     _uiState.update {
@@ -71,7 +72,7 @@ class UsersListViewModel @Inject constructor(
                             errorMessage = result.message
                         )
                     }
-                    android.util.Log.e("UsersListVM", "❌ Hata: ${result.message}")
+                    Logger.e( "❌ Hata: ${result.message}")
                 }
                 is NetworkResult.Loading -> {}
             }
@@ -80,17 +81,17 @@ class UsersListViewModel @Inject constructor(
 
     fun loadUserDetail(userId: String, onSuccess: (User) -> Unit) {
         viewModelScope.launch {
-            android.util.Log.d("UsersListVM", "🔍 Loading detail for userId: $userId")
+            Logger.d( "🔍 Loading detail for userId: $userId")
 
             when (val result = userRepository.getUserById(userId)) {
                 is NetworkResult.Success -> {
                     result.data?.let { user ->
-                        android.util.Log.d("UsersListVM", "✅ User loaded: ${user.fullName}")
+                        Logger.d( "✅ User loaded: ${user.fullName}")
                         onSuccess(user)
                     }
                 }
                 is NetworkResult.Error -> {
-                    android.util.Log.e("UsersListVM", "❌ Error: ${result.message}")
+                    Logger.e( "❌ Error: ${result.message}")
                 }
                 is NetworkResult.Loading -> {}
             }
@@ -145,11 +146,11 @@ class UsersListViewModel @Inject constructor(
         viewModelScope.launch {
             when (val result = rfidRepository.startRegistration(userId)) {
                 is NetworkResult.Success -> {
-                    android.util.Log.d("UsersListVM", "✅ RFID Kayıt Modu Başlatıldı: $userId")
+                    Logger.d( "✅ RFID Kayıt Modu Başlatıldı: $userId")
                     onSuccess()
                 }
                 is NetworkResult.Error -> {
-                    android.util.Log.e("UsersListVM", "❌ RFID Hata: ${result.message}")
+                    Logger.e( "❌ RFID Hata: ${result.message}")
                     onError(result.message ?: "Bilinmeyen hata")
                 }
                 is NetworkResult.Loading -> {}
@@ -164,13 +165,13 @@ class UsersListViewModel @Inject constructor(
             
             when (val result = userRepository.deleteUser(userId)) {
                 is NetworkResult.Success -> {
-                    android.util.Log.d("UsersListVM", "✅ Kullanıcı silindi: $userId")
+                    Logger.d( "✅ Kullanıcı silindi: $userId")
                     loadUsers() // Listeyi yenile
                     onSuccess()
                 }
                 is NetworkResult.Error -> {
                     _uiState.update { it.copy(isLoading = false) }
-                    android.util.Log.e("UsersListVM", "❌ Silme hatası: ${result.message}")
+                    Logger.e( "❌ Silme hatası: ${result.message}")
                     onError(result.message ?: "Silme işlemi başarısız")
                 }
                 is NetworkResult.Loading -> {}

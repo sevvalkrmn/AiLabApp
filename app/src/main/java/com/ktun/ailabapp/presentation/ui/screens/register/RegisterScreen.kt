@@ -234,14 +234,27 @@ fun RegisterScreen(
                         imeAction = ImeAction.Next
                     )
 
+                    val phoneRegex = "^5[0-9]{9}$".toRegex()
+                    val isValidPhone = phoneRegex.matches(uiState.phone)
+
                     RegisterInput(
                         value = uiState.phone,
                         onValueChange = viewModel::updatePhone,
                         placeholder = "Telefon (5xx xxx xx xx)",
                         keyboardType = KeyboardType.Phone,
                         imeAction = ImeAction.Done,
-                        prefix = "+90 "
+                        prefix = "+90 ",
+                        isError = uiState.phone.isNotBlank() && !isValidPhone
                     )
+
+                    if (uiState.phone.isNotBlank() && !isValidPhone) {
+                        Text(
+                            text = "Telefon numarası 5 ile başlamalı ve 10 haneli olmalıdır.",
+                            color = Color.Red,
+                            fontSize = 11.sp,
+                            modifier = Modifier.padding(start = 4.dp)
+                        )
+                    }
                 }
             }
 
@@ -253,10 +266,10 @@ fun RegisterScreen(
                               passwordRegex.matches(uiState.password) && 
                               uiState.password == uiState.confirmPassword
             
-            val isStep2Valid = uiState.fullName.isNotBlank() && 
-                              uiState.username.length >= 3 && 
-                              uiState.schoolNumber.isNotBlank() && 
-                              uiState.phone.length >= 10
+            val isStep2Valid = uiState.fullName.isNotBlank() &&
+                              uiState.username.length >= 3 &&
+                              uiState.schoolNumber.isNotBlank() &&
+                              uiState.phone.matches("^5[0-9]{9}$".toRegex())
 
             val isButtonEnabled = if (uiState.step == 1) isStep1Valid else isStep2Valid
 

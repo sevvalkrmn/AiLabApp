@@ -12,6 +12,7 @@ import com.ktun.ailabapp.data.remote.dto.response.LeaderboardUserResponse
 import com.ktun.ailabapp.data.remote.dto.response.ProfileResponse
 import com.ktun.ailabapp.util.FirebaseAuthManager
 import com.ktun.ailabapp.util.FirebaseStorageHelper
+import com.ktun.ailabapp.util.Logger
 import com.ktun.ailabapp.util.NetworkResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -227,7 +228,7 @@ class AuthRepository @Inject constructor(
 
             when {
                 response.code() == 401 -> {
-                    android.util.Log.e("AuthRepository", "🔴 401 Unauthorized - Session expired")
+                    Logger.e("401 Unauthorized - Session expired", tag = "AuthRepository")
                     preferencesManager.clearAllData()
                     _sessionExpiredEvent.emit(Unit)
                     NetworkResult.Error("Oturum süresi doldu")

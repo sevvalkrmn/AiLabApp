@@ -6,6 +6,7 @@ import com.ktun.ailabapp.data.remote.api.TaskApi
 import com.ktun.ailabapp.data.remote.dto.response.TaskHistory
 import com.ktun.ailabapp.data.remote.dto.response.TaskStatus
 import com.ktun.ailabapp.data.remote.dto.response.toTaskHistory
+import com.ktun.ailabapp.util.Logger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -38,7 +39,7 @@ class TaskHistoryViewModel @Inject constructor(
 
                 if (response.isSuccessful) {
                     val tasks = response.body()?.map { it.toTaskHistory() } ?: emptyList()
-                    android.util.Log.d("TaskHistoryVM", "✅ Loaded ${tasks.size} tasks")
+                    Logger.d( "✅ Loaded ${tasks.size} tasks")
 
                     _uiState.update {
                         it.copy(
@@ -55,7 +56,7 @@ class TaskHistoryViewModel @Inject constructor(
                     }
                 }
             } catch (e: Exception) {
-                android.util.Log.e("TaskHistoryVM", "❌ Error: ${e.message}")
+                Logger.e( "❌ Error: ${e.message}")
                 _uiState.update {
                     it.copy(
                         isLoading = false,

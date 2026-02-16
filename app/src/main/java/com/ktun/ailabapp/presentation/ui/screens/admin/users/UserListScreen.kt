@@ -32,6 +32,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import coil.compose.AsyncImage
 import com.ktun.ailabapp.data.model.User
 import com.ktun.ailabapp.presentation.ui.components.StaggeredAnimatedItem
+import com.ktun.ailabapp.util.Logger
 import com.ktun.ailabapp.presentation.ui.screens.admin.users.DeleteUserDialog
 import com.ktun.ailabapp.ui.theme.BackgroundLight
 import com.ktun.ailabapp.ui.theme.PrimaryBlue
@@ -89,7 +90,7 @@ fun UsersListScreen(
             if (event == Lifecycle.Event.ON_RESUME) {
                 // ManageRoles'tan döndüyse ve bir user seçiliyse, refresh et
                 selectedUser?.let { user ->
-                    android.util.Log.d("UsersListScreen", "🔄 Refreshing user: ${user.id}")
+                    Logger.d( "🔄 Refreshing user: ${user.id}")
                     isLoadingDetail = true
                     viewModel.loadUserDetail(user.id) { updatedUser ->
                         isLoadingDetail = false
@@ -231,7 +232,7 @@ fun UsersListScreen(
                 showBottomSheet = false
             },
             onEditClick = {
-                android.util.Log.d("UsersListScreen", "✏️ Edit: ${selectedUser?.id}")
+                Logger.d( "✏️ Edit: ${selectedUser?.id}")
             },
             onSendAnnouncement = { userId, userName ->
                 viewModel.onSendAnnouncementClick(userId, userName)
@@ -249,7 +250,7 @@ fun UsersListScreen(
             onImageUpdated = {
                 // ✅ Fotoğraf güncellendiğinde hem detayı hem listeyi yenile
                 selectedUser?.let { user ->
-                    android.util.Log.d("UsersListScreen", "🔄 Refreshing user after image update: ${user.id}")
+                    Logger.d( "🔄 Refreshing user after image update: ${user.id}")
                     viewModel.loadUserDetail(user.id) { updatedUser ->
                         selectedUser = updatedUser
                     }
@@ -259,7 +260,7 @@ fun UsersListScreen(
             onScoreUpdated = {
                 // ✅ Puan güncellendiğinde hem detayı hem listeyi yenile
                 selectedUser?.let { user ->
-                    android.util.Log.d("UsersListScreen", "🔄 Refreshing user after score adjustment: ${user.id}")
+                    Logger.d( "🔄 Refreshing user after score adjustment: ${user.id}")
                     viewModel.loadUserDetail(user.id) { updatedUser ->
                         selectedUser = updatedUser
                     }

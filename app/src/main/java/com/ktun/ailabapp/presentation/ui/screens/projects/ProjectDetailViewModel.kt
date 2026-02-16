@@ -11,6 +11,7 @@ import com.ktun.ailabapp.data.remote.dto.response.TaskStatistics
 import com.ktun.ailabapp.data.repository.ProjectRepository
 import com.ktun.ailabapp.data.repository.TaskRepository
 import com.ktun.ailabapp.data.repository.UserRepository
+import com.ktun.ailabapp.util.Logger
 import com.ktun.ailabapp.util.NetworkResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -277,7 +278,7 @@ class ProjectDetailViewModel @Inject constructor(
                     _uiState.update { it.copy(availableUsers = result.data ?: emptyList()) }
                 }
                 is NetworkResult.Error -> {
-                    android.util.Log.e("ProjectDetailViewModel", "❌ Failed to load users: ${result.message}")
+                    Logger.e("Failed to load users: ${result.message}", tag = "ProjectDetailVM")
                 }
                 is NetworkResult.Loading -> {}
             }

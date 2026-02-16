@@ -10,6 +10,7 @@ import com.ktun.ailabapp.data.remote.dto.response.MyProjectsResponse
 import com.ktun.ailabapp.data.remote.dto.response.ProjectDetailResponse
 import com.ktun.ailabapp.data.remote.dto.response.ProjectMember
 import com.ktun.ailabapp.data.remote.dto.response.toUserProject
+import com.ktun.ailabapp.util.Logger
 import com.ktun.ailabapp.util.NetworkResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -27,7 +28,7 @@ class ProjectRepository @Inject constructor(
      */
     suspend fun getMyProjects(roleFilter: String? = null): NetworkResult<List<MyProjectsResponse>> = withContext(Dispatchers.IO) {
         try {
-            android.util.Log.d("ProjectRepository", "🔍 Fetching my projects with role filter: $roleFilter")
+            Logger.d( "🔍 Fetching my projects with role filter: $roleFilter")
 
             val response = projectApi.getMyProjects(roleFilter)
 
@@ -37,20 +38,20 @@ class ProjectRepository @Inject constructor(
                 }
                 response.isSuccessful && response.body() != null -> {
                     val projects = response.body()!!
-                    android.util.Log.d("ProjectRepository", "✅ Loaded ${projects.size} projects")
+                    Logger.d( "✅ Loaded ${projects.size} projects")
                     NetworkResult.Success(projects)
                 }
                 response.isSuccessful && response.body() == null -> {
-                    android.util.Log.d("ProjectRepository", "⚠️ No projects found")
+                    Logger.d( "⚠️ No projects found")
                     NetworkResult.Success(emptyList())
                 }
                 else -> {
-                    android.util.Log.e("ProjectRepository", "❌ Error: ${response.code()}")
+                    Logger.e( "❌ Error: ${response.code()}")
                     NetworkResult.Error("Projeler yüklenemedi: ${response.code()}")
                 }
             }
         } catch (e: Exception) {
-            android.util.Log.e("ProjectRepository", "❌ Exception: ${e.message}", e)
+            Logger.e( "❌ Exception: ${e.message}", e)
             return@withContext NetworkResult.Error(e.message ?: "Bilinmeyen hata")
         }
     }
@@ -61,7 +62,7 @@ class ProjectRepository @Inject constructor(
      */
     suspend fun getAllProjects(): NetworkResult<List<MyProjectsResponse>> = withContext(Dispatchers.IO) {
         try {
-            android.util.Log.d("ProjectRepository", "🔍 Fetching ALL projects (Admin)")
+            Logger.d( "🔍 Fetching ALL projects (Admin)")
 
             val response = projectApi.getAllProjects()
 
@@ -71,7 +72,7 @@ class ProjectRepository @Inject constructor(
                 response.isSuccessful && response.body() != null -> {
                     // ✅ PaginatedResponse içinden items listesini al
                     val projects = response.body()!!.items 
-                    android.util.Log.d("ProjectRepository", "✅ Loaded ${projects.size} total projects")
+                    Logger.d( "✅ Loaded ${projects.size} total projects")
                     NetworkResult.Success(projects)
                 }
                 else -> NetworkResult.Error("Projeler yüklenemedi: ${response.code()}")
@@ -87,7 +88,7 @@ class ProjectRepository @Inject constructor(
      */
     suspend fun getUserProjects(userId: String): NetworkResult<List<UserProject>> = withContext(Dispatchers.IO) {
         try {
-            android.util.Log.d("ProjectRepository", "🔍 Fetching projects for userId: $userId")
+            Logger.d( "🔍 Fetching projects for userId: $userId")
 
             val response = projectApi.getUserProjects(userId)
 
@@ -96,25 +97,25 @@ class ProjectRepository @Inject constructor(
                     NetworkResult.Error("Oturum süresi doldu")
                 }
                 response.code() == 404 -> {
-                    android.util.Log.d("ProjectRepository", "⚠️ User has no projects (404)")
+                    Logger.d( "⚠️ User has no projects (404)")
                     NetworkResult.Success(emptyList())
                 }
                 response.isSuccessful && response.body() != null -> {
                     val projects = response.body()!!.map { it.toUserProject(userId) }
-                    android.util.Log.d("ProjectRepository", "✅ Loaded ${projects.size} projects")
+                    Logger.d( "✅ Loaded ${projects.size} projects")
                     NetworkResult.Success(projects)
                 }
                 response.isSuccessful && response.body() == null -> {
-                    android.util.Log.d("ProjectRepository", "⚠️ User has no projects (empty body)")
+                    Logger.d( "⚠️ User has no projects (empty body)")
                     NetworkResult.Success(emptyList())
                 }
                 else -> {
-                    android.util.Log.e("ProjectRepository", "❌ Error: ${response.code()}")
+                    Logger.e( "❌ Error: ${response.code()}")
                     NetworkResult.Error("Projeler yüklenemedi: ${response.code()}")
                 }
             }
         } catch (e: Exception) {
-            android.util.Log.e("ProjectRepository", "❌ Exception: ${e.message}", e)
+            Logger.e( "❌ Exception: ${e.message}", e)
             return@withContext NetworkResult.Error(e.message ?: "Bilinmeyen hata")
         }
     }
@@ -125,7 +126,7 @@ class ProjectRepository @Inject constructor(
      */
     suspend fun getProjectDetail(projectId: String): NetworkResult<ProjectDetailResponse> = withContext(Dispatchers.IO) {
         try {
-            android.util.Log.d("ProjectRepository", "🔍 Fetching project detail: $projectId")
+            Logger.d( "🔍 Fetching project detail: $projectId")
 
             val response = projectApi.getProjectDetail(projectId)
 
@@ -141,16 +142,16 @@ class ProjectRepository @Inject constructor(
                 }
                 response.isSuccessful && response.body() != null -> {
                     val project = response.body()!!
-                    android.util.Log.d("ProjectRepository", "✅ Loaded project: ${project.name}")
+                    Logger.d( "✅ Loaded project: ${project.name}")
                     NetworkResult.Success(project)
                 }
                 else -> {
-                    android.util.Log.e("ProjectRepository", "❌ Error: ${response.code()}")
+                    Logger.e( "❌ Error: ${response.code()}")
                     NetworkResult.Error("Proje yüklenemedi: ${response.code()}")
                 }
             }
         } catch (e: Exception) {
-            android.util.Log.e("ProjectRepository", "❌ Exception: ${e.message}", e)
+            Logger.e( "❌ Exception: ${e.message}", e)
             return@withContext NetworkResult.Error(e.message ?: "Bilinmeyen hata")
         }
     }
@@ -161,7 +162,7 @@ class ProjectRepository @Inject constructor(
      */
     suspend fun getProjectMembers(projectId: String): NetworkResult<List<ProjectMember>> = withContext(Dispatchers.IO) {
         try {
-            android.util.Log.d("ProjectRepository", "🔍 Fetching members for project: $projectId")
+            Logger.d( "🔍 Fetching members for project: $projectId")
 
             val response = projectApi.getProjectMembers(projectId)
 
@@ -177,20 +178,20 @@ class ProjectRepository @Inject constructor(
                 }
                 response.isSuccessful && response.body() != null -> {
                     val members = response.body()!!
-                    android.util.Log.d("ProjectRepository", "✅ Loaded ${members.size} members")
+                    Logger.d( "✅ Loaded ${members.size} members")
                     NetworkResult.Success(members)
                 }
                 response.isSuccessful && response.body() == null -> {
-                    android.util.Log.d("ProjectRepository", "⚠️ No members found")
+                    Logger.d( "⚠️ No members found")
                     NetworkResult.Success(emptyList())
                 }
                 else -> {
-                    android.util.Log.e("ProjectRepository", "❌ Error: ${response.code()}")
+                    Logger.e( "❌ Error: ${response.code()}")
                     NetworkResult.Error("Üyeler yüklenemedi: ${response.code()}")
                 }
             }
         } catch (e: Exception) {
-            android.util.Log.e("ProjectRepository", "❌ Exception: ${e.message}", e)
+            Logger.e( "❌ Exception: ${e.message}", e)
             return@withContext NetworkResult.Error(e.message ?: "Bilinmeyen hata")
         }
     }
@@ -201,7 +202,7 @@ class ProjectRepository @Inject constructor(
      */
     suspend fun createProject(request: CreateProjectRequest): NetworkResult<ProjectDetailResponse> = withContext(Dispatchers.IO) {
         try {
-            android.util.Log.d("ProjectRepository", "🔍 Creating project: ${request.name}")
+            Logger.d( "🔍 Creating project: ${request.name}")
 
             // ProjectApi'deki createProject muhtemelen Response<ProjectDetailResponse> dönüyor
             val response = projectApi.createProject(request)
@@ -218,19 +219,19 @@ class ProjectRepository @Inject constructor(
                 }
                 response.isSuccessful && response.body() != null -> {
                     val project = response.body()!!
-                    android.util.Log.d("ProjectRepository", "✅ Project created: ${project.name}")
+                    Logger.d( "✅ Project created: ${project.name}")
                     NetworkResult.Success(project)
                 }
                 else -> {
-                    android.util.Log.e("ProjectRepository", "❌ Error: ${response.code()}")
+                    Logger.e( "❌ Error: ${response.code()}")
                     NetworkResult.Error("Proje oluşturulamadı: ${response.code()}")
                 }
             }
         } catch (e: HttpException) {
-            android.util.Log.e("ProjectRepository", "❌ HTTP Exception: ${e.code()}", e)
+            Logger.e( "❌ HTTP Exception: ${e.code()}", e)
             return@withContext NetworkResult.Error("HTTP ${e.code()}: ${e.message()}")
         } catch (e: Exception) {
-            android.util.Log.e("ProjectRepository", "❌ Exception: ${e.message}", e)
+            Logger.e( "❌ Exception: ${e.message}", e)
             return@withContext NetworkResult.Error(e.message ?: "Bilinmeyen hata")
         }
     }
@@ -240,7 +241,7 @@ class ProjectRepository @Inject constructor(
         request: AddMemberRequest
     ): NetworkResult<ProjectMember> = withContext(Dispatchers.IO) {
         try {
-            android.util.Log.d("ProjectRepository", "🔍 Adding member to project: $projectId")
+            Logger.d( "🔍 Adding member to project: $projectId")
 
             val response = projectApi.addMember(projectId, request)
 
@@ -251,7 +252,7 @@ class ProjectRepository @Inject constructor(
                 response.code() == 400 -> {
                     // ✅ Backend'den gelen gerçek hatayı okumaya çalış
                     val errorBody = response.errorBody()?.string()
-                    android.util.Log.e("ProjectRepository", "Add Member 400 Error Body: $errorBody")
+                    Logger.e( "Add Member 400 Error Body: $errorBody")
                     
                     if (!errorBody.isNullOrEmpty()) {
                         NetworkResult.Error("Ekleme başarısız (400): $errorBody")
@@ -261,19 +262,19 @@ class ProjectRepository @Inject constructor(
                 }
                 response.isSuccessful && response.body() != null -> {
                     val member = response.body()!!
-                    android.util.Log.d("ProjectRepository", "✅ Member added: ${member.fullName}")
+                    Logger.d( "✅ Member added: ${member.fullName}")
                     NetworkResult.Success(member)
                 }
                 else -> {
-                    android.util.Log.e("ProjectRepository", "❌ Error: ${response.code()}")
+                    Logger.e( "❌ Error: ${response.code()}")
                     NetworkResult.Error("Üye eklenemedi: ${response.code()}")
                 }
             }
         } catch (e: HttpException) {
-            android.util.Log.e("ProjectRepository", "❌ HTTP Exception: ${e.code()}", e)
+            Logger.e( "❌ HTTP Exception: ${e.code()}", e)
             return@withContext NetworkResult.Error("HTTP ${e.code()}: ${e.message()}")
         } catch (e: Exception) {
-            android.util.Log.e("ProjectRepository", "❌ Exception: ${e.message}", e)
+            Logger.e( "❌ Exception: ${e.message}", e)
             return@withContext NetworkResult.Error(e.message ?: "Bilinmeyen hata")
         }
     }
@@ -287,7 +288,7 @@ class ProjectRepository @Inject constructor(
         userId: String
     ): NetworkResult<Unit> = withContext(Dispatchers.IO) {
         try {
-            android.util.Log.d("ProjectRepository", "🔍 Removing member from project: $projectId")
+            Logger.d( "🔍 Removing member from project: $projectId")
 
             val response = projectApi.removeMember(projectId, userId)
 
@@ -297,7 +298,7 @@ class ProjectRepository @Inject constructor(
                 response.code() == 400 -> {
                     // ✅ Backend'den gelen gerçek hatayı okumaya çalış
                     val errorBody = response.errorBody()?.string()
-                    android.util.Log.e("ProjectRepository", "Remove Member 400 Error Body: $errorBody")
+                    Logger.e( "Remove Member 400 Error Body: $errorBody")
                     
                     if (!errorBody.isNullOrEmpty()) {
                         // Eğer backend düz metin veya JSON içinde mesaj dönüyorsa onu kullanabiliriz.
@@ -308,19 +309,19 @@ class ProjectRepository @Inject constructor(
                     }
                 }
                 response.isSuccessful -> {
-                    android.util.Log.d("ProjectRepository", "✅ Member removed")
+                    Logger.d( "✅ Member removed")
                     NetworkResult.Success(Unit)
                 }
                 else -> {
-                    android.util.Log.e("ProjectRepository", "❌ Error: ${response.code()}")
+                    Logger.e( "❌ Error: ${response.code()}")
                     NetworkResult.Error("Üye çıkarılamadı: ${response.code()}")
                 }
             }
         } catch (e: HttpException) {
-            android.util.Log.e("ProjectRepository", "❌ HTTP Exception: ${e.code()}", e)
+            Logger.e( "❌ HTTP Exception: ${e.code()}", e)
             return@withContext NetworkResult.Error("HTTP ${e.code()}: ${e.message()}")
         } catch (e: Exception) {
-            android.util.Log.e("ProjectRepository", "❌ Exception: ${e.message}", e)
+            Logger.e( "❌ Exception: ${e.message}", e)
             return@withContext NetworkResult.Error(e.message ?: "Bilinmeyen hata")
         }
     }
@@ -333,7 +334,7 @@ class ProjectRepository @Inject constructor(
         projectId: String
     ): NetworkResult<Unit> = withContext(Dispatchers.IO) {
         try {
-            android.util.Log.d("ProjectRepository", "🔍 Deleting project: $projectId")
+            Logger.d( "🔍 Deleting project: $projectId")
 
             val response = projectApi.deleteProject(projectId)
 
@@ -342,19 +343,19 @@ class ProjectRepository @Inject constructor(
                 response.code() == 403 -> NetworkResult.Error("Proje silme yetkiniz yok")
                 response.code() == 400 -> NetworkResult.Error("Aktif görevler var, önce bunları tamamlayın")
                 response.isSuccessful -> {
-                    android.util.Log.d("ProjectRepository", "✅ Project deleted")
+                    Logger.d( "✅ Project deleted")
                     NetworkResult.Success(Unit)
                 }
                 else -> {
-                    android.util.Log.e("ProjectRepository", "❌ Error: ${response.code()}")
+                    Logger.e( "❌ Error: ${response.code()}")
                     NetworkResult.Error("Proje silinemedi: ${response.code()}")
                 }
             }
         } catch (e: HttpException) {
-            android.util.Log.e("ProjectRepository", "❌ HTTP Exception: ${e.code()}", e)
+            Logger.e( "❌ HTTP Exception: ${e.code()}", e)
             return@withContext NetworkResult.Error("HTTP ${e.code()}: ${e.message()}")
         } catch (e: Exception) {
-            android.util.Log.e("ProjectRepository", "❌ Exception: ${e.message}", e)
+            Logger.e( "❌ Exception: ${e.message}", e)
             return@withContext NetworkResult.Error(e.message ?: "Bilinmeyen hata")
         }
     }

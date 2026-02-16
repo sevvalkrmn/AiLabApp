@@ -6,7 +6,10 @@ import com.ktun.ailabapp.data.model.Announcement
 import com.ktun.ailabapp.data.model.AnnouncementFilter
 import com.ktun.ailabapp.data.model.AnnouncementType
 import com.ktun.ailabapp.data.repository.AnnouncementRepository
+import com.ktun.ailabapp.util.Logger
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -34,6 +37,7 @@ class AnnouncementViewModel @Inject constructor(
     }
 
     fun loadAnnouncements() {
+        if (_uiState.value.isLoading) return
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
 
@@ -45,11 +49,8 @@ class AnnouncementViewModel @Inject constructor(
                             isLoading = false
                         )
                     }
-
-                    // ✅ EKLE: Her duyurunun detayını arka planda yükle
-                    announcements.forEach { announcement ->
-                        loadAnnouncementDetail(announcement.id)
-                    }
+                    // Detayları arka planda paralel yükle, tek state güncellemesi
+                    loadAllDetails(announcements)
                 },
                 onFailure = { exception ->
                     _uiState.update {
@@ -60,6 +61,21 @@ class AnnouncementViewModel @Inject constructor(
                     }
                 }
             )
+        }
+    }
+
+    private fun loadAllDetails(announcements: List<Announcement>) {
+        viewModelScope.launch {
+            val detailedList = announcements.map { announcement ->
+                async {
+                    repository.getAnnouncementDetail(announcement.id).fold(
+                        onSuccess = { detail -> detail.copy(isRead = announcement.isRead) },
+                        onFailure = { announcement }
+                    )
+                }
+            }.awaitAll()
+
+            _uiState.update { it.copy(announcements = detailedList) }
         }
     }
 
@@ -84,7 +100,7 @@ class AnnouncementViewModel @Inject constructor(
                     }
                 },
                 onFailure = {
-                    println("⚠️ Detay yüklenemedi: $id")
+                    Logger.e("Detay yüklenemedi: $id", tag = "AnnouncementVM")
                 }
             )
         }
@@ -132,15 +148,12 @@ class AnnouncementViewModel @Inject constructor(
     }
 
     fun getUnreadCount(): Int {
-        val count = _uiState.value.announcements.count { !it.isRead }
-        println("🔔 Okunmamış duyuru sayısı: $count")
-        println("📋 Tüm duyurular: ${_uiState.value.announcements.map { "id=${it.id}, isRead=${it.isRead}" }}")
-        return count
+        return _uiState.value.announcements.count { !it.isRead }
     }
 
     //Logout olurken duyuruları temizle
     fun clearAnnouncements() {
-        android.util.Log.d("AnnouncementViewModel", "🗑️ Clearing all announcements and state")
+        Logger.d("Clearing all announcements and state", tag = "AnnouncementVM")
         _uiState.value = AnnouncementUiState() // Tüm state'i sıfırla
     }
 }

@@ -44,7 +44,7 @@ class RegisterViewModel @Inject constructor(
     fun updateEmail(email: String) { _uiState.value = _uiState.value.copy(email = email) }
     fun updateSchoolNumber(schoolNumber: String) { _uiState.value = _uiState.value.copy(schoolNumber = schoolNumber) }
     fun updatePhone(phone: String) {
-        val cleanedPhone = phone.filter { it.isDigit() }.removePrefix("0")
+        val cleanedPhone = phone.filter { it.isDigit() }.removePrefix("0").take(10)
         _uiState.value = _uiState.value.copy(phone = cleanedPhone)
     }
     fun updatePassword(password: String) { _uiState.value = _uiState.value.copy(password = password) }
@@ -110,7 +110,7 @@ class RegisterViewModel @Inject constructor(
             state.username.length < 3 -> "Kullanıcı adı en az 3 karakter olmalıdır"
             state.schoolNumber.isBlank() -> "Okul numarası boş bırakılamaz"
             state.phone.isBlank() -> "Telefon numarası boş bırakılamaz"
-            state.phone.length < 10 -> "Telefon numarası 10 haneli olmalıdır"
+            !state.phone.matches("^5[0-9]{9}$".toRegex()) -> "Telefon numarası 5 ile başlamalı ve 10 haneli olmalıdır"
             else -> null
         }
 

@@ -3,6 +3,7 @@ package com.ktun.ailabapp.data.repository
 import com.ktun.ailabapp.data.remote.api.TaskApi
 import com.ktun.ailabapp.data.remote.dto.request.UpdateTaskStatusRequest
 import com.ktun.ailabapp.data.remote.dto.response.TaskResponse
+import com.ktun.ailabapp.util.Logger
 import com.ktun.ailabapp.util.NetworkResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -22,7 +23,7 @@ class TaskRepository @Inject constructor(
     suspend fun getProjectTasks(projectId: String): NetworkResult<List<TaskResponse>> =
         withContext(Dispatchers.IO) {
             try {
-                android.util.Log.d("TaskRepository", "Proje görevleri çekiliyor: $projectId")
+                Logger.d( "Proje görevleri çekiliyor: $projectId")
 
                 val response = taskApi.getProjectTasks(projectId)
 
@@ -30,13 +31,13 @@ class TaskRepository @Inject constructor(
                     val paginatedResponse = response.body()!!
                     val tasks = paginatedResponse.items
 
-                    android.util.Log.d("TaskRepository", "Görev sayısı: ${tasks.size}")
+                    Logger.d( "Görev sayısı: ${tasks.size}")
 
                     NetworkResult.Success(tasks)
                 } else {
                     val errorBody = response.errorBody()?.string()
 
-                    android.util.Log.e("TaskRepository", """
+                    Logger.e( """
                         Görevler Error:
                         Code: ${response.code()}
                         Error: $errorBody
@@ -51,7 +52,7 @@ class TaskRepository @Inject constructor(
                     NetworkResult.Error(errorMessage)
                 }
             } catch (e: Exception) {
-                android.util.Log.e("TaskRepository", "Görevler Exception", e)
+                Logger.e( "Görevler Exception", e)
                 NetworkResult.Error(e.message ?: "Bilinmeyen hata")
             }
         }
@@ -62,29 +63,29 @@ class TaskRepository @Inject constructor(
     suspend fun getMyTasks(status: Int? = null): NetworkResult<List<TaskResponse>> =
         withContext(Dispatchers.IO) {
             try {
-                android.util.Log.d("TaskRepository", "Kullanıcı görevleri çekiliyor. Status: $status")
+                Logger.d( "Kullanıcı görevleri çekiliyor. Status: $status")
 
                 val response = taskApi.getMyTasks(status)
 
                 if (response.isSuccessful && response.body() != null) {
                     val tasks = response.body()!!
 
-                    android.util.Log.d("TaskRepository", "Görev sayısı: ${tasks.size}")
+                    Logger.d( "Görev sayısı: ${tasks.size}")
 
                     tasks.forEach { task ->
-                        android.util.Log.d("TaskRepository", "Görev: ${task.title} - Status: ${task.status}")
+                        Logger.d( "Görev: ${task.title} - Status: ${task.status}")
                     }
 
                     NetworkResult.Success(tasks)
                 } else {
                     val errorBody = response.errorBody()?.string()
 
-                    android.util.Log.e("TaskRepository", "My Tasks Error: $errorBody")
+                    Logger.e( "My Tasks Error: $errorBody")
 
                     NetworkResult.Error("Görevler yüklenemedi.")
                 }
             } catch (e: Exception) {
-                android.util.Log.e("TaskRepository", "My Tasks Exception", e)
+                Logger.e( "My Tasks Exception", e)
                 NetworkResult.Error(e.message ?: "Bilinmeyen hata")
             }
         }
@@ -154,7 +155,7 @@ class TaskRepository @Inject constructor(
         status: String
     ): NetworkResult<TaskResponse> = withContext(Dispatchers.IO) {
         try {
-            android.util.Log.d("TaskRepository", "Görev durumu güncelleniyor: $taskId -> $status")
+            Logger.d( "Görev durumu güncelleniyor: $taskId -> $status")
 
             val numericStatus = when (status) {
                 "Todo" -> 0
@@ -169,17 +170,17 @@ class TaskRepository @Inject constructor(
             if (response.isSuccessful && response.body() != null) {
                 val task = response.body()!!
 
-                android.util.Log.d("TaskRepository", "Görev durumu güncellendi")
+                Logger.d( "Görev durumu güncellendi")
 
                 if (status == "Done") {
-                    android.util.Log.d("TaskRepository", "🎉 Görev tamamlandı! +10 puan kazanıldı!")
+                    Logger.d( "🎉 Görev tamamlandı! +10 puan kazanıldı!")
                 }
 
                 NetworkResult.Success(task)
             } else {
                 val errorBody = response.errorBody()?.string()
 
-                android.util.Log.e("TaskRepository", "Durum güncelleme hatası: $errorBody")
+                Logger.e( "Durum güncelleme hatası: $errorBody")
 
                 val errorMessage = when (response.code()) {
                     400 -> "Geçersiz durum değeri."
@@ -190,7 +191,7 @@ class TaskRepository @Inject constructor(
                 NetworkResult.Error(errorMessage)
             }
         } catch (e: Exception) {
-            android.util.Log.e("TaskRepository", "Durum güncelleme exception", e)
+            Logger.e( "Durum güncelleme exception", e)
             NetworkResult.Error(e.message ?: "Bilinmeyen hata")
         }
     }

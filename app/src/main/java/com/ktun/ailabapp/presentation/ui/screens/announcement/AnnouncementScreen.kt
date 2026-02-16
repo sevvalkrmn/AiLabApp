@@ -49,10 +49,6 @@ fun AnnouncementScreen(
     val context = LocalContext.current
     var isRefreshing by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
-        viewModel.loadAnnouncements()
-    }
-
     LaunchedEffect(uiState.isLoading) {
         if (!uiState.isLoading) {
             isRefreshing = false
@@ -104,14 +100,13 @@ fun AnnouncementScreen(
 
     Scaffold(
         bottomBar = {
-            val count = viewModel.getUnreadCount()
             BottomNavigationBar(
                 selectedItem = 2,
                 onHomeClick = onNavigateToHome,
                 onProjectsClick = onNavigateToProjects,
                 onChatClick = onNavigateToChat,
                 onProfileClick = onNavigateToProfile,
-                unreadAnnouncementCount = count
+                unreadAnnouncementCount = unreadCount
             )
         },
         containerColor = TaskHistoryBg, // ✅ Arka plan
@@ -217,7 +212,10 @@ fun AnnouncementScreen(
                                 modifier = Modifier.fillMaxSize(),
                                 verticalArrangement = Arrangement.spacedBy(screenHeight * 0.015f)
                             ) {
-                                items(filteredAnnouncements.size) { index ->
+                                items(
+                                    count = filteredAnnouncements.size,
+                                    key = { index -> filteredAnnouncements[index].id }
+                                ) { index ->
                                     StaggeredAnimatedItem(index = index) {
                                         AnnouncementCard(
                                             announcement = filteredAnnouncements[index],

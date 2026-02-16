@@ -9,6 +9,7 @@ import com.ktun.ailabapp.data.remote.api.RoleApi
 import com.ktun.ailabapp.data.remote.dto.request.AssignRoleRequest
 import com.ktun.ailabapp.data.remote.dto.request.RemoveRoleRequest
 import com.ktun.ailabapp.data.repository.UserRepository
+import com.ktun.ailabapp.util.Logger
 import com.ktun.ailabapp.util.NetworkResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -129,7 +130,7 @@ class ManageRolesViewModel @Inject constructor(
                     )
 
                     if (assignResponse.isSuccessful) {
-                        android.util.Log.d("ManageRolesVM", "✅ Role changed: $currentRole → $newRole")
+                        Logger.d( "✅ Role changed: $currentRole → $newRole")
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
@@ -146,7 +147,7 @@ class ManageRolesViewModel @Inject constructor(
                         }
                     }
                 } else {
-                    android.util.Log.d("ManageRolesVM", "✅ Role removed: $currentRole → Member")
+                    Logger.d( "✅ Role removed: $currentRole → Member")
                     _uiState.update {
                         it.copy(
                             isLoading = false,
@@ -156,7 +157,7 @@ class ManageRolesViewModel @Inject constructor(
                     }
                 }
             } catch (e: Exception) {
-                android.util.Log.e("ManageRolesVM", "❌ Error: ${e.message}")
+                Logger.e( "❌ Error: ${e.message}")
                 _uiState.update {
                     it.copy(
                         isLoading = false,

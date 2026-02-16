@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ktun.ailabapp.data.remote.api.AnnouncementApi
 import com.ktun.ailabapp.data.remote.dto.request.CreateAnnouncementRequest
+import com.ktun.ailabapp.util.Logger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -87,7 +88,7 @@ class SendAnnouncementViewModel @Inject constructor(
                 val response = announcementApi.createAnnouncement(request)
 
                 if (response.isSuccessful) {
-                    android.util.Log.d("SendAnnouncementVM", "✅ Announcement sent successfully")
+                    Logger.d( "✅ Announcement sent successfully")
                     _uiState.update {
                         it.copy(
                             isLoading = false,
@@ -95,7 +96,7 @@ class SendAnnouncementViewModel @Inject constructor(
                         )
                     }
                 } else {
-                    android.util.Log.e("SendAnnouncementVM", "❌ Error: ${response.code()}")
+                    Logger.e( "❌ Error: ${response.code()}")
                     _uiState.update {
                         it.copy(
                             isLoading = false,
@@ -104,7 +105,7 @@ class SendAnnouncementViewModel @Inject constructor(
                     }
                 }
             } catch (e: Exception) {
-                android.util.Log.e("SendAnnouncementVM", "❌ Exception: ${e.message}")
+                Logger.e( "❌ Exception: ${e.message}")
                 _uiState.update {
                     it.copy(
                         isLoading = false,

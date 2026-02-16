@@ -30,6 +30,8 @@ import com.ktun.ailabapp.presentation.ui.screens.admin.announcement.SendGlobalAn
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 
 @Composable
 fun NavGraph(
@@ -44,23 +46,32 @@ fun NavGraph(
         }
     }
 
+    // Slide + fade animasyonları (ileri navigasyon)
+    val slideEnter = { slideInHorizontally(tween(300)) { it } + fadeIn(tween(300)) }
+    val slideExit = { slideOutHorizontally(tween(300)) { -it / 3 } + fadeOut(tween(150)) }
+    // Slide + fade animasyonları (geri navigasyon)
+    val slidePopEnter = { slideInHorizontally(tween(300)) { -it / 3 } + fadeIn(tween(300)) }
+    val slidePopExit = { slideOutHorizontally(tween(300)) { it } + fadeOut(tween(300)) }
+    // Fade animasyonları (tab geçişleri ve auth ekranları)
+    val fadeEnter = { fadeIn(tween(200)) }
+    val fadeExit = { fadeOut(tween(200)) }
+
     NavHost(
         navController = navController,
         startDestination = startDestination,
-        enterTransition = {
-            fadeIn(tween(200))
-        },
-        exitTransition = {
-            fadeOut(tween(200))
-        },
-        popEnterTransition = {
-            fadeIn(tween(200))
-        },
-        popExitTransition = {
-            fadeOut(tween(200))
-        }
+        enterTransition = { slideEnter() },
+        exitTransition = { slideExit() },
+        popEnterTransition = { slidePopEnter() },
+        popExitTransition = { slidePopExit() }
     ) {
-        composable(route = Screen.Login.route) {
+        // --- Auth Ekranları (fade) ---
+        composable(
+            route = Screen.Login.route,
+            enterTransition = { fadeEnter() },
+            exitTransition = { fadeExit() },
+            popEnterTransition = { fadeEnter() },
+            popExitTransition = { fadeExit() }
+        ) {
             LoginScreen(
                 onLoginSuccess = {
                     navController.navigate(Screen.Home.route) {
@@ -73,7 +84,13 @@ fun NavGraph(
             )
         }
 
-        composable(Screen.Register.route) {
+        composable(
+            route = Screen.Register.route,
+            enterTransition = { fadeEnter() },
+            exitTransition = { fadeExit() },
+            popEnterTransition = { fadeEnter() },
+            popExitTransition = { fadeExit() }
+        ) {
             RegisterScreen(
                 navController = navController,
                 onRegisterSuccess = {
@@ -84,7 +101,14 @@ fun NavGraph(
             )
         }
 
-        composable(route = Screen.Home.route) {
+        // --- Tab Ekranları (fade) ---
+        composable(
+            route = Screen.Home.route,
+            enterTransition = { fadeEnter() },
+            exitTransition = { fadeExit() },
+            popEnterTransition = { fadeEnter() },
+            popExitTransition = { fadeExit() }
+        ) {
             HomeScreen(
                 onNavigateToProjects = { navController.navigate(Screen.Projects.route) },
                 onNavigateToChat = { navController.navigate(Screen.Announcements.route) },
@@ -93,7 +117,13 @@ fun NavGraph(
             )
         }
 
-        composable(route = Screen.Projects.route) {
+        composable(
+            route = Screen.Projects.route,
+            enterTransition = { fadeEnter() },
+            exitTransition = { fadeExit() },
+            popEnterTransition = { fadeEnter() },
+            popExitTransition = { fadeExit() }
+        ) {
             ProjectsScreen(
                 onNavigateToHome = { navController.navigate(Screen.Home.route) { popUpTo(Screen.Home.route) { inclusive = true } } },
                 onNavigateToChat = { navController.navigate(Screen.Announcements.route) },
@@ -111,7 +141,13 @@ fun NavGraph(
             ProjectDetailScreen(projectId = projectId, onNavigateBack = { navController.popBackStack() })
         }
 
-        composable(Screen.Announcements.route) {
+        composable(
+            route = Screen.Announcements.route,
+            enterTransition = { fadeEnter() },
+            exitTransition = { fadeExit() },
+            popEnterTransition = { fadeEnter() },
+            popExitTransition = { fadeExit() }
+        ) {
             AnnouncementScreen(
                 onNavigateToHome = { navController.navigate(Screen.Home.route) },
                 onNavigateToProjects = { navController.navigate(Screen.Projects.route) },
@@ -122,7 +158,13 @@ fun NavGraph(
             )
         }
 
-        composable(Screen.Profile.route) {
+        composable(
+            route = Screen.Profile.route,
+            enterTransition = { fadeEnter() },
+            exitTransition = { fadeExit() },
+            popEnterTransition = { fadeEnter() },
+            popExitTransition = { fadeExit() }
+        ) {
             ProfileScreen(
                 onNavigateToHome = { navController.navigate(Screen.Home.route) },
                 onNavigateToProjects = { navController.navigate(Screen.Projects.route) },
