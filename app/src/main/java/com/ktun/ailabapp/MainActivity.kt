@@ -1,10 +1,11 @@
 package com.ktun.ailabapp
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen // ✅ Import added
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -15,6 +16,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
 import com.ktun.ailabapp.data.local.datastore.PreferencesManager
@@ -41,7 +43,7 @@ class MainActivity : ComponentActivity() {
     private val mainViewModel: MainViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen() // ✅ Call before super.onCreate
+        installSplashScreen()
         super.onCreate(savedInstanceState)
 
         setContent {
@@ -54,7 +56,20 @@ class MainActivity : ComponentActivity() {
                     val startDestination by mainViewModel.startDestination.collectAsState()
                     val isLoading by mainViewModel.isLoading.collectAsState()
                     var splashFinished by remember { mutableStateOf(false) }
+                    val context = LocalContext.current
 
+                    // Oturum süresi doldu bildirimi
+                    LaunchedEffect(Unit) {
+                        mainViewModel.sessionExpiredMessage.collect {
+                            Toast.makeText(
+                                context,
+                                "Oturum süresi doldu. Lütfen tekrar giriş yapın.",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    }
+
+                    // Login ekranına yönlendirme
                     LaunchedEffect(startDestination) {
                         if (startDestination == Screen.Login.route) {
                             val currentRoute = navController.currentDestination?.route

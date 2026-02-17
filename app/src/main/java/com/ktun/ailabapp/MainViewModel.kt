@@ -3,13 +3,16 @@ package com.ktun.ailabapp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ktun.ailabapp.data.local.datastore.PreferencesManager
-import com.ktun.ailabapp.data.repository.AuthRepository
 import com.ktun.ailabapp.presentation.ui.screens.navigation.Screen
 import com.ktun.ailabapp.util.FirebaseAuthManager
 import com.ktun.ailabapp.util.Logger
+import com.ktun.ailabapp.util.SessionManager
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -19,7 +22,7 @@ import javax.inject.Inject
 class MainViewModel @Inject constructor(
     private val preferencesManager: PreferencesManager,
     private val authManager: FirebaseAuthManager,
-    private val authRepository: AuthRepository
+    private val sessionManager: SessionManager
 ) : ViewModel() {
 
     private val _startDestination = MutableStateFlow<String?>(null)
@@ -28,6 +31,9 @@ class MainViewModel @Inject constructor(
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    private val _sessionExpiredMessage = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    val sessionExpiredMessage: SharedFlow<Unit> = _sessionExpiredMessage.asSharedFlow()
+
     init {
         checkSession()
         observeSessionExpiry()
@@ -35,8 +41,9 @@ class MainViewModel @Inject constructor(
 
     private fun observeSessionExpiry() {
         viewModelScope.launch {
-            authRepository.sessionExpiredEvent.collect {
+            sessionManager.sessionExpiredEvent.collect {
                 Logger.e("Session Expired Event Received", tag = "MainViewModel")
+                _sessionExpiredMessage.tryEmit(Unit)
                 preferencesManager.clearAllData()
                 authManager.signOut()
                 _startDestination.value = Screen.Login.route

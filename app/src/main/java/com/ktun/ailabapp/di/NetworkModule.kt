@@ -27,9 +27,10 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideAuthInterceptor(
-        authManager: FirebaseAuthManager
+        authManager: FirebaseAuthManager,
+        sessionManager: com.ktun.ailabapp.util.SessionManager
     ): AuthInterceptor {
-        return AuthInterceptor(authManager)
+        return AuthInterceptor(authManager, sessionManager)
     }
 
     @Provides

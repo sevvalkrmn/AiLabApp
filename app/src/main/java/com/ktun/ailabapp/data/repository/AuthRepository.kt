@@ -15,9 +15,6 @@ import com.ktun.ailabapp.util.FirebaseStorageHelper
 import com.ktun.ailabapp.util.Logger
 import com.ktun.ailabapp.util.NetworkResult
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -28,9 +25,6 @@ class AuthRepository @Inject constructor(
     private val preferencesManager: PreferencesManager,
     private val authManager: FirebaseAuthManager
 ) {
-
-    private val _sessionExpiredEvent = MutableSharedFlow<Unit>(replay = 0)
-    val sessionExpiredEvent: SharedFlow<Unit> = _sessionExpiredEvent.asSharedFlow()
 
     suspend fun completeRegistration(
         idToken: String,
@@ -228,9 +222,6 @@ class AuthRepository @Inject constructor(
 
             when {
                 response.code() == 401 -> {
-                    Logger.e("401 Unauthorized - Session expired", tag = "AuthRepository")
-                    preferencesManager.clearAllData()
-                    _sessionExpiredEvent.emit(Unit)
                     NetworkResult.Error("Oturum süresi doldu")
                 }
                 response.isSuccessful && response.body() != null -> {

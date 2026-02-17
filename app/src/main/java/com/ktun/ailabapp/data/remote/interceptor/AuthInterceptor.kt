@@ -2,12 +2,15 @@ package com.ktun.ailabapp.data.remote.interceptor
 
 import com.ktun.ailabapp.data.remote.network.ApiConfig
 import com.ktun.ailabapp.util.FirebaseAuthManager
+import com.ktun.ailabapp.util.Logger
+import com.ktun.ailabapp.util.SessionManager
 import okhttp3.Interceptor
 import okhttp3.Response
 import javax.inject.Inject
 
 class AuthInterceptor @Inject constructor(
-    private val authManager: FirebaseAuthManager
+    private val authManager: FirebaseAuthManager,
+    private val sessionManager: SessionManager
 ) : Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {
@@ -41,6 +44,13 @@ class AuthInterceptor @Inject constructor(
             }
             .build()
 
-        return chain.proceed(newRequest)
+        val response = chain.proceed(newRequest)
+
+        if (response.code == 401) {
+            Logger.e("401 Unauthorized - Oturum süresi doldu: ${originalRequest.url}", tag = "AuthInterceptor")
+            sessionManager.onSessionExpired()
+        }
+
+        return response
     }
 }
