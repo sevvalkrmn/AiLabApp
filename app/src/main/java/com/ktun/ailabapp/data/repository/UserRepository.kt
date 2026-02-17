@@ -56,7 +56,7 @@ class UserRepository @Inject constructor(
                     NetworkResult.Error("Kullanıcı bulunamadı")
                 }
                 response.isSuccessful && response.body() != null -> {
-                    var user = response.body()!!.toUser()
+                    var user = response.body()!!.toUser().copy(id = userId)
 
                     when (val projectsResult = projectRepository.getUserProjects(userId)) {
                         is NetworkResult.Success -> {

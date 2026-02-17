@@ -83,6 +83,35 @@ fun UsersListScreen(
         }
     }
 
+    // RFID kayıt sonucu dinleyici
+    LaunchedEffect(Unit) {
+        viewModel.rfidEvent.collect { event ->
+            when (event) {
+                is RfidEvent.RegistrationComplete -> {
+                    Toast.makeText(
+                        context,
+                        "RFID Kart Kaydı Başarılı!\n${event.userName} için kart kaydedildi.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+                is RfidEvent.RegistrationTimeout -> {
+                    Toast.makeText(
+                        context,
+                        "RFID kayıt süresi doldu. Lütfen tekrar deneyin.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+                is RfidEvent.RegistrationFailed -> {
+                    Toast.makeText(
+                        context,
+                        "RFID Kayıt Hatası: ${event.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+        }
+    }
+
     // ✅ YENİ - ManageRoles'tan döndüğünde user'ı refresh et
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
@@ -272,10 +301,13 @@ fun UsersListScreen(
                 onNavigateToProjectDetail(projectId)
             },
             onRfidClick = { userId ->
+                val userName = selectedUser?.fullName ?: ""
+                Logger.d("RFID butonuna tıklandı - userId: $userId, userName: $userName")
                 viewModel.startRfidRegistration(
                     userId = userId,
+                    userName = userName,
                     onSuccess = {
-                        Toast.makeText(context, "RFID Kayıt Modu Başlatıldı! Kartı okutun.", Toast.LENGTH_LONG).show()
+                        Toast.makeText(context, "RFID Kayıt Modu Başlatıldı!\nKullanıcı: $userName\nKartı okutun.", Toast.LENGTH_LONG).show()
                     },
                     onError = { message ->
                         Toast.makeText(context, "Hata: $message", Toast.LENGTH_LONG).show()

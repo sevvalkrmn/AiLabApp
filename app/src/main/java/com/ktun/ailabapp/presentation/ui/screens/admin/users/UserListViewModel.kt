@@ -10,6 +10,8 @@ import com.ktun.ailabapp.data.repository.UserRepository
 import com.ktun.ailabapp.util.Logger
 import com.ktun.ailabapp.util.NetworkResult
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,13 +26,20 @@ data class UsersListUiState(
     val filteredUsers: List<User> = emptyList(),
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
-    val searchQuery: String = ""
+    val searchQuery: String = "",
+    val rfidRegistering: Boolean = false
 )
 
 sealed interface AdminNavigationEvent {
     data class ToSendAnnouncement(val userId: String, val userName: String) : AdminNavigationEvent
     data class ToManageRoles(val userId: String) : AdminNavigationEvent
     data class ToTaskHistory(val userId: String, val userName: String) : AdminNavigationEvent
+}
+
+sealed interface RfidEvent {
+    data class RegistrationComplete(val userName: String) : RfidEvent
+    data class RegistrationFailed(val message: String) : RfidEvent
+    data object RegistrationTimeout : RfidEvent
 }
 
 @HiltViewModel
@@ -44,6 +53,11 @@ class UsersListViewModel @Inject constructor(
 
     private val _navigationEvent = MutableSharedFlow<AdminNavigationEvent>()
     val navigationEvent = _navigationEvent.asSharedFlow()
+
+    private val _rfidEvent = MutableSharedFlow<RfidEvent>()
+    val rfidEvent = _rfidEvent.asSharedFlow()
+
+    private var rfidPollingJob: Job? = null
 
     init {
         loadUsers()
@@ -142,12 +156,14 @@ class UsersListViewModel @Inject constructor(
     }
 
     // ✅ RFID Kayıt Başlat
-    fun startRfidRegistration(userId: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
+    fun startRfidRegistration(userId: String, userName: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
         viewModelScope.launch {
             when (val result = rfidRepository.startRegistration(userId)) {
                 is NetworkResult.Success -> {
                     Logger.d( "✅ RFID Kayıt Modu Başlatıldı: $userId")
+                    _uiState.update { it.copy(rfidRegistering = true) }
                     onSuccess()
+                    startRfidPolling(userName)
                 }
                 is NetworkResult.Error -> {
                     Logger.e( "❌ RFID Hata: ${result.message}")
@@ -158,11 +174,46 @@ class UsersListViewModel @Inject constructor(
         }
     }
 
+    private fun startRfidPolling(userName: String) {
+        rfidPollingJob?.cancel()
+        rfidPollingJob = viewModelScope.launch {
+            val timeoutMs = 60_000L
+            val intervalMs = 1_500L
+            var elapsed = 0L
+
+            while (elapsed < timeoutMs) {
+                delay(intervalMs)
+                elapsed += intervalMs
+
+                when (val result = rfidRepository.checkStatus()) {
+                    is NetworkResult.Success -> {
+                        val mode = result.data
+                        if (mode != "register") {
+                            Logger.d("✅ RFID kart kaydı tamamlandı - $userName")
+                            _uiState.update { it.copy(rfidRegistering = false) }
+                            _rfidEvent.emit(RfidEvent.RegistrationComplete(userName))
+                            return@launch
+                        }
+                    }
+                    is NetworkResult.Error -> {
+                        Logger.e("RFID status kontrol hatası: ${result.message}")
+                    }
+                    is NetworkResult.Loading -> {}
+                }
+            }
+
+            // Timeout
+            Logger.d("RFID kayıt zaman aşımına uğradı")
+            _uiState.update { it.copy(rfidRegistering = false) }
+            _rfidEvent.emit(RfidEvent.RegistrationTimeout)
+        }
+    }
+
     // ✅ Kullanıcı Sil
     fun deleteUser(userId: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-            
+
             when (val result = userRepository.deleteUser(userId)) {
                 is NetworkResult.Success -> {
                     Logger.d( "✅ Kullanıcı silindi: $userId")
