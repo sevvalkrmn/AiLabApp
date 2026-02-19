@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ktun.ailabapp.data.model.LoginUiState
 import com.ktun.ailabapp.data.repository.AuthRepository
+import com.ktun.ailabapp.util.FirebaseAuthManager
 import com.ktun.ailabapp.util.Logger
 import com.ktun.ailabapp.util.NetworkResult
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -15,7 +16,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val authManager: FirebaseAuthManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginUiState())
@@ -70,6 +72,23 @@ class LoginViewModel @Inject constructor(
                     )
                 }
                 is NetworkResult.Loading -> {}
+            }
+        }
+    }
+
+    fun sendPasswordResetEmail(onResult: (Boolean, String) -> Unit) {
+        val email = _uiState.value.email.trim()
+        if (email.isBlank()) {
+            onResult(false, "Lütfen e-posta adresinizi girin")
+            return
+        }
+
+        viewModelScope.launch {
+            val result = authManager.sendPasswordResetEmail(email)
+            if (result.isSuccess) {
+                onResult(true, "Şifre sıfırlama bağlantısı e-posta adresinize gönderildi")
+            } else {
+                onResult(false, result.exceptionOrNull()?.message ?: "Bir hata oluştu")
             }
         }
     }

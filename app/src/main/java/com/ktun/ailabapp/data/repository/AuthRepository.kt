@@ -110,7 +110,7 @@ class AuthRepository @Inject constructor(
         try {
             val firebaseResult = authManager.signIn(email, password)
             val idToken = firebaseResult.getOrElse {
-                return@withContext NetworkResult.Error("Firebase Giriş Hatası: ${it.message}")
+                return@withContext NetworkResult.Error(it.message ?: "Giriş başarısız")
             }
 
             val request = FirebaseLoginRequest(idToken = idToken)

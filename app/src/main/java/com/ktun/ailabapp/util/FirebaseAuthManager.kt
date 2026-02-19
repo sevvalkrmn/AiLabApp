@@ -93,8 +93,21 @@ class FirebaseAuthManager @Inject constructor() {
             val token = result.user?.getIdToken(false)?.await()?.token
             if (token != null) Result.success(token)
             else Result.failure(Exception("Token alınamadı"))
+        } catch (e: FirebaseAuthInvalidCredentialsException) {
+            Result.failure(Exception("E-posta veya şifre hatalı"))
+        } catch (e: FirebaseAuthException) {
+            val message = when (e.errorCode) {
+                "ERROR_USER_NOT_FOUND" -> "Bu e-posta adresine ait hesap bulunamadı"
+                "ERROR_USER_DISABLED" -> "Bu hesap devre dışı bırakılmış"
+                "ERROR_INVALID_EMAIL" -> "Geçersiz e-posta adresi"
+                "ERROR_WRONG_PASSWORD" -> "E-posta veya şifre hatalı"
+                "ERROR_TOO_MANY_REQUESTS" -> "Çok fazla başarısız deneme. Lütfen daha sonra tekrar deneyin"
+                "ERROR_INVALID_CREDENTIAL" -> "E-posta veya şifre hatalı"
+                else -> "Giriş hatası: ${e.localizedMessage}"
+            }
+            Result.failure(Exception(message))
         } catch (e: Exception) {
-            Result.failure(e)
+            Result.failure(Exception("Bağlantı hatası. Lütfen internet bağlantınızı kontrol edin."))
         }
     }
 
@@ -161,7 +174,17 @@ class FirebaseAuthManager @Inject constructor() {
         }
     }
 
-    // ✅ YENİ: Şifre Güncelleme
+    // Şifre Sıfırlama E-postası Gönder
+    suspend fun sendPasswordResetEmail(email: String): Result<Unit> {
+        return try {
+            auth.sendPasswordResetEmail(email).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // Şifre Güncelleme
     suspend fun updatePassword(newPassword: String): Result<Unit> {
         return try {
             val user = auth.currentUser ?: return Result.failure(Exception("Kullanıcı oturumu yok"))

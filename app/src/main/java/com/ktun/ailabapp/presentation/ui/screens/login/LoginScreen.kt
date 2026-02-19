@@ -175,7 +175,11 @@ fun LoginScreen(
                     )
                 }
 
-                TextButton(onClick = { }) {
+                TextButton(onClick = {
+                    viewModel.sendPasswordResetEmail { success, message ->
+                        Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                    }
+                }) {
                     Text(
                         "Şifremi Unuttum",
                         fontSize = 13.sp,
