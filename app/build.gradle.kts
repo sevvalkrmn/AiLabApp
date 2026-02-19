@@ -116,6 +116,8 @@ dependencies {
     implementation("com.google.firebase:firebase-storage-ktx")
     // Firebase Auth
     implementation("com.google.firebase:firebase-auth-ktx")
+    // Firebase Cloud Messaging (FCM)
+    implementation("com.google.firebase:firebase-messaging-ktx")
 
     // Coroutines support
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")

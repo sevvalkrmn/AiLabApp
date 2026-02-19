@@ -17,12 +17,21 @@ object RepositoryModule {
 
     @Provides
     @Singleton
+    fun provideNotificationRepository(
+        notificationApi: NotificationApi
+    ): NotificationRepository {
+        return NotificationRepository(notificationApi)
+    }
+
+    @Provides
+    @Singleton
     fun provideAuthRepository(
         authApi: AuthApi,
         preferencesManager: PreferencesManager,
-        authManager: FirebaseAuthManager // ✅ Inject FirebaseAuthManager
+        authManager: FirebaseAuthManager,
+        notificationRepository: NotificationRepository
     ): AuthRepository {
-        return AuthRepository(authApi, preferencesManager, authManager) // ✅ Pass to constructor
+        return AuthRepository(authApi, preferencesManager, authManager, notificationRepository)
     }
 
     @Provides

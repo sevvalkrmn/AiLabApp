@@ -9,6 +9,7 @@ import com.ktun.ailabapp.data.remote.dto.response.ProjectDetailResponse
 import com.ktun.ailabapp.data.remote.dto.response.TaskResponse
 import com.ktun.ailabapp.data.remote.dto.response.TaskStatistics
 import com.ktun.ailabapp.data.repository.AnnouncementRepository
+import com.ktun.ailabapp.data.repository.AuthRepository
 import com.ktun.ailabapp.data.repository.ProjectRepository
 import com.ktun.ailabapp.data.repository.TaskRepository
 import com.ktun.ailabapp.data.repository.UserRepository
@@ -18,6 +19,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -53,60 +55,51 @@ class ProjectDetailViewModel @Inject constructor(
     private val taskRepository: TaskRepository,
     private val userRepository: UserRepository,
     private val announcementRepository: AnnouncementRepository,
+    private val authRepository: AuthRepository,
     private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProjectDetailUiState())
     val uiState: StateFlow<ProjectDetailUiState> = _uiState.asStateFlow()
 
-    init {
-        checkAdminStatus()
-    }
-
-    private fun checkAdminStatus() {
-        viewModelScope.launch {
-            val userId = preferencesManager.getUserId()
-
-            if (userId != null) {
-                when (val result = userRepository.getUserById(userId)) {
-                    is NetworkResult.Success -> {
-                        val user = result.data
-                        val isAdmin = user?.roles?.any {
-                            it.equals("Admin", ignoreCase = true)
-                        } ?: false
-
-                        _uiState.update { 
-                            it.copy(
-                                isAdmin = isAdmin,
-                                canEdit = isAdmin 
-                            ) 
-                        }
-                    }
-                    is NetworkResult.Error -> {
-                        _uiState.update { it.copy(isAdmin = false) }
-                    }
-                    is NetworkResult.Loading -> {}
-                }
-            } else {
-                _uiState.update { it.copy(isAdmin = false) }
-            }
-        }
-    }
-
     fun loadProjectDetail(projectId: String) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
 
-            when (val projectResult = projectRepository.getProjectDetail(projectId)) {
+            val currentUserId = preferencesManager.getUserId()
+
+            // Profil ve proje detayini paralel olarak cek
+            val profileDeferred = async { authRepository.getProfile() }
+            val projectDeferred = async { projectRepository.getProjectDetail(projectId) }
+
+            val profileResult = profileDeferred.await()
+            val projectResult = projectDeferred.await()
+
+            // Admin kontrolu
+            var isAdmin = false
+            when (profileResult) {
+                is NetworkResult.Success -> {
+                    isAdmin = profileResult.data?.roles?.any {
+                        it.equals("Admin", ignoreCase = true)
+                    } ?: false
+                }
+                is NetworkResult.Error -> {}
+                is NetworkResult.Loading -> {}
+            }
+
+            // Proje detayi
+            when (projectResult) {
                 is NetworkResult.Success -> {
                     projectResult.data?.let { project ->
-                        val currentUserId = preferencesManager.getUserId()
-                        val isCaptain = project.captains.any { it.userId == currentUserId }
-                        val isAdmin = _uiState.value.isAdmin
+                        val allProjectMembers = project.captains + project.members
+                        val isCaptain = allProjectMembers.any {
+                            it.userId == currentUserId && it.role.equals("Captain", ignoreCase = true)
+                        }
                         val canEdit = isAdmin || isCaptain
 
                         _uiState.value = _uiState.value.copy(
                             project = project,
+                            isAdmin = isAdmin,
                             isCaptain = isCaptain,
                             canEdit = canEdit,
                             isLoading = false

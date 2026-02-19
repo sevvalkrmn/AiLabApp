@@ -23,7 +23,8 @@ import javax.inject.Singleton
 class AuthRepository @Inject constructor(
     private val authApi: AuthApi,
     private val preferencesManager: PreferencesManager,
-    private val authManager: FirebaseAuthManager
+    private val authManager: FirebaseAuthManager,
+    private val notificationRepository: NotificationRepository
 ) {
 
     suspend fun completeRegistration(
@@ -63,6 +64,9 @@ class AuthRepository @Inject constructor(
                     lastName = splitName.drop(1).joinToString(" "),
                     phone = authResponse.phoneNumber ?: phone
                 )
+
+                // Kayit basarili — FCM token'i backend'e kaydet
+                notificationRepository.registerFcmToken()
 
                 NetworkResult.Success(authResponse)
             } else {
@@ -133,6 +137,9 @@ class AuthRepository @Inject constructor(
                     phone = authResponse.phoneNumber ?: ""
                 )
 
+                // Login basarili — FCM token'i backend'e kaydet
+                notificationRepository.registerFcmToken()
+
                 NetworkResult.Success(authResponse)
             } else {
                 NetworkResult.Error("Giriş başarısız: ${response.code()}")
@@ -144,6 +151,8 @@ class AuthRepository @Inject constructor(
 
     suspend fun logout() {
         try {
+            // Once FCM token'i backend'den sil (auth token hala gecerli)
+            notificationRepository.unregisterFcmToken()
             authManager.signOut()
             authApi.logout()
         } catch (e: Exception) {

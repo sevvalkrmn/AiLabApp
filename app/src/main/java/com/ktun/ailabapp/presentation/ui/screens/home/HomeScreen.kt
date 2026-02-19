@@ -50,7 +50,8 @@ fun HomeScreen(
     onNavigateToChat: () -> Unit = {},
     onNavigateToProfile: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel(),
-    announcementViewModel: AnnouncementViewModel
+    announcementViewModel: AnnouncementViewModel,
+    notificationTaskId: String? = null
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val announcementUiState by announcementViewModel.uiState.collectAsState()
@@ -88,6 +89,13 @@ fun HomeScreen(
     LaunchedEffect(Unit) {
         viewModel.loadUserData()
         announcementViewModel.loadAnnouncements()
+    }
+
+    // Bildirimden gelen task detayini otomatik ac
+    LaunchedEffect(notificationTaskId) {
+        if (!notificationTaskId.isNullOrEmpty()) {
+            viewModel.loadTaskDetail(notificationTaskId)
+        }
     }
 
     // Görev Detay Dialog

@@ -284,7 +284,7 @@ fun ProjectDetailScreen(
                             }
                         }
 
-                        if (uiState.canEdit) {
+                        if (uiState.isAdmin) {
                             item {
                                 StaggeredAnimatedItem(index = uiState.tasks.size + 4 + captains.size + members.size) {
                                     AdminActionsSection(

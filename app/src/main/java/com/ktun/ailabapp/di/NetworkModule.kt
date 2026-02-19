@@ -1,6 +1,7 @@
 package com.ktun.ailabapp.di
 
 import android.content.Context
+import com.chuckerteam.chucker.api.ChuckerCollector
 import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.ktun.ailabapp.BuildConfig
 import com.ktun.ailabapp.data.local.datastore.PreferencesManager
@@ -50,7 +51,13 @@ object NetworkModule {
     fun provideChuckerInterceptor(
         @ApplicationContext context: Context
     ): ChuckerInterceptor {
-        return ChuckerInterceptor.Builder(context).build()
+        val collector = ChuckerCollector(
+            context = context,
+            showNotification = false
+        )
+        return ChuckerInterceptor.Builder(context)
+            .collector(collector)
+            .build()
     }
 
     @Provides
@@ -140,6 +147,12 @@ object NetworkModule {
     @Singleton
     fun provideElectricityApi(retrofit: Retrofit): ElectricityApi {
         return retrofit.create(ElectricityApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideNotificationApi(retrofit: Retrofit): NotificationApi {
+        return retrofit.create(NotificationApi::class.java)
     }
 
     // --- RFID API (Raspberry Pi) ---

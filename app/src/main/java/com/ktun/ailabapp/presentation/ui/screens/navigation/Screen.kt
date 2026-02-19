@@ -5,7 +5,12 @@ package com.ktun.ailabapp.presentation.ui.screens.navigation
 sealed class Screen(val route: String) {
     object Login : Screen("login")
     object Register : Screen("register")
-    object Home : Screen("home")
+    object Home : Screen("home") {
+        const val routeWithArgs = "home?taskId={taskId}"
+        fun createRoute(taskId: String? = null): String {
+            return if (taskId != null) "home?taskId=$taskId" else "home"
+        }
+    }
     object Projects : Screen("projects")
     object ProjectDetail : Screen("project_detail/{projectId}") {
         fun createRoute(projectId: String) = "project_detail/$projectId"

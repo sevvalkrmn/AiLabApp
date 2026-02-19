@@ -103,17 +103,26 @@ fun NavGraph(
 
         // --- Tab Ekranları (fade) ---
         composable(
-            route = Screen.Home.route,
+            route = Screen.Home.routeWithArgs,
+            arguments = listOf(
+                navArgument("taskId") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            ),
             enterTransition = { fadeEnter() },
             exitTransition = { fadeExit() },
             popEnterTransition = { fadeEnter() },
             popExitTransition = { fadeExit() }
-        ) {
+        ) { backStackEntry ->
+            val taskId = backStackEntry.arguments?.getString("taskId")
             HomeScreen(
                 onNavigateToProjects = { navController.navigate(Screen.Projects.route) },
                 onNavigateToChat = { navController.navigate(Screen.Announcements.route) },
                 onNavigateToProfile = { navController.navigate(Screen.Profile.route) },
-                announcementViewModel = sharedAnnouncementViewModel
+                announcementViewModel = sharedAnnouncementViewModel,
+                notificationTaskId = taskId
             )
         }
 
