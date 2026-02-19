@@ -344,7 +344,7 @@ private fun ActionButtonsSection(
                 modifier = Modifier.weight(1f)
             )
             ActionButton(
-                text = "Yeni Rol Ata / Rolü Çıkar",
+                text = "Kaptan Değişimi Yap",
                 onClick = onSendNotification,
                 modifier = Modifier.weight(1f)
             )

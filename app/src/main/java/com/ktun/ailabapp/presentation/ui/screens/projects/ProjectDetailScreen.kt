@@ -10,13 +10,16 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material.icons.filled.*
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -153,7 +156,9 @@ fun ProjectDetailScreen(
                                 ProjectInfoCard(
                                     project = uiState.project!!,
                                     screenWidth = screenWidth,
-                                    screenHeight = screenHeight
+                                    screenHeight = screenHeight,
+                                    isCaptain = uiState.isCaptain,
+                                    onSendAnnouncementClick = { viewModel.showSendAnnouncementDialog() }
                                 )
                             }
                         }
@@ -182,7 +187,7 @@ fun ProjectDetailScreen(
                                         color = PrimaryBlue
                                     )
 
-                                    if (uiState.canEdit) {
+                                    if (uiState.isCaptain) {
                                         IconButton(onClick = { viewModel.showCreateTaskDialog() }) {
                                             Icon(
                                                 imageVector = Icons.Default.Add,
@@ -353,6 +358,28 @@ fun ProjectDetailScreen(
                 viewModel.deleteProject(onSuccess = onNavigateBack)
             }
         )
+    }
+
+    if (uiState.showSendAnnouncementDialog && uiState.project != null) {
+        SendAnnouncementDialog(
+            members = uiState.project!!.captains + uiState.project!!.members,
+            isSending = uiState.isAnnouncementSending,
+            onDismiss = { viewModel.hideSendAnnouncementDialog() },
+            onSendToTeam = { title, content ->
+                viewModel.sendTeamAnnouncement(title, content)
+            },
+            onSendToUser = { title, content, userId ->
+                viewModel.sendPersonalAnnouncement(title, content, userId)
+            }
+        )
+    }
+
+    val context = LocalContext.current
+    LaunchedEffect(uiState.announcementMessage) {
+        uiState.announcementMessage?.let { message ->
+            android.widget.Toast.makeText(context, message, android.widget.Toast.LENGTH_LONG).show()
+            viewModel.clearAnnouncementMessage()
+        }
     }
 }
 
@@ -596,49 +623,71 @@ fun TaskCard(
 fun ProjectInfoCard(
     project: ProjectDetailResponse,
     screenWidth: androidx.compose.ui.unit.Dp,
-    screenHeight: androidx.compose.ui.unit.Dp
+    screenHeight: androidx.compose.ui.unit.Dp,
+    isCaptain: Boolean = false,
+    onSendAnnouncementClick: () -> Unit = {}
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = White),
         shape = RoundedCornerShape(screenWidth * 0.03f)
     ) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(screenWidth * 0.04f)
+                .padding(screenWidth * 0.04f),
+            verticalAlignment = Alignment.Top
         ) {
-            Text(
-                text = project.name,
-                fontSize = (screenWidth.value * 0.05f).sp,
-                fontWeight = FontWeight.Bold,
-                color = PrimaryBlue
-            )
-
-            if (!project.description.isNullOrEmpty()) {
-                Spacer(modifier = Modifier.height(screenHeight * 0.01f))
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = project.description,
-                    fontSize = (screenWidth.value * 0.035f).sp,
-                    color = PrimaryBlue.copy(alpha = 0.7f)
+                    text = project.name,
+                    fontSize = (screenWidth.value * 0.05f).sp,
+                    fontWeight = FontWeight.Bold,
+                    color = PrimaryBlue
                 )
+
+                if (!project.description.isNullOrEmpty()) {
+                    Spacer(modifier = Modifier.height(screenHeight * 0.01f))
+                    Text(
+                        text = project.description,
+                        fontSize = (screenWidth.value * 0.035f).sp,
+                        color = PrimaryBlue.copy(alpha = 0.7f)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(screenHeight * 0.015f))
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Default.DateRange,
+                        contentDescription = null,
+                        tint = PrimaryBlue.copy(alpha = 0.5f),
+                        modifier = Modifier.size(screenWidth * 0.04f)
+                    )
+                    Spacer(modifier = Modifier.width(screenWidth * 0.01f))
+                    Text(
+                        text = "Oluşturulma: ${formatDate(project.createdAt)}",
+                        fontSize = (screenWidth.value * 0.03f).sp,
+                        color = PrimaryBlue.copy(alpha = 0.5f)
+                    )
+                }
             }
 
-            Spacer(modifier = Modifier.height(screenHeight * 0.015f))
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    Icons.Default.DateRange,
-                    contentDescription = null,
-                    tint = PrimaryBlue.copy(alpha = 0.5f),
-                    modifier = Modifier.size(screenWidth * 0.04f)
-                )
-                Spacer(modifier = Modifier.width(screenWidth * 0.01f))
-                Text(
-                    text = "Oluşturulma: ${formatDate(project.createdAt)}",
-                    fontSize = (screenWidth.value * 0.03f).sp,
-                    color = PrimaryBlue.copy(alpha = 0.5f)
-                )
+            if (isCaptain) {
+                Button(
+                    onClick = onSendAnnouncementClick,
+                    shape = RoundedCornerShape(50),
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
+                    modifier = Modifier.defaultMinSize(minHeight = 1.dp, minWidth = 1.dp)
+                ) {
+                    Text(
+                        text = "Mesaj Gönder",
+                        fontSize = (screenWidth.value * 0.028f).sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.White
+                    )
+                }
             }
         }
     }
@@ -1092,6 +1141,177 @@ fun DeleteProjectDialog(
         dismissButton = {
             TextButton(onClick = onDismiss) {
                 Text("İptal")
+            }
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SendAnnouncementDialog(
+    members: List<ProjectMember>,
+    isSending: Boolean,
+    onDismiss: () -> Unit,
+    onSendToTeam: (title: String, content: String) -> Unit,
+    onSendToUser: (title: String, content: String, userId: String) -> Unit
+) {
+    var step by remember { mutableIntStateOf(1) }
+    var isTeamMode by remember { mutableStateOf(true) }
+    var selectedMember by remember { mutableStateOf<ProjectMember?>(null) }
+    var memberDropdownExpanded by remember { mutableStateOf(false) }
+    var title by remember { mutableStateOf("") }
+    var content by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = { if (!isSending) onDismiss() },
+        title = {
+            Text(
+                if (step == 1) "Bildirim Gönder" else if (isTeamMode) "Takıma Bildirim" else "Kişiye Özel Bildirim",
+                fontWeight = FontWeight.Bold,
+                color = PrimaryBlue
+            )
+        },
+        text = {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                if (step == 1) {
+                    Text(
+                        "Bildirimi kime göndermek istiyorsunuz?",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Button(
+                        onClick = {
+                            isTeamMode = true
+                            step = 2
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue)
+                    ) {
+                        Icon(Icons.Default.Groups, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Tüm Takıma Gönder")
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    OutlinedButton(
+                        onClick = {
+                            isTeamMode = false
+                            step = 2
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.Person, contentDescription = null, tint = PrimaryBlue)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Kişiye Özel Gönder", color = PrimaryBlue)
+                    }
+                } else {
+                    if (!isTeamMode) {
+                        ExposedDropdownMenuBox(
+                            expanded = memberDropdownExpanded,
+                            onExpandedChange = { memberDropdownExpanded = it }
+                        ) {
+                            OutlinedTextField(
+                                value = selectedMember?.fullName ?: "",
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { Text("Kişi Seç") },
+                                trailingIcon = {
+                                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = memberDropdownExpanded)
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .menuAnchor()
+                            )
+
+                            ExposedDropdownMenu(
+                                expanded = memberDropdownExpanded,
+                                onDismissRequest = { memberDropdownExpanded = false }
+                            ) {
+                                members.forEach { member ->
+                                    DropdownMenuItem(
+                                        text = {
+                                            Column {
+                                                Text(member.fullName, fontWeight = FontWeight.Medium)
+                                                Text(member.email, fontSize = 12.sp, color = Color.Gray)
+                                            }
+                                        },
+                                        onClick = {
+                                            selectedMember = member
+                                            memberDropdownExpanded = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                    }
+
+                    OutlinedTextField(
+                        value = title,
+                        onValueChange = { title = it },
+                        label = { Text("Başlık") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    OutlinedTextField(
+                        value = content,
+                        onValueChange = { content = it },
+                        label = { Text("İçerik") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 100.dp),
+                        maxLines = 5
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            if (step == 2) {
+                Button(
+                    onClick = {
+                        if (isTeamMode) {
+                            onSendToTeam(title, content)
+                        } else {
+                            selectedMember?.let {
+                                onSendToUser(title, content, it.userId)
+                            }
+                        }
+                    },
+                    enabled = !isSending
+                            && title.isNotBlank()
+                            && content.isNotBlank()
+                            && (isTeamMode || selectedMember != null),
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue)
+                ) {
+                    if (isSending) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            color = White,
+                            strokeWidth = 2.dp
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                    }
+                    Text("Gönder")
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = {
+                if (step == 2 && !isSending) {
+                    step = 1
+                    title = ""
+                    content = ""
+                    selectedMember = null
+                } else if (!isSending) {
+                    onDismiss()
+                }
+            }) {
+                Text(if (step == 2) "Geri" else "İptal")
             }
         }
     )

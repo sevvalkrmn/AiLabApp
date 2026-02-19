@@ -4,6 +4,7 @@ package com.ktun.ailabapp.data.remote.api
 
 import com.ktun.ailabapp.data.remote.dto.request.AddMemberRequest
 import com.ktun.ailabapp.data.remote.dto.request.CreateProjectRequest
+import com.ktun.ailabapp.data.remote.dto.request.TransferOwnershipRequest
 import com.ktun.ailabapp.data.remote.dto.request.UpdateMemberRoleRequest
 import com.ktun.ailabapp.data.remote.dto.request.UpdateProjectRequest
 import com.ktun.ailabapp.data.remote.dto.response.MyProjectsResponse
@@ -113,6 +114,16 @@ interface ProjectApi {
         @Path("id") projectId: String,
         @Path("userId") userId: String,
         @Body request: UpdateMemberRoleRequest
+    ): Response<Unit>
+
+    /**
+     * Kaptan değişimi yap
+     * POST /api/Projects/{id}/transfer-ownership
+     */
+    @POST("api/Projects/{id}/transfer-ownership")
+    suspend fun transferOwnership(
+        @Path("id") projectId: String,
+        @Body request: TransferOwnershipRequest
     ): Response<Unit>
 
 }

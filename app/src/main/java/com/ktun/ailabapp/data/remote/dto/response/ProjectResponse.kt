@@ -62,7 +62,10 @@ data class ProjectDetailResponse(
     val captains: List<ProjectMember> = emptyList(),
 
     @SerializedName("members")
-    val members: List<ProjectMember> = emptyList()
+    val members: List<ProjectMember> = emptyList(),
+
+    @SerializedName("captainNames")
+    val captainNames: List<String> = emptyList()
 )
 
 data class TaskStatistics(

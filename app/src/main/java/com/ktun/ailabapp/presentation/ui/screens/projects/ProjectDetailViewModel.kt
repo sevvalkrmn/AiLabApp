@@ -8,6 +8,7 @@ import com.ktun.ailabapp.data.remote.dto.request.AddMemberRequest
 import com.ktun.ailabapp.data.remote.dto.response.ProjectDetailResponse
 import com.ktun.ailabapp.data.remote.dto.response.TaskResponse
 import com.ktun.ailabapp.data.remote.dto.response.TaskStatistics
+import com.ktun.ailabapp.data.repository.AnnouncementRepository
 import com.ktun.ailabapp.data.repository.ProjectRepository
 import com.ktun.ailabapp.data.repository.TaskRepository
 import com.ktun.ailabapp.data.repository.UserRepository
@@ -36,7 +37,10 @@ data class ProjectDetailUiState(
     val showRemoveMemberDialog: Boolean = false,
     val showDeleteProjectDialog: Boolean = false,
     val showCreateTaskDialog: Boolean = false,
+    val showSendAnnouncementDialog: Boolean = false,
     val availableUsers: List<User> = emptyList(),
+    val announcementMessage: String? = null,
+    val isAnnouncementSending: Boolean = false,
 
     // ✅ YENİ - Seçili Görev Detayı
     val selectedTask: TaskResponse? = null,
@@ -48,6 +52,7 @@ class ProjectDetailViewModel @Inject constructor(
     private val projectRepository: ProjectRepository,
     private val taskRepository: TaskRepository,
     private val userRepository: UserRepository,
+    private val announcementRepository: AnnouncementRepository,
     private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
@@ -316,6 +321,57 @@ class ProjectDetailViewModel @Inject constructor(
                     _uiState.update { it.copy(errorMessage = result.message) }
                 }
                 is NetworkResult.Loading -> {}
+            }
+        }
+    }
+
+    fun showSendAnnouncementDialog() {
+        _uiState.update { it.copy(showSendAnnouncementDialog = true) }
+    }
+
+    fun hideSendAnnouncementDialog() {
+        _uiState.update { it.copy(showSendAnnouncementDialog = false, announcementMessage = null) }
+    }
+
+    fun clearAnnouncementMessage() {
+        _uiState.update { it.copy(announcementMessage = null) }
+    }
+
+    fun sendTeamAnnouncement(title: String, content: String) {
+        val projectId = _uiState.value.project?.id ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isAnnouncementSending = true) }
+            val result = announcementRepository.createAnnouncement(
+                title = title,
+                content = content,
+                scope = 1,
+                projectId = projectId
+            )
+            _uiState.update {
+                it.copy(
+                    isAnnouncementSending = false,
+                    showSendAnnouncementDialog = if (result.isSuccess) false else true,
+                    announcementMessage = if (result.isSuccess) "Bildirim tüm takıma gönderildi!" else "Hata: ${result.exceptionOrNull()?.message}"
+                )
+            }
+        }
+    }
+
+    fun sendPersonalAnnouncement(title: String, content: String, targetUserId: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isAnnouncementSending = true) }
+            val result = announcementRepository.createAnnouncement(
+                title = title,
+                content = content,
+                scope = 2,
+                userId = targetUserId
+            )
+            _uiState.update {
+                it.copy(
+                    isAnnouncementSending = false,
+                    showSendAnnouncementDialog = if (result.isSuccess) false else true,
+                    announcementMessage = if (result.isSuccess) "Bildirim kişiye gönderildi!" else "Hata: ${result.exceptionOrNull()?.message}"
+                )
             }
         }
     }

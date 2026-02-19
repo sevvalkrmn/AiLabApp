@@ -1,7 +1,6 @@
 package com.ktun.ailabapp.presentation.ui.screens.admin.users.roles
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -10,6 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ktun.ailabapp.data.model.User
+import com.ktun.ailabapp.data.remote.dto.response.ProjectMember
 import com.ktun.ailabapp.presentation.ui.screens.admin.roles.ManageRolesViewModel
 import com.ktun.ailabapp.ui.theme.ErrorRed
 import com.ktun.ailabapp.ui.theme.PrimaryBlue
@@ -45,18 +46,19 @@ fun ManageRolesScreen(
         }
     }
 
-    if (uiState.showCaptainWarning) {
-        CaptainWarningDialog(
+    if (uiState.showConfirmDialog) {
+        TransferConfirmDialog(
             projectName = uiState.selectedProjectName ?: "",
-            onConfirm = { viewModel.confirmCaptainAssignment("Captain") },
-            onDismiss = { viewModel.dismissCaptainWarning() }
+            newCaptainName = uiState.selectedNewCaptain?.fullName ?: "",
+            onConfirm = { viewModel.transferOwnership() },
+            onDismiss = { viewModel.dismissConfirmDialog() }
         )
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Rol Yönetimi") },
+                title = { Text("Kaptan Değişimi") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBack, "Geri")
@@ -93,9 +95,8 @@ fun ManageRolesScreen(
                 )
             }
         } else {
-            // ✅ Local variable ile smart cast sorunu çözülür
             val user = uiState.user!!
-            val projects = user.projects.orEmpty() // ✅ null-safe
+            val captainProjects = uiState.captainProjects
 
             Column(
                 modifier = Modifier
@@ -106,11 +107,11 @@ fun ManageRolesScreen(
             ) {
                 UserInfoCard(user = user)
 
-                if (projects.isEmpty()) {
+                if (captainProjects.isEmpty()) {
                     EmptyProjectsCard()
                 } else {
                     Text(
-                        text = "Proje Seçin:",
+                        text = "Kaptan Olduğu Projeyi Seçin:",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = PrimaryBlue
@@ -120,45 +121,108 @@ fun ManageRolesScreen(
                         modifier = Modifier.weight(1f),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        items(projects) { project -> // ✅ Artık smart cast sorunu yok
+                        items(captainProjects) { project ->
                             ProjectSelectionCard(
                                 projectName = project.name,
-                                currentRole = project.role ?: "Member",
                                 isSelected = uiState.selectedProjectId == project.id,
                                 onClick = {
                                     viewModel.selectProject(
                                         projectId = project.id,
-                                        projectName = project.name,
-                                        currentRole = project.role
+                                        projectName = project.name
                                     )
                                 }
                             )
                         }
-                    }
-                }
 
-                if (uiState.selectedProjectId != null) {
-                    Divider(color = Color.Gray.copy(alpha = 0.3f))
+                        // Proje seçildiyse üyeleri göster
+                        if (uiState.selectedProjectId != null) {
+                            item {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                HorizontalDivider(color = Color.Gray.copy(alpha = 0.3f))
+                                Spacer(modifier = Modifier.height(8.dp))
 
-                    Text(
-                        text = "Yeni Rol Seçin:",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = PrimaryBlue
-                    )
+                                Text(
+                                    text = "Yeni Kaptan Seçin:",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = PrimaryBlue
+                                )
+                            }
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        uiState.availableRoles.forEach { role ->
-                            RoleButton(
-                                role = role,
-                                isSelected = uiState.currentRole == role,
-                                onClick = { viewModel.selectRole(role) },
-                                modifier = Modifier.weight(1f),
-                                isLoading = uiState.isLoading
-                            )
+                            if (uiState.isLoadingMembers) {
+                                item {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        CircularProgressIndicator(
+                                            color = PrimaryBlue,
+                                            modifier = Modifier.size(32.dp)
+                                        )
+                                    }
+                                }
+                            } else if (uiState.projectMembers.isEmpty()) {
+                                item {
+                                    Surface(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = RoundedCornerShape(12.dp),
+                                        color = ErrorRed.copy(alpha = 0.1f)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier.padding(16.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text(
+                                                text = "Bu projede başka üye bulunmuyor",
+                                                fontSize = 14.sp,
+                                                color = ErrorRed
+                                            )
+                                        }
+                                    }
+                                }
+                            } else {
+                                items(uiState.projectMembers) { member ->
+                                    MemberSelectionCard(
+                                        member = member,
+                                        isSelected = uiState.selectedNewCaptain?.userId == member.userId,
+                                        onClick = { viewModel.selectNewCaptain(member) }
+                                    )
+                                }
+                            }
+
+                            // Transfer butonu
+                            if (uiState.selectedNewCaptain != null) {
+                                item {
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Button(
+                                        onClick = { viewModel.showConfirmDialog() },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(48.dp),
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = PrimaryBlue
+                                        ),
+                                        shape = RoundedCornerShape(24.dp),
+                                        enabled = !uiState.isLoading
+                                    ) {
+                                        if (uiState.isLoading) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.size(20.dp),
+                                                color = Color.White,
+                                                strokeWidth = 2.dp
+                                            )
+                                        } else {
+                                            Text(
+                                                text = "Kaptanlığı Devret",
+                                                fontSize = 14.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -168,6 +232,15 @@ fun ManageRolesScreen(
                         text = error,
                         color = MaterialTheme.colorScheme.error,
                         fontSize = 14.sp
+                    )
+                }
+
+                if (uiState.isSuccess) {
+                    Text(
+                        text = "Kaptan değişimi başarıyla tamamlandı!",
+                        color = Color(0xFF4CAF50),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }
@@ -223,7 +296,6 @@ private fun UserInfoCard(user: User) {
 @Composable
 private fun ProjectSelectionCard(
     projectName: String,
-    currentRole: String,
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
@@ -251,7 +323,7 @@ private fun ProjectSelectionCard(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Mevcut Rol: $currentRole",
+                    text = "Mevcut Rol: Captain",
                     fontSize = 12.sp,
                     color = Color.Gray
                 )
@@ -269,36 +341,63 @@ private fun ProjectSelectionCard(
 }
 
 @Composable
-private fun RoleButton(
-    role: String,
+private fun MemberSelectionCard(
+    member: ProjectMember,
     isSelected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    isLoading: Boolean
+    onClick: () -> Unit
 ) {
-    Button(
-        onClick = onClick,
-        modifier = modifier.height(48.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = if (isSelected) PrimaryBlue else Color.White,
-            contentColor = if (isSelected) Color.White else PrimaryBlue
-        ),
-        shape = RoundedCornerShape(24.dp),
-        border = BorderStroke(1.dp, PrimaryBlue),
-        enabled = !isLoading
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(12.dp),
+        color = if (isSelected) PrimaryBlue.copy(alpha = 0.1f) else Color.White,
+        border = BorderStroke(
+            width = if (isSelected) 2.dp else 1.dp,
+            color = if (isSelected) PrimaryBlue else Color.Gray.copy(alpha = 0.3f)
+        )
     ) {
-        if (isLoading && isSelected) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(20.dp),
-                color = Color.White,
-                strokeWidth = 2.dp
-            )
-        } else {
-            Text(
-                text = role,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold
-            )
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Surface(
+                modifier = Modifier.size(36.dp),
+                shape = RoundedCornerShape(18.dp),
+                color = PrimaryBlue.copy(alpha = 0.1f)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = null,
+                        tint = PrimaryBlue,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = member.fullName,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = PrimaryBlue
+                )
+                Text(
+                    text = member.email,
+                    fontSize = 12.sp,
+                    color = Color.Gray
+                )
+            }
+
+            if (isSelected) {
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = null,
+                    tint = PrimaryBlue
+                )
+            }
         }
     }
 }
@@ -315,7 +414,7 @@ private fun EmptyProjectsCard() {
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "Bu kullanıcının henüz projesi yok",
+                text = "Bu kullanıcının kaptan olduğu proje yok",
                 fontSize = 14.sp,
                 color = ErrorRed
             )
@@ -324,8 +423,9 @@ private fun EmptyProjectsCard() {
 }
 
 @Composable
-private fun CaptainWarningDialog(
+private fun TransferConfirmDialog(
     projectName: String,
+    newCaptainName: String,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -333,16 +433,16 @@ private fun CaptainWarningDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = "⚠️ Kaptan Ataması",
+                text = "Kaptan Değişimi Onayı",
                 fontWeight = FontWeight.Bold
             )
         },
         text = {
             Column {
-                Text("\"$projectName\" projesine yeni bir kaptan atamak üzeresiniz.")
+                Text("\"$projectName\" projesinin kaptanlığını \"$newCaptainName\" kişisine devretmek istediğinize emin misiniz?")
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "UYARI: Bir projede yalnızca bir kaptan olabilir. Mevcut kaptan varsa otomatik olarak Member rolüne düşürülecektir.",
+                    text = "Bu işlem sonucunda mevcut kaptan Member rolüne düşürülecektir.",
                     fontSize = 12.sp,
                     color = Color.Red
                 )
@@ -355,7 +455,7 @@ private fun CaptainWarningDialog(
                     contentColor = PrimaryBlue
                 )
             ) {
-                Text("Devam Et", fontWeight = FontWeight.Bold)
+                Text("Devret", fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {
