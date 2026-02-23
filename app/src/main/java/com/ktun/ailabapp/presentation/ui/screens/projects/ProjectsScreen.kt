@@ -58,13 +58,6 @@ fun ProjectsScreen(
     val screenWidth = configuration.screenWidthDp.dp
 
     var showFeedbackDialog by remember { mutableStateOf(false) }
-    var isRefreshing by remember { mutableStateOf(false) }
-
-    LaunchedEffect(uiState.isLoading) {
-        if (!uiState.isLoading) {
-            isRefreshing = false
-        }
-    }
 
     val unreadCount = remember(announcementUiState.announcements) {
         announcementUiState.announcements.count { !it.isRead }
@@ -138,17 +131,14 @@ fun ProjectsScreen(
 
             // CONTENT
             androidx.compose.material3.pulltorefresh.PullToRefreshBox(
-                isRefreshing = isRefreshing,
-                onRefresh = {
-                    isRefreshing = true
-                    viewModel.refreshProjects()
-                },
+                isRefreshing = uiState.isRefreshing,
+                onRefresh = { viewModel.refreshProjects() },
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
             ) {
                 when {
-                    uiState.isLoading && !isRefreshing -> {
+                    uiState.isLoading && !uiState.isRefreshing -> {
                         ProjectsScreenSkeleton(screenWidth, screenHeight)
                     }
                     uiState.errorMessage != null -> {

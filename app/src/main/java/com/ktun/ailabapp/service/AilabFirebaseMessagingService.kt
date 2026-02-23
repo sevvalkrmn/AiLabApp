@@ -4,6 +4,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import com.google.firebase.messaging.FirebaseMessagingService
@@ -64,24 +65,22 @@ class AilabFirebaseMessagingService : FirebaseMessagingService() {
     /**
      * Bildirim geldiginde cagirilir.
      *
-     * Uygulama FOREGROUND'da → Bu metod cagirilir, biz gostermeliyiz.
-     * Uygulama BACKGROUND'da VE notification payload varsa → Sistem otomatik gosterir.
-     * Uygulama KILLED durumda → Sistem otomatik gosterir.
+     * Data-only payload kullanildigi icin her durumda (foreground/background/killed)
+     * bu metod cagirilir ve biz bildirimi gosteririz.
      */
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
 
-        val title = message.notification?.title ?: return
-        val body = message.notification?.body ?: return
         val data = message.data
-
+        val title = data["title"] ?: return
+        val body = data["body"] ?: return
         val type = data["type"] ?: "default"
         val referenceId = data["referenceId"]
 
         Logger.d("Bildirim alindi - type: $type, title: $title", "FCMService")
 
         val channelId = when (type) {
-            "task" -> CHANNEL_TASK
+            "task", "task_reminder" -> CHANNEL_TASK
             "announcement" -> CHANNEL_ANNOUNCEMENT
             "auto_checkout_warning" -> CHANNEL_LAB
             else -> CHANNEL_DEFAULT
@@ -108,8 +107,18 @@ class AilabFirebaseMessagingService : FirebaseMessagingService() {
             PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
         )
 
+        val ailaDrawable = when (type) {
+            "task" -> R.drawable.aila_yeni_task
+            "task_reminder" -> R.drawable.aila_task_unutmus
+            "announcement" -> R.drawable.aila_anons
+            "auto_checkout_warning" -> R.drawable.aila_rfid_unutmus
+            else -> R.drawable.aila
+        }
+        val largeIcon = BitmapFactory.decodeResource(resources, ailaDrawable)
+
         val notification = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(R.drawable.ic_notification)
+            .setLargeIcon(largeIcon)
             .setContentTitle(title)
             .setContentText(body)
             .setAutoCancel(true)

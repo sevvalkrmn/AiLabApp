@@ -10,11 +10,13 @@ import com.ktun.ailabapp.data.remote.dto.response.MyProjectsResponse
 import com.ktun.ailabapp.data.remote.dto.response.ProjectDetailResponse
 import com.ktun.ailabapp.data.remote.dto.response.ProjectMember
 import com.ktun.ailabapp.data.remote.dto.response.toUserProject
+import com.ktun.ailabapp.util.CacheEntry
 import com.ktun.ailabapp.util.Logger
 import com.ktun.ailabapp.util.NetworkResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import retrofit2.HttpException
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -22,11 +24,27 @@ import javax.inject.Singleton
 class ProjectRepository @Inject constructor(
     private val projectApi: ProjectApi
 ) {
+
+    private companion object {
+        const val PROJECTS_TTL_MS = 5 * 60 * 1000L
+        const val MEMBERS_TTL_MS = 5 * 60 * 1000L
+    }
+
+    private val myProjectsCache = ConcurrentHashMap<String, CacheEntry<List<MyProjectsResponse>>>()
+    private val membersCacheMap = ConcurrentHashMap<String, CacheEntry<List<ProjectMember>>>()
+
+    fun clearCache() {
+        myProjectsCache.clear()
+        membersCacheMap.clear()
+    }
     /**
      * Kullanıcının kendi projelerini çeker
      * GET /api/projects/my-projects
      */
     suspend fun getMyProjects(roleFilter: String? = null): NetworkResult<List<MyProjectsResponse>> = withContext(Dispatchers.IO) {
+        val cacheKey = roleFilter ?: "all"
+        myProjectsCache[cacheKey]?.let { if (it.isValid(PROJECTS_TTL_MS)) return@withContext NetworkResult.Success(it.data) }
+
         try {
             Logger.d( "🔍 Fetching my projects with role filter: $roleFilter")
 
@@ -38,10 +56,12 @@ class ProjectRepository @Inject constructor(
                 }
                 response.isSuccessful && response.body() != null -> {
                     val projects = response.body()!!
+                    myProjectsCache[cacheKey] = CacheEntry(projects)
                     Logger.d( "✅ Loaded ${projects.size} projects")
                     NetworkResult.Success(projects)
                 }
                 response.isSuccessful && response.body() == null -> {
+                    myProjectsCache[cacheKey] = CacheEntry(emptyList())
                     Logger.d( "⚠️ No projects found")
                     NetworkResult.Success(emptyList())
                 }
@@ -161,6 +181,8 @@ class ProjectRepository @Inject constructor(
      * GET /api/projects/{id}/members
      */
     suspend fun getProjectMembers(projectId: String): NetworkResult<List<ProjectMember>> = withContext(Dispatchers.IO) {
+        membersCacheMap[projectId]?.let { if (it.isValid(MEMBERS_TTL_MS)) return@withContext NetworkResult.Success(it.data) }
+
         try {
             Logger.d( "🔍 Fetching members for project: $projectId")
 
@@ -178,10 +200,12 @@ class ProjectRepository @Inject constructor(
                 }
                 response.isSuccessful && response.body() != null -> {
                     val members = response.body()!!
+                    membersCacheMap[projectId] = CacheEntry(members)
                     Logger.d( "✅ Loaded ${members.size} members")
                     NetworkResult.Success(members)
                 }
                 response.isSuccessful && response.body() == null -> {
+                    membersCacheMap[projectId] = CacheEntry(emptyList())
                     Logger.d( "⚠️ No members found")
                     NetworkResult.Success(emptyList())
                 }
@@ -219,6 +243,7 @@ class ProjectRepository @Inject constructor(
                 }
                 response.isSuccessful && response.body() != null -> {
                     val project = response.body()!!
+                    myProjectsCache.clear()
                     Logger.d( "✅ Project created: ${project.name}")
                     NetworkResult.Success(project)
                 }
@@ -262,6 +287,8 @@ class ProjectRepository @Inject constructor(
                 }
                 response.isSuccessful && response.body() != null -> {
                     val member = response.body()!!
+                    membersCacheMap.remove(projectId)
+                    myProjectsCache.clear()
                     Logger.d( "✅ Member added: ${member.fullName}")
                     NetworkResult.Success(member)
                 }
@@ -309,6 +336,8 @@ class ProjectRepository @Inject constructor(
                     }
                 }
                 response.isSuccessful -> {
+                    membersCacheMap.remove(projectId)
+                    myProjectsCache.clear()
                     Logger.d( "✅ Member removed")
                     NetworkResult.Success(Unit)
                 }
@@ -343,6 +372,7 @@ class ProjectRepository @Inject constructor(
                 response.code() == 403 -> NetworkResult.Error("Proje silme yetkiniz yok")
                 response.code() == 400 -> NetworkResult.Error("Aktif görevler var, önce bunları tamamlayın")
                 response.isSuccessful -> {
+                    myProjectsCache.clear()
                     Logger.d( "✅ Project deleted")
                     NetworkResult.Success(Unit)
                 }

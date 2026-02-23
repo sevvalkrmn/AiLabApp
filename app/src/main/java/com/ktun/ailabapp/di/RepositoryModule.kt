@@ -29,9 +29,11 @@ object RepositoryModule {
         authApi: AuthApi,
         preferencesManager: PreferencesManager,
         authManager: FirebaseAuthManager,
-        notificationRepository: NotificationRepository
+        notificationRepository: NotificationRepository,
+        projectRepository: ProjectRepository,
+        taskRepository: TaskRepository
     ): AuthRepository {
-        return AuthRepository(authApi, preferencesManager, authManager, notificationRepository)
+        return AuthRepository(authApi, preferencesManager, authManager, notificationRepository, projectRepository, taskRepository)
     }
 
     @Provides

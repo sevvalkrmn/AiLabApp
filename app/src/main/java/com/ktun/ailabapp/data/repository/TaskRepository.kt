@@ -3,10 +3,12 @@ package com.ktun.ailabapp.data.repository
 import com.ktun.ailabapp.data.remote.api.TaskApi
 import com.ktun.ailabapp.data.remote.dto.request.UpdateTaskStatusRequest
 import com.ktun.ailabapp.data.remote.dto.response.TaskResponse
+import com.ktun.ailabapp.util.CacheEntry
 import com.ktun.ailabapp.util.Logger
 import com.ktun.ailabapp.util.NetworkResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -16,6 +18,16 @@ import com.ktun.ailabapp.data.remote.dto.request.CreateTaskRequest
 class TaskRepository @Inject constructor(
     private val taskApi: TaskApi
 ) {
+
+    private companion object {
+        const val MY_TASKS_TTL_MS = 2 * 60 * 1000L
+    }
+
+    private val myTasksCache = ConcurrentHashMap<String, CacheEntry<List<TaskResponse>>>()
+
+    fun clearCache() {
+        myTasksCache.clear()
+    }
 
     /**
      * Projenin tüm görevlerini getir
@@ -62,6 +74,9 @@ class TaskRepository @Inject constructor(
      */
     suspend fun getMyTasks(status: Int? = null): NetworkResult<List<TaskResponse>> =
         withContext(Dispatchers.IO) {
+            val cacheKey = status?.toString() ?: "all"
+            myTasksCache[cacheKey]?.let { if (it.isValid(MY_TASKS_TTL_MS)) return@withContext NetworkResult.Success(it.data) }
+
             try {
                 Logger.d( "Kullanıcı görevleri çekiliyor. Status: $status")
 
@@ -69,6 +84,7 @@ class TaskRepository @Inject constructor(
 
                 if (response.isSuccessful && response.body() != null) {
                     val tasks = response.body()!!
+                    myTasksCache[cacheKey] = CacheEntry(tasks)
 
                     Logger.d( "Görev sayısı: ${tasks.size}")
 
@@ -122,6 +138,7 @@ class TaskRepository @Inject constructor(
             val response = taskApi.createTask(request)
 
             if (response.isSuccessful && response.body() != null) {
+                myTasksCache.clear()
                 NetworkResult.Success(response.body()!!)
             } else {
                 val errorBody = response.errorBody()?.string()
@@ -137,6 +154,7 @@ class TaskRepository @Inject constructor(
             val response = taskApi.deleteTask(taskId)
 
             if (response.isSuccessful) {
+                myTasksCache.clear()
                 NetworkResult.Success(Unit)
             } else {
                 val errorBody = response.errorBody()?.string()
@@ -169,6 +187,7 @@ class TaskRepository @Inject constructor(
 
             if (response.isSuccessful && response.body() != null) {
                 val task = response.body()!!
+                myTasksCache.clear()
 
                 Logger.d( "Görev durumu güncellendi")
 

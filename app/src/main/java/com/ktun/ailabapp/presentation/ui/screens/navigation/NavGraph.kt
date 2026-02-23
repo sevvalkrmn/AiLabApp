@@ -15,9 +15,12 @@ import com.ktun.ailabapp.presentation.ui.screens.login.LoginScreen
 import com.ktun.ailabapp.presentation.ui.screens.announcement.AnnouncementScreen
 import com.ktun.ailabapp.presentation.ui.screens.announcement.AnnouncementViewModel
 import com.ktun.ailabapp.presentation.ui.screens.home.HomeScreen
+import com.ktun.ailabapp.presentation.ui.screens.home.HomeViewModel
 import com.ktun.ailabapp.presentation.ui.screens.profile.ProfileScreen
+import com.ktun.ailabapp.presentation.ui.screens.profile.ProfileViewModel
 import com.ktun.ailabapp.presentation.ui.screens.projects.ProjectDetailScreen
 import com.ktun.ailabapp.presentation.ui.screens.projects.ProjectsScreen
+import com.ktun.ailabapp.presentation.ui.screens.projects.ProjectsViewModel
 import com.ktun.ailabapp.screens.RegisterScreen
 import com.ktun.ailabapp.presentation.ui.screens.admin.users.UsersListScreen
 import com.ktun.ailabapp.presentation.ui.screens.admin.users.personalAnnouncement.SendAnnouncementScreen
@@ -39,6 +42,9 @@ fun NavGraph(
     startDestination: String = Screen.Login.route
 ) {
     val sharedAnnouncementViewModel: AnnouncementViewModel = hiltViewModel()
+    val sharedHomeViewModel: HomeViewModel = hiltViewModel()
+    val sharedProjectsViewModel: ProjectsViewModel = hiltViewModel()
+    val sharedProfileViewModel: ProfileViewModel = hiltViewModel()
 
     LaunchedEffect(startDestination) {
         if (startDestination != Screen.Login.route && startDestination != Screen.Register.route) {
@@ -121,6 +127,7 @@ fun NavGraph(
                 onNavigateToProjects = { navController.navigate(Screen.Projects.route) },
                 onNavigateToChat = { navController.navigate(Screen.Announcements.route) },
                 onNavigateToProfile = { navController.navigate(Screen.Profile.route) },
+                viewModel = sharedHomeViewModel,
                 announcementViewModel = sharedAnnouncementViewModel,
                 notificationTaskId = taskId
             )
@@ -138,6 +145,7 @@ fun NavGraph(
                 onNavigateToChat = { navController.navigate(Screen.Announcements.route) },
                 onNavigateToProfile = { navController.navigate(Screen.Profile.route) },
                 onNavigateToProjectDetail = { projectId -> navController.navigate(Screen.ProjectDetail.createRoute(projectId)) },
+                viewModel = sharedProjectsViewModel,
                 announcementViewModel = sharedAnnouncementViewModel
             )
         }
@@ -181,6 +189,7 @@ fun NavGraph(
                 onNavigateToProfile = { },
                 onNavigateToAdminPanel = { navController.navigate(Screen.AdminPanel.route) },
                 onLogout = { navController.navigate(Screen.Login.route) { popUpTo(0) { inclusive = true } } },
+                viewModel = sharedProfileViewModel,
                 announcementViewModel = sharedAnnouncementViewModel
             )
         }

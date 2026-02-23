@@ -31,49 +31,55 @@ class ProfileViewModel @Inject constructor(
         loadDefaultAvatars()
     }
 
-    private fun loadUserProfile() {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+    private suspend fun loadUserProfileInternal() {
+        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
 
-            when (val result = authRepository.getProfile()) {
-                is NetworkResult.Success -> {
-                    result.data?.let { profile ->
-
-                        val isAdminUser = profile.roles.any { role ->
-                            role.equals("admin", ignoreCase = true)
-                        }
-
-                        _uiState.value = _uiState.value.copy(
-                            id = profile.id,
-                            fullName = profile.fullName,
-                            email = profile.email,
-                            schoolNumber = profile.schoolNumber,
-                            phone = profile.phone,
-                            profileImageUrl = profile.profileImageUrl,
-                            totalScore = profile.totalScore, // Double
-                            roles = profile.roles,
-                            isAdmin = isAdminUser,
-                            isLoading = false,
-                            errorMessage = null
-                        )
-
-                        Logger.d("✅ Profile loaded: ${profile.fullName}", "ProfileVM")
+        when (val result = authRepository.getProfile()) {
+            is NetworkResult.Success -> {
+                result.data?.let { profile ->
+                    val isAdminUser = profile.roles.any { role ->
+                        role.equals("admin", ignoreCase = true)
                     }
-                }
-                is NetworkResult.Error -> {
-                    Logger.e("❌ Profile error: ${result.message}", tag = "ProfileVM")
+
                     _uiState.value = _uiState.value.copy(
+                        id = profile.id,
+                        fullName = profile.fullName,
+                        email = profile.email,
+                        schoolNumber = profile.schoolNumber,
+                        phone = profile.phone,
+                        profileImageUrl = profile.profileImageUrl,
+                        totalScore = profile.totalScore,
+                        roles = profile.roles,
+                        isAdmin = isAdminUser,
                         isLoading = false,
-                        errorMessage = result.message
+                        errorMessage = null
                     )
+
+                    Logger.d("✅ Profile loaded: ${profile.fullName}", "ProfileVM")
                 }
-                is NetworkResult.Loading -> {}
             }
+            is NetworkResult.Error -> {
+                Logger.e("❌ Profile error: ${result.message}", tag = "ProfileVM")
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = result.message
+                )
+            }
+            is NetworkResult.Loading -> {}
         }
     }
 
+    private fun loadUserProfile() {
+        viewModelScope.launch { loadUserProfileInternal() }
+    }
+
     fun refreshProfile() {
-        loadUserProfile()
+        if (_uiState.value.isRefreshing) return
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isRefreshing = true)
+            loadUserProfileInternal()
+            _uiState.value = _uiState.value.copy(isRefreshing = false)
+        }
     }
 
     fun uploadAndUpdateProfileImage(context: Context, imageUri: Uri) {

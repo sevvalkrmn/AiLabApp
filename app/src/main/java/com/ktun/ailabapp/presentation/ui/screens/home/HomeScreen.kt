@@ -26,9 +26,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import coil.compose.AsyncImage
 import com.ktun.ailabapp.data.remote.dto.response.TaskResponse
 import com.ktun.ailabapp.presentation.ui.components.BottomNavigationBar
@@ -57,7 +54,6 @@ fun HomeScreen(
     val announcementUiState by announcementViewModel.uiState.collectAsState()
     val context = LocalContext.current
 
-    var isRefreshing by remember { mutableStateOf(false) }
     var showFeedbackDialog by remember { mutableStateOf(false) }
 
     if (showFeedbackDialog) {
@@ -70,24 +66,7 @@ fun HomeScreen(
         )
     }
 
-    // Lifecycle-aware polling: sadece ekran görünürken çalışır
-    val lifecycleOwner = LocalLifecycleOwner.current
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_RESUME -> viewModel.startPolling()
-                Lifecycle.Event.ON_PAUSE -> viewModel.stopPolling()
-                else -> {}
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-        }
-    }
-
     LaunchedEffect(Unit) {
-        viewModel.loadUserData()
         announcementViewModel.loadAnnouncements()
     }
 
@@ -111,12 +90,6 @@ fun HomeScreen(
             task = uiState.selectedTask!!,
             onDismiss = { viewModel.clearSelectedTask() }
         )
-    }
-
-    LaunchedEffect(uiState.isLoading) {
-        if (!uiState.isLoading) {
-            isRefreshing = false
-        }
     }
 
     val configuration = LocalConfiguration.current
@@ -180,14 +153,11 @@ fun HomeScreen(
 
             // ✅ İÇERİK ALANI (Card kaldırıldı, doğrudan akış sağlandı)
             androidx.compose.material3.pulltorefresh.PullToRefreshBox(
-                isRefreshing = isRefreshing,
-                onRefresh = {
-                    isRefreshing = true
-                    viewModel.refreshUserData()
-                },
+                isRefreshing = uiState.isRefreshing,
+                onRefresh = { viewModel.refreshUserData() },
                 modifier = Modifier.fillMaxSize()
             ) {
-                if (uiState.isLoading && !isRefreshing) {
+                if (uiState.isLoading && !uiState.isRefreshing) {
                     HomeScreenSkeleton(screenWidth, screenHeight)
                 } else {
                     val cardItems = listOf<@Composable () -> Unit>(

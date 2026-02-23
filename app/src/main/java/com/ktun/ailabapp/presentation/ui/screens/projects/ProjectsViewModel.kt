@@ -8,6 +8,9 @@ import com.ktun.ailabapp.data.repository.ProjectRepository
 import com.ktun.ailabapp.util.Logger
 import com.ktun.ailabapp.util.NetworkResult
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,6 +20,7 @@ import javax.inject.Inject
 data class ProjectsUiState(
     val projects: List<MyProjectsResponse> = emptyList(),
     val isLoading: Boolean = false,
+    val isRefreshing: Boolean = false,
     val errorMessage: String? = null,
     val selectedFilter: ProjectFilter = ProjectFilter.ALL
 )
@@ -39,104 +43,92 @@ class ProjectsViewModel @Inject constructor(
     private var currentUserId: String = ""
 
     init {
-        loadUserIdAndProjects()
-    }
-
-    private fun loadUserIdAndProjects() {
         viewModelScope.launch {
-            // Önce kullanıcının ID'sini al
             when (val profileResult = authRepository.getProfile()) {
                 is NetworkResult.Success -> {
                     profileResult.data?.let { profile ->
                         currentUserId = profile.id
-                        Logger.d( "Current User ID: $currentUserId")
-
-                        // UserId alındıktan sonra projeleri yükle
-                        loadProjects()
+                        Logger.d("Current User ID: $currentUserId")
                     }
                 }
                 is NetworkResult.Error -> {
-                    Logger.e( "Profile alınamadı: ${profileResult.message}")
-                    // Yine de projeleri yüklemeyi dene
-                    loadProjects()
+                    Logger.e("Profile alınamadı: ${profileResult.message}")
                 }
                 else -> {}
             }
+            loadProjectsInternal(ProjectFilter.ALL)
+        }
+    }
+
+    private suspend fun loadProjectsInternal(filter: ProjectFilter) {
+        _uiState.value = _uiState.value.copy(
+            isLoading = true,
+            errorMessage = null,
+            selectedFilter = filter
+        )
+
+        val roleFilter = when (filter) {
+            ProjectFilter.CAPTAIN -> "Captain"
+            ProjectFilter.MEMBER -> "Member"
+            ProjectFilter.ALL -> null
+        }
+
+        when (val result = projectRepository.getMyProjects(roleFilter)) {
+            is NetworkResult.Success -> {
+                result.data?.let { projects ->
+                    Logger.d("Projeler yüklendi: ${projects.size}")
+
+                    val projectsWithRoles = coroutineScope {
+                        projects.map { project ->
+                            async {
+                                when (val membersResult = projectRepository.getProjectMembers(project.id)) {
+                                    is NetworkResult.Success -> {
+                                        val userMember = membersResult.data?.find { it.userId == currentUserId }
+                                        val userRole = userMember?.role ?: "Member"
+                                        Logger.d("Proje: ${project.name}, User Role: $userRole")
+                                        project.copy(userRole = userRole)
+                                    }
+                                    is NetworkResult.Error -> {
+                                        Logger.e("Üyeler alınamadı: ${membersResult.message}")
+                                        project.copy(userRole = "Member")
+                                    }
+                                    else -> project.copy(userRole = "Member")
+                                }
+                            }
+                        }.awaitAll()
+                    }
+
+                    _uiState.value = _uiState.value.copy(
+                        projects = projectsWithRoles,
+                        isLoading = false,
+                        errorMessage = null
+                    )
+
+                    Logger.d("Tüm projeler rolleriyle yüklendi: ${projectsWithRoles.size}")
+                }
+            }
+            is NetworkResult.Error -> {
+                Logger.e("Proje yükleme hatası: ${result.message}")
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = result.message
+                )
+            }
+            is NetworkResult.Loading -> {}
         }
     }
 
     fun loadProjects(filter: ProjectFilter = ProjectFilter.ALL) {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(
-                isLoading = true,
-                errorMessage = null,
-                selectedFilter = filter
-            )
-
-            val roleFilter = when (filter) {
-                ProjectFilter.CAPTAIN -> "Captain"
-                ProjectFilter.MEMBER -> "Member"
-                ProjectFilter.ALL -> null
-            }
-
-            when (val result = projectRepository.getMyProjects(roleFilter)) {
-                is NetworkResult.Success -> {
-                    result.data?.let { projects ->
-                        Logger.d( "Projeler yüklendi: ${projects.size}")
-
-                        // Her proje için üye bilgisini çek ve kullanıcının rolünü bul
-                        val projectsWithRoles = mutableListOf<MyProjectsResponse>()
-
-                        projects.forEach { project ->
-                            // Proje üyelerini çek
-                            when (val membersResult = projectRepository.getProjectMembers(project.id)) {
-                                is NetworkResult.Success -> {
-                                    membersResult.data?.let { members ->
-                                        // Giriş yapan kullanıcının bu projedeki rolünü bul
-                                        val userMember = members.find { it.userId == currentUserId }
-                                        val userRole = userMember?.role ?: "Member"
-
-                                        projectsWithRoles.add(project.copy(userRole = userRole))
-
-                                        Logger.d( """
-                                            Proje: ${project.name}
-                                            User ID: $currentUserId
-                                            User Role: $userRole
-                                        """.trimIndent())
-                                    }
-                                }
-                                is NetworkResult.Error -> {
-                                    Logger.e( "Üyeler alınamadı: ${membersResult.message}")
-                                    // Üyeler alınamazsa default role kullan
-                                    projectsWithRoles.add(project.copy(userRole = "Member"))
-                                }
-                                else -> {}
-                            }
-                        }
-
-                        _uiState.value = _uiState.value.copy(
-                            projects = projectsWithRoles,
-                            isLoading = false,
-                            errorMessage = null
-                        )
-
-                        Logger.d( "Tüm projeler rolleriyle yüklendi: ${projectsWithRoles.size}")
-                    }
-                }
-                is NetworkResult.Error -> {
-                    Logger.e( "Proje yükleme hatası: ${result.message}")
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        errorMessage = result.message
-                    )
-                }
-                is NetworkResult.Loading -> {}
-            }
-        }
+        viewModelScope.launch { loadProjectsInternal(filter) }
     }
 
     fun refreshProjects() {
-        loadProjects(_uiState.value.selectedFilter)
+        if (_uiState.value.isRefreshing) return
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isRefreshing = true)
+            loadProjectsInternal(_uiState.value.selectedFilter)
+            _uiState.value = _uiState.value.copy(isRefreshing = false)
+        }
     }
 
     fun filterProjects(filter: ProjectFilter) {

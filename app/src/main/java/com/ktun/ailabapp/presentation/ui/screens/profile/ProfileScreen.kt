@@ -55,14 +55,6 @@ fun ProfileScreen(
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     val announcementUiState by announcementViewModel.uiState.collectAsState()
-    var isRefreshing by remember { mutableStateOf(false) }
-
-    LaunchedEffect(uiState.isLoading) {
-        if (!uiState.isLoading) {
-            isRefreshing = false
-        }
-    }
-
     val configuration = LocalConfiguration.current
     val screenHeight = configuration.screenHeightDp.dp
     val screenWidth = configuration.screenWidthDp.dp
@@ -248,16 +240,13 @@ fun ProfileScreen(
             }
 
             androidx.compose.material3.pulltorefresh.PullToRefreshBox(
-                isRefreshing = isRefreshing,
-                onRefresh = {
-                    isRefreshing = true
-                    viewModel.refreshProfile()
-                },
+                isRefreshing = uiState.isRefreshing,
+                onRefresh = { viewModel.refreshProfile() },
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
             ) {
-                if (uiState.isLoading && !isRefreshing) {
+                if (uiState.isLoading && !uiState.isRefreshing) {
                     ProfileScreenSkeleton(screenWidth, screenHeight)
                 } else {
                     Column(

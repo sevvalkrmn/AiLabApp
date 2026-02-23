@@ -10,6 +10,7 @@ import com.ktun.ailabapp.data.remote.dto.request.UpdateProfileImageRequest
 import com.ktun.ailabapp.data.remote.dto.response.AuthResponse
 import com.ktun.ailabapp.data.remote.dto.response.LeaderboardUserResponse
 import com.ktun.ailabapp.data.remote.dto.response.ProfileResponse
+import com.ktun.ailabapp.util.CacheEntry
 import com.ktun.ailabapp.util.FirebaseAuthManager
 import com.ktun.ailabapp.util.FirebaseStorageHelper
 import com.ktun.ailabapp.util.Logger
@@ -24,8 +25,26 @@ class AuthRepository @Inject constructor(
     private val authApi: AuthApi,
     private val preferencesManager: PreferencesManager,
     private val authManager: FirebaseAuthManager,
-    private val notificationRepository: NotificationRepository
+    private val notificationRepository: NotificationRepository,
+    private val projectRepository: ProjectRepository,
+    private val taskRepository: TaskRepository
 ) {
+
+    private companion object {
+        const val PROFILE_TTL_MS = 5 * 60 * 1000L
+        const val LEADERBOARD_TTL_MS = 5 * 60 * 1000L
+        const val AVATARS_TTL_MS = 30 * 60 * 1000L
+    }
+
+    @Volatile private var profileCache: CacheEntry<ProfileResponse>? = null
+    @Volatile private var leaderboardCache: CacheEntry<List<LeaderboardUserResponse>>? = null
+    @Volatile private var defaultAvatarsCache: CacheEntry<List<String>>? = null
+
+    fun clearCache() {
+        profileCache = null
+        leaderboardCache = null
+        defaultAvatarsCache = null
+    }
 
     suspend fun completeRegistration(
         idToken: String,
@@ -158,6 +177,9 @@ class AuthRepository @Inject constructor(
         } catch (e: Exception) {
             // Ignore
         } finally {
+            clearCache()
+            projectRepository.clearCache()
+            taskRepository.clearCache()
             preferencesManager.clearAllData()
         }
     }
@@ -181,6 +203,7 @@ class AuthRepository @Inject constructor(
             val response = authApi.updateEmail(request)
 
             if (response.isSuccessful) {
+                profileCache = null
                 NetworkResult.Success(Unit)
             } else {
                 NetworkResult.Error("Backend senkronizasyon hatası: ${response.code()}")
@@ -216,6 +239,7 @@ class AuthRepository @Inject constructor(
             val response = authApi.updatePhone(request)
 
             if (response.isSuccessful) {
+                profileCache = null
                 NetworkResult.Success(Unit)
             } else {
                 NetworkResult.Error("Telefon güncelleme hatası: ${response.code()}")
@@ -226,6 +250,8 @@ class AuthRepository @Inject constructor(
     }
 
     suspend fun getProfile(): NetworkResult<ProfileResponse> = withContext(Dispatchers.IO) {
+        profileCache?.let { if (it.isValid(PROFILE_TTL_MS)) return@withContext NetworkResult.Success(it.data) }
+
         try {
             val response = authApi.getProfile()
 
@@ -234,7 +260,9 @@ class AuthRepository @Inject constructor(
                     NetworkResult.Error("Oturum süresi doldu")
                 }
                 response.isSuccessful && response.body() != null -> {
-                    NetworkResult.Success(response.body()!!)
+                    val profile = response.body()!!
+                    profileCache = CacheEntry(profile)
+                    NetworkResult.Success(profile)
                 }
                 else -> {
                     NetworkResult.Error("Profil bilgileri alınamadı")
@@ -261,6 +289,7 @@ class AuthRepository @Inject constructor(
             val response = authApi.updateProfileImage(request)
 
             if (response.isSuccessful && response.body() != null) {
+                profileCache = null
                 NetworkResult.Success(response.body()!!)
             } else {
                 NetworkResult.Error("Profil fotoğrafı güncellenemedi")
@@ -276,6 +305,7 @@ class AuthRepository @Inject constructor(
             val response = authApi.updateProfileImage(request)
 
             if (response.isSuccessful && response.body() != null) {
+                profileCache = null
                 NetworkResult.Success(response.body()!!)
             } else {
                 NetworkResult.Error("Avatar seçimi başarısız")
@@ -286,10 +316,14 @@ class AuthRepository @Inject constructor(
     }
 
     suspend fun getDefaultAvatars(): NetworkResult<List<String>> = withContext(Dispatchers.IO) {
+        defaultAvatarsCache?.let { if (it.isValid(AVATARS_TTL_MS)) return@withContext NetworkResult.Success(it.data) }
+
         try {
             val response = authApi.getDefaultAvatars()
             if (response.isSuccessful && response.body() != null) {
-                NetworkResult.Success(response.body()!!.avatarUrls)
+                val avatarUrls = response.body()!!.avatarUrls
+                defaultAvatarsCache = CacheEntry(avatarUrls)
+                NetworkResult.Success(avatarUrls)
             } else {
                 NetworkResult.Error("Avatarlar yüklenemedi")
             }
@@ -299,10 +333,14 @@ class AuthRepository @Inject constructor(
     }
 
     suspend fun getLeaderboard(): NetworkResult<List<LeaderboardUserResponse>> = withContext(Dispatchers.IO) {
+        leaderboardCache?.let { if (it.isValid(LEADERBOARD_TTL_MS)) return@withContext NetworkResult.Success(it.data) }
+
         try {
             val response = authApi.getLeaderboard()
             if (response.isSuccessful && response.body() != null) {
-                NetworkResult.Success(response.body()!!)
+                val data = response.body()!!
+                leaderboardCache = CacheEntry(data)
+                NetworkResult.Success(data)
             } else {
                 NetworkResult.Error("Leaderboard yüklenemedi")
             }

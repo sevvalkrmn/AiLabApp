@@ -12,6 +12,7 @@ data class ProfileUiState(
     val roles: List<String> = emptyList(),
     val isAdmin: Boolean = false, // ✅ Admin kontrolü için
     val isLoading: Boolean = true,
+    val isRefreshing: Boolean = false,
     val errorMessage: String? = null,
     val isUploadingImage: Boolean = false,
     val defaultAvatars: List<String> = emptyList()
