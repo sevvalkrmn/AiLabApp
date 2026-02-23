@@ -30,6 +30,8 @@ import com.ktun.ailabapp.presentation.ui.screens.admin.lab.LabPeopleScreen
 import com.ktun.ailabapp.presentation.ui.screens.admin.pendingtasks.PendingTasksScreen
 import com.ktun.ailabapp.presentation.ui.screens.admin.announcement.SendGlobalAnnouncementScreen
 
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -58,7 +60,7 @@ fun NavGraph(
     // Slide + fade animasyonları (geri navigasyon)
     val slidePopEnter = { slideInHorizontally(tween(300)) { -it / 3 } + fadeIn(tween(300)) }
     val slidePopExit = { slideOutHorizontally(tween(300)) { it } + fadeOut(tween(300)) }
-    // Fade animasyonları (tab geçişleri ve auth ekranları)
+    // Fade animasyonları (sadece auth ekranları için)
     val fadeEnter = { fadeIn(tween(200)) }
     val fadeExit = { fadeOut(tween(200)) }
 
@@ -107,7 +109,7 @@ fun NavGraph(
             )
         }
 
-        // --- Tab Ekranları (fade) ---
+        // --- Tab Ekranları (anında geçiş — header stabil kalır, içerik StaggeredAnimatedItem ile gelir) ---
         composable(
             route = Screen.Home.routeWithArgs,
             arguments = listOf(
@@ -117,10 +119,10 @@ fun NavGraph(
                     defaultValue = null
                 }
             ),
-            enterTransition = { fadeEnter() },
-            exitTransition = { fadeExit() },
-            popEnterTransition = { fadeEnter() },
-            popExitTransition = { fadeExit() }
+            enterTransition = { EnterTransition.None },
+            exitTransition = { ExitTransition.None },
+            popEnterTransition = { EnterTransition.None },
+            popExitTransition = { ExitTransition.None }
         ) { backStackEntry ->
             val taskId = backStackEntry.arguments?.getString("taskId")
             HomeScreen(
@@ -135,10 +137,10 @@ fun NavGraph(
 
         composable(
             route = Screen.Projects.route,
-            enterTransition = { fadeEnter() },
-            exitTransition = { fadeExit() },
-            popEnterTransition = { fadeEnter() },
-            popExitTransition = { fadeExit() }
+            enterTransition = { EnterTransition.None },
+            exitTransition = { ExitTransition.None },
+            popEnterTransition = { EnterTransition.None },
+            popExitTransition = { ExitTransition.None }
         ) {
             ProjectsScreen(
                 onNavigateToHome = { navController.navigate(Screen.Home.route) { popUpTo(Screen.Home.route) { inclusive = true } } },
@@ -160,10 +162,10 @@ fun NavGraph(
 
         composable(
             route = Screen.Announcements.route,
-            enterTransition = { fadeEnter() },
-            exitTransition = { fadeExit() },
-            popEnterTransition = { fadeEnter() },
-            popExitTransition = { fadeExit() }
+            enterTransition = { EnterTransition.None },
+            exitTransition = { ExitTransition.None },
+            popEnterTransition = { EnterTransition.None },
+            popExitTransition = { ExitTransition.None }
         ) {
             AnnouncementScreen(
                 onNavigateToHome = { navController.navigate(Screen.Home.route) },
@@ -177,10 +179,10 @@ fun NavGraph(
 
         composable(
             route = Screen.Profile.route,
-            enterTransition = { fadeEnter() },
-            exitTransition = { fadeExit() },
-            popEnterTransition = { fadeEnter() },
-            popExitTransition = { fadeExit() }
+            enterTransition = { EnterTransition.None },
+            exitTransition = { ExitTransition.None },
+            popEnterTransition = { EnterTransition.None },
+            popExitTransition = { ExitTransition.None }
         ) {
             ProfileScreen(
                 onNavigateToHome = { navController.navigate(Screen.Home.route) },
