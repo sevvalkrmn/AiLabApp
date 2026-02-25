@@ -351,14 +351,14 @@ fun CurrentTasksCard(
                     Text(text = "Aktif görev yok", fontSize = (screenWidth.value * 0.035f).sp, color = White.copy(alpha = 0.7f))
                 }
             } else {
-                LazyColumn(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(screenHeight * 0.18f),
+                        .height(screenHeight * 0.18f)
+                        .verticalScroll(androidx.compose.foundation.rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(screenHeight * 0.01f)
                 ) {
-                    items(tasks.size) { index ->
-                        val task = tasks[index]
+                    tasks.forEach { task ->
                         TaskItem(
                             icon = Icons.Default.Create,
                             title = task.title,
