@@ -2,6 +2,8 @@
 
 package com.ktun.ailabapp.presentation.ui.screens.navigation
 
+import android.net.Uri
+
 sealed class Screen(val route: String) {
     object Login : Screen("login")
     object Register : Screen("register")
@@ -28,12 +30,12 @@ sealed class Screen(val route: String) {
     object AllProjects : Screen("all_projects")
 
     object TaskHistory : Screen("task_history/{userId}/{userName}") {
-        fun createRoute(userId: String, userName: String) = "task_history/$userId/$userName"
+        fun createRoute(userId: String, userName: String) = "task_history/$userId/${Uri.encode(userName)}"
     }
 
     // ✅ YENİ ROUTE
     object SendAnnouncement : Screen("send_announcement/{userId}/{userName}") {
-        fun createRoute(userId: String, userName: String) = "send_announcement/$userId/$userName"
+        fun createRoute(userId: String, userName: String) = "send_announcement/$userId/${Uri.encode(userName)}"
     }
 
     object LabPeople : Screen("lab_people")
