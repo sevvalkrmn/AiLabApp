@@ -112,7 +112,8 @@ class ProfileViewModel @Inject constructor(
                 
                 when (val result = authRepository.uploadAndUpdateProfileImage(userId, optimizedUri)) {
                     is NetworkResult.Success -> {
-                        loadUserProfile()
+                        loadUserProfileInternal()
+                        _uiState.value = _uiState.value.copy(isUploadingImage = false)
                     }
                     is NetworkResult.Error -> {
                         _uiState.value = _uiState.value.copy(
@@ -140,7 +141,8 @@ class ProfileViewModel @Inject constructor(
 
             when (val result = authRepository.selectDefaultAvatar(avatarUrl)) {
                 is NetworkResult.Success -> {
-                    loadUserProfile()
+                    loadUserProfileInternal()
+                    _uiState.value = _uiState.value.copy(isUploadingImage = false)
                 }
                 is NetworkResult.Error -> {
                     _uiState.value = _uiState.value.copy(
