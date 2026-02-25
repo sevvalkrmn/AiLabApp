@@ -38,6 +38,7 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
+import androidx.compose.runtime.saveable.rememberSaveable
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -257,7 +258,7 @@ fun ProfileScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         // Avatar + isim animasyonu
-                        var visibleAvatar by remember { mutableStateOf(false) }
+                        var visibleAvatar by rememberSaveable { mutableStateOf(false) }
                         LaunchedEffect(Unit) { visibleAvatar = true }
                         AnimatedVisibility(
                             visible = visibleAvatar,
@@ -338,7 +339,7 @@ fun ProfileScreen(
                         Spacer(modifier = Modifier.height(screenHeight * 0.03f))
 
                         // Puan kartı animasyonu
-                        var visibleScore by remember { mutableStateOf(false) }
+                        var visibleScore by rememberSaveable { mutableStateOf(false) }
                         LaunchedEffect(Unit) { delay(80L); visibleScore = true }
                         AnimatedVisibility(
                             visible = visibleScore,
@@ -366,7 +367,7 @@ fun ProfileScreen(
                                         color = PrimaryBlue
                                     )
                                     Text(
-                                        text = "Points",
+                                        text = "Puan",
                                         fontSize = (screenWidth.value * 0.04f).sp,
                                         color = PrimaryBlue.copy(alpha = 0.7f)
                                     )
@@ -388,7 +389,7 @@ fun ProfileScreen(
                         }
 
                         menuItems.forEachIndexed { idx, (icon, text, onClick) ->
-                            var visibleItem by remember { mutableStateOf(false) }
+                            var visibleItem by rememberSaveable(key = "menu_item_visible_$idx") { mutableStateOf(false) }
                             LaunchedEffect(Unit) { delay((idx + 2) * 80L); visibleItem = true }
                             AnimatedVisibility(
                                 visible = visibleItem,
@@ -412,7 +413,7 @@ fun ProfileScreen(
 
                         Spacer(modifier = Modifier.height(screenHeight * 0.04f))
 
-                        var visibleLogout by remember { mutableStateOf(false) }
+                        var visibleLogout by rememberSaveable { mutableStateOf(false) }
                         LaunchedEffect(Unit) { delay((menuItems.size + 2) * 80L); visibleLogout = true }
                         AnimatedVisibility(
                             visible = visibleLogout,

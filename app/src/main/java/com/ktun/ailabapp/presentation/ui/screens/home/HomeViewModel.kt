@@ -21,7 +21,7 @@ import javax.inject.Inject
 data class HomeUiState(
     val user: ProfileResponse? = null,
     val userName: String = "",
-    val greeting: String = "Good Morning",
+    val greeting: String = "Günaydın",
     val currentTasks: List<TaskResponse> = emptyList(),
 
     // Lab Stats
@@ -221,10 +221,10 @@ class HomeViewModel @Inject constructor(
     private fun updateGreeting() {
         val currentHour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
         val greeting = when (currentHour) {
-            in 6..11 -> "Good Morning"
-            in 12..17 -> "Good Afternoon"
-            in 18..21 -> "Good Evening"
-            else -> "Good Night"
+            in 6..11 -> "Günaydın"
+            in 12..17 -> "İyi öğlenler"
+            in 18..21 -> "İyi akşamlar"
+            else -> "İyi geceler"
         }
         _uiState.value = _uiState.value.copy(greeting = greeting)
     }

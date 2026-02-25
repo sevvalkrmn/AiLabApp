@@ -46,7 +46,9 @@ class AuthInterceptor @Inject constructor(
 
         val response = chain.proceed(newRequest)
 
-        if (response.code == 401) {
+        // Sadece token varken 401 gelirse oturum süresi dolmuş demektir.
+        // Token yoksa (login öncesi) 401 beklenen davranış, onSessionExpired tetiklenmemeli.
+        if (response.code == 401 && !token.isNullOrEmpty()) {
             Logger.e("401 Unauthorized - Oturum süresi doldu: ${originalRequest.url}", tag = "AuthInterceptor")
             sessionManager.onSessionExpired()
         }

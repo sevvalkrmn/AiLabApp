@@ -323,7 +323,7 @@ private fun ProjectSelectionCard(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Mevcut Rol: Captain",
+                    text = "Mevcut Rol: Kaptan",
                     fontSize = 12.sp,
                     color = Color.Gray
                 )

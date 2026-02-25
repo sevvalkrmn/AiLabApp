@@ -14,6 +14,18 @@
     @com.google.gson.annotations.SerializedName <fields>;
 }
 
+# Gson TypeToken - generic type bilgisini korumak için kritik
+# Bu olmadan: java.lang.Class cannot be cast to java.lang.reflect.ParameterizedType
+-keep class com.google.gson.reflect.TypeToken { *; }
+-keep class * extends com.google.gson.reflect.TypeToken
+-keep class com.google.gson.TypeAdapter { *; }
+-keep class * extends com.google.gson.TypeAdapter { *; }
+-keep class com.google.gson.TypeAdapterFactory
+-keep class * implements com.google.gson.TypeAdapterFactory { *; }
+-keep class * implements com.google.gson.JsonSerializer { *; }
+-keep class * implements com.google.gson.JsonDeserializer { *; }
+-keep class com.google.gson.** { *; }
+
 # ---- DTO Sınıfları (Gson reflection ile erişir - DOKUNMA) ----
 -keep class com.ktun.ailabapp.data.remote.dto.request.** { *; }
 -keep class com.ktun.ailabapp.data.remote.dto.response.** { *; }
@@ -86,3 +98,7 @@
 
 # ---- R8 full mode uyumluluk ----
 -dontwarn java.lang.invoke.StringConcatFactory
+
+# ---- Netty / BlockHound (OkHttp geçişli bağımlılık) ----
+-dontwarn reactor.blockhound.integration.BlockHoundIntegration
+-dontwarn io.netty.**

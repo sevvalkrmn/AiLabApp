@@ -77,8 +77,12 @@ class ProfileViewModel @Inject constructor(
         if (_uiState.value.isRefreshing) return
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isRefreshing = true)
-            loadUserProfileInternal()
-            _uiState.value = _uiState.value.copy(isRefreshing = false)
+            authRepository.invalidateProfileCache()
+            try {
+                loadUserProfileInternal()
+            } finally {
+                _uiState.value = _uiState.value.copy(isRefreshing = false)
+            }
         }
     }
 
@@ -150,12 +154,44 @@ class ProfileViewModel @Inject constructor(
     }
 
     fun updateEmail(password: String, newEmail: String, onSuccess: () -> Unit) {
-// ...
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+
+            when (val result = authRepository.updateEmail(password, newEmail)) {
+                is NetworkResult.Success -> {
+                    loadUserProfile()
+                    _uiState.value = _uiState.value.copy(isLoading = false)
+                    onSuccess()
+                }
+                is NetworkResult.Error -> {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = result.message
+                    )
+                }
+                is NetworkResult.Loading -> {}
+            }
+        }
     }
 
-    // ✅ YENİ: Şifre Değiştirme
     fun changePassword(oldPassword: String, newPassword: String, onSuccess: () -> Unit) {
-// ...
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+
+            when (val result = authRepository.changePassword(oldPassword, newPassword)) {
+                is NetworkResult.Success -> {
+                    _uiState.value = _uiState.value.copy(isLoading = false)
+                    onSuccess()
+                }
+                is NetworkResult.Error -> {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = result.message
+                    )
+                }
+                is NetworkResult.Loading -> {}
+            }
+        }
     }
 
     // ✅ YENİ: Telefon Güncelleme

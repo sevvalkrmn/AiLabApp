@@ -36,8 +36,9 @@ class AnnouncementViewModel @Inject constructor(
         loadAnnouncements()
     }
 
-    fun loadAnnouncements() {
+    fun loadAnnouncements(forceReload: Boolean = false) {
         if (_uiState.value.isLoading) return
+        if (!forceReload && _uiState.value.announcements.isNotEmpty()) return
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
 

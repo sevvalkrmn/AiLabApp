@@ -297,7 +297,7 @@ private fun ProjectsSection(
                             modifier = Modifier.padding(start = 4.dp)
                         ) {
                             Text(
-                                text = role,
+                                text = if (role.equals("Captain", ignoreCase = true)) "Kaptan" else "Üye",
                                 fontSize = 10.sp,
                                 color = if (role.equals("Captain", ignoreCase = true)) {
                                     CaptainGold

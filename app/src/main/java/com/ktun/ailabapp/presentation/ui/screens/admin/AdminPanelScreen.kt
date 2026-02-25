@@ -102,13 +102,13 @@ fun AdminPanelScreen(
 
                     Column {
                         Text(
-                            text = "Admin Control Panel",
+                            text = "Yönetici Paneli",
                             fontSize = (screenWidth.value * 0.05f).sp,
                             fontWeight = FontWeight.Bold,
                             color = White
                         )
                         Text(
-                            text = "Welcome back to your panel",
+                            text = "Panelinize hoş geldiniz",
                             fontSize = (screenWidth.value * 0.035f).sp,
                             color = White.copy(alpha = 0.8f)
                         )

@@ -204,7 +204,7 @@ fun AnnouncementScreen(
                             isRefreshing = isRefreshing,
                             onRefresh = {
                                 isRefreshing = true
-                                viewModel.loadAnnouncements()
+                                viewModel.loadAnnouncements(forceReload = true)
                             },
                             modifier = Modifier.fillMaxSize()
                         ) {

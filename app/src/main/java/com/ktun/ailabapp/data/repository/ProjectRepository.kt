@@ -28,14 +28,21 @@ class ProjectRepository @Inject constructor(
     private companion object {
         const val PROJECTS_TTL_MS = 5 * 60 * 1000L
         const val MEMBERS_TTL_MS = 5 * 60 * 1000L
+        const val PROJECT_DETAIL_TTL_MS = 5 * 60 * 1000L
     }
 
     private val myProjectsCache = ConcurrentHashMap<String, CacheEntry<List<MyProjectsResponse>>>()
     private val membersCacheMap = ConcurrentHashMap<String, CacheEntry<List<ProjectMember>>>()
+    private val projectDetailCache = ConcurrentHashMap<String, CacheEntry<ProjectDetailResponse>>()
 
     fun clearCache() {
         myProjectsCache.clear()
         membersCacheMap.clear()
+        projectDetailCache.clear()
+    }
+
+    fun invalidateProjectDetail(projectId: String) {
+        projectDetailCache.remove(projectId)
     }
     /**
      * Kullanıcının kendi projelerini çeker
@@ -145,6 +152,8 @@ class ProjectRepository @Inject constructor(
      * GET /api/projects/{id}
      */
     suspend fun getProjectDetail(projectId: String): NetworkResult<ProjectDetailResponse> = withContext(Dispatchers.IO) {
+        projectDetailCache[projectId]?.let { if (it.isValid(PROJECT_DETAIL_TTL_MS)) return@withContext NetworkResult.Success(it.data) }
+
         try {
             Logger.d( "🔍 Fetching project detail: $projectId")
 
@@ -162,6 +171,7 @@ class ProjectRepository @Inject constructor(
                 }
                 response.isSuccessful && response.body() != null -> {
                     val project = response.body()!!
+                    projectDetailCache[projectId] = CacheEntry(project)
                     Logger.d( "✅ Loaded project: ${project.name}")
                     NetworkResult.Success(project)
                 }

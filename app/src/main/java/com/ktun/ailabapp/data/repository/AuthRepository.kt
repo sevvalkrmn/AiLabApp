@@ -46,6 +46,10 @@ class AuthRepository @Inject constructor(
         defaultAvatarsCache = null
     }
 
+    fun invalidateProfileCache() {
+        profileCache = null
+    }
+
     suspend fun completeRegistration(
         idToken: String,
         fullName: String,

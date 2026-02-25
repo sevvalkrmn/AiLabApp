@@ -75,8 +75,8 @@ class ProjectDetailViewModel @Inject constructor(
             val profileResult = profileDeferred.await()
             val projectResult = projectDeferred.await()
 
-            // Admin kontrolu
-            var isAdmin = false
+            // Admin kontrolu — mevcut değeri koru, sadece başarılı yanıtta güncelle
+            var isAdmin = _uiState.value.isAdmin
             when (profileResult) {
                 is NetworkResult.Success -> {
                     isAdmin = profileResult.data?.roles?.any {
@@ -91,10 +91,7 @@ class ProjectDetailViewModel @Inject constructor(
             when (projectResult) {
                 is NetworkResult.Success -> {
                     projectResult.data?.let { project ->
-                        val allProjectMembers = project.captains + project.members
-                        val isCaptain = allProjectMembers.any {
-                            it.userId == currentUserId && it.role.equals("Captain", ignoreCase = true)
-                        }
+                        val isCaptain = project.captains.any { it.userId == currentUserId }
                         val canEdit = isAdmin || isCaptain
 
                         _uiState.value = _uiState.value.copy(
@@ -199,6 +196,7 @@ class ProjectDetailViewModel @Inject constructor(
             when (val result = taskRepository.updateTaskStatus(taskId, newStatus)) {
                 is NetworkResult.Success -> {
                     _uiState.value.project?.let { project ->
+                        projectRepository.invalidateProjectDetail(project.id)
                         loadProjectDetail(project.id)
                     }
                 }
@@ -214,6 +212,7 @@ class ProjectDetailViewModel @Inject constructor(
 
     fun refreshProject() {
         _uiState.value.project?.let { project ->
+            projectRepository.invalidateProjectDetail(project.id)
             loadProjectDetail(project.id)
         }
     }
@@ -259,6 +258,7 @@ class ProjectDetailViewModel @Inject constructor(
             when (val result = taskRepository.createTask(title, description, projectId, finalAssigneeId, dueDate)) {
                 is NetworkResult.Success -> {
                     _uiState.update { it.copy(showCreateTaskDialog = false, errorMessage = null) }
+                    projectRepository.invalidateProjectDetail(projectId)
                     loadProjectDetail(projectId)
                 }
                 is NetworkResult.Error -> {
@@ -291,7 +291,8 @@ class ProjectDetailViewModel @Inject constructor(
             when (val result = projectRepository.addMember(projectId, request)) {
                 is NetworkResult.Success -> {
                     _uiState.update { it.copy(showAddMemberDialog = false, errorMessage = null) }
-                    loadProjectDetail(projectId) 
+                    projectRepository.invalidateProjectDetail(projectId)
+                    loadProjectDetail(projectId)
                 }
                 is NetworkResult.Error -> {
                     _uiState.update { it.copy(errorMessage = result.message) }
@@ -308,7 +309,8 @@ class ProjectDetailViewModel @Inject constructor(
             when (val result = projectRepository.removeMember(projectId, userId)) {
                 is NetworkResult.Success -> {
                     _uiState.update { it.copy(showRemoveMemberDialog = false, errorMessage = null) }
-                    loadProjectDetail(projectId) 
+                    projectRepository.invalidateProjectDetail(projectId)
+                    loadProjectDetail(projectId)
                 }
                 is NetworkResult.Error -> {
                     _uiState.update { it.copy(errorMessage = result.message) }

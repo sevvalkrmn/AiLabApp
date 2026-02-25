@@ -180,10 +180,10 @@ fun PendingTaskItem(
                 ) {
                     Text(
                         text = when (task.status) {
-                            0 -> "Todo"
-                            1 -> "In Progress"
-                            2 -> "Done"
-                            else -> "Unknown"
+                            0 -> "Yapılacak"
+                            1 -> "Devam Ediyor"
+                            2 -> "Tamamlandı"
+                            else -> "Bilinmiyor"
                         },
                         color = White,
                         fontSize = 12.sp,

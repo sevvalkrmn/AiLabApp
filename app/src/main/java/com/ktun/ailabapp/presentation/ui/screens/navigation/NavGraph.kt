@@ -48,12 +48,6 @@ fun NavGraph(
     val sharedProjectsViewModel: ProjectsViewModel = hiltViewModel()
     val sharedProfileViewModel: ProfileViewModel = hiltViewModel()
 
-    LaunchedEffect(startDestination) {
-        if (startDestination != Screen.Login.route && startDestination != Screen.Register.route) {
-            sharedAnnouncementViewModel.loadAnnouncements()
-        }
-    }
-
     // Slide + fade animasyonları (ileri navigasyon)
     val slideEnter = { slideInHorizontally(tween(300)) { it } + fadeIn(tween(300)) }
     val slideExit = { slideOutHorizontally(tween(300)) { -it / 3 } + fadeOut(tween(150)) }
@@ -85,6 +79,10 @@ fun NavGraph(
                     navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Login.route) { inclusive = true }
                     }
+                    sharedHomeViewModel.refreshUserData()
+                    sharedProjectsViewModel.refreshProjects()
+                    sharedProfileViewModel.refreshProfile()
+                    sharedAnnouncementViewModel.loadAnnouncements()
                 },
                 onNavigateToRegister = {
                     navController.navigate(Screen.Register.route)
@@ -105,6 +103,10 @@ fun NavGraph(
                     navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Register.route) { inclusive = true }
                     }
+                    sharedHomeViewModel.refreshUserData()
+                    sharedProjectsViewModel.refreshProjects()
+                    sharedProfileViewModel.refreshProfile()
+                    sharedAnnouncementViewModel.loadAnnouncements()
                 }
             )
         }

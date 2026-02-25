@@ -126,8 +126,12 @@ class ProjectsViewModel @Inject constructor(
         if (_uiState.value.isRefreshing) return
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isRefreshing = true)
-            loadProjectsInternal(_uiState.value.selectedFilter)
-            _uiState.value = _uiState.value.copy(isRefreshing = false)
+            try {
+                projectRepository.clearCache()
+                loadProjectsInternal(_uiState.value.selectedFilter)
+            } finally {
+                _uiState.value = _uiState.value.copy(isRefreshing = false)
+            }
         }
     }
 

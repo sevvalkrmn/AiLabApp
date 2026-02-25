@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -64,10 +65,6 @@ fun HomeScreen(
                 showFeedbackDialog = false
             }
         )
-    }
-
-    LaunchedEffect(Unit) {
-        announcementViewModel.loadAnnouncements()
     }
 
     // Bildirimden gelen task detayini otomatik ac
@@ -135,8 +132,8 @@ fun HomeScreen(
                 ) {
                     Column {
                         Text(
-                            text = "Hi, ${uiState.user?.fullName ?: ""}",
-                            fontSize = (screenWidth.value * 0.055f).sp,
+                            text = "Merhaba, ${uiState.user?.fullName ?: ""}",
+                            fontSize = (screenWidth.value * 0.050f).sp,
                             fontWeight = FontWeight.Bold,
                             color = White
                         )
@@ -204,8 +201,8 @@ fun HomeScreen(
                         verticalArrangement = Arrangement.spacedBy(screenHeight * 0.02f),
                         contentPadding = PaddingValues(top = screenHeight * 0.02f, bottom = screenHeight * 0.02f)
                     ) {
-                        items(cardItems.size) { index ->
-                            var visible by remember { mutableStateOf(false) }
+                        items(cardItems.size, key = { it }) { index ->
+                            var visible by rememberSaveable { mutableStateOf(false) }
                             LaunchedEffect(Unit) {
                                 kotlinx.coroutines.delay(index * 100L)
                                 visible = true
@@ -289,7 +286,7 @@ fun ProfileCard(totalScore: Double, avatarUrl: String?, lastEntryDate: String?, 
                 }
                 Spacer(modifier = Modifier.height(screenHeight * 0.01f))
                 Text(text = "${totalScore.toInt()}", fontSize = (screenWidth.value * 0.08f).sp, fontWeight = FontWeight.Bold, color = White)
-                Text(text = "Points", fontSize = (screenWidth.value * 0.03f).sp, color = White.copy(alpha = 0.9f))
+                Text(text = "Puan", fontSize = (screenWidth.value * 0.03f).sp, color = White.copy(alpha = 0.9f))
             }
             Box(modifier = Modifier.width(2.dp).height(screenHeight * 0.12f).background(White.copy(alpha = 0.3f)))
             Spacer(modifier = Modifier.width(screenWidth * 0.04f))
@@ -367,9 +364,9 @@ fun CurrentTasksCard(
                             title = task.title,
                             frequency = task.projectName,
                             status = when (task.status) {
-                                "InProgress" -> "In Progress"
-                                "Done" -> "Done"
-                                "Todo" -> "To Do"
+                                "InProgress" -> "Devam Ediyor"
+                                "Done" -> "Tamamlandı"
+                                "Todo" -> "Yapılacak"
                                 else -> task.status
                             },
                             statusColor = when (task.status) {
@@ -427,7 +424,7 @@ fun BottomCard(topUsers: List<TopUserItem>, screenWidth: Dp, screenHeight: Dp) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center, modifier = Modifier.padding(bottom = screenHeight * 0.015f)) {
                 Icon(imageVector = Icons.Default.Star, contentDescription = null, tint = Gold, modifier = Modifier.size(screenWidth * 0.05f))
                 Spacer(modifier = Modifier.width(screenWidth * 0.02f))
-                Text(text = "LEADERBOARD", fontSize = (screenWidth.value * 0.04f).sp, fontWeight = FontWeight.Light, color = White, letterSpacing = 1.5.sp)
+                Text(text = "LİDERLİK TABLOSU", fontSize = (screenWidth.value * 0.04f).sp, fontWeight = FontWeight.Light, color = White, letterSpacing = 1.5.sp)
                 Spacer(modifier = Modifier.width(screenWidth * 0.02f))
                 Icon(imageVector = Icons.Default.Star, contentDescription = null, tint = Gold, modifier = Modifier.size(screenWidth * 0.05f))
             }
@@ -467,7 +464,7 @@ fun LeaderboardUser(user: TopUserItem?, borderColor: Color, rank: Int, screenWid
             Text(text = user.name.split(" ").firstOrNull() ?: user.name, fontSize = (screenWidth.value * 0.032f).sp, fontWeight = FontWeight.Bold, color = White, maxLines = 1)
             Spacer(modifier = Modifier.height(screenHeight * 0.005f))
             Box(modifier = Modifier.background(borderColor, RoundedCornerShape(50)).padding(horizontal = screenWidth * 0.025f, vertical = screenHeight * 0.004f)) {
-                Text(text = "$animatedScore pts", fontSize = (screenWidth.value * 0.028f).sp, fontWeight = FontWeight.Bold, color = PrimaryBlue)
+                Text(text = "$animatedScore puan", fontSize = (screenWidth.value * 0.028f).sp, fontWeight = FontWeight.Bold, color = PrimaryBlue)
             }
         } else {
             Box(modifier = Modifier.size(avatarSize).background(White.copy(alpha = 0.2f), CircleShape))

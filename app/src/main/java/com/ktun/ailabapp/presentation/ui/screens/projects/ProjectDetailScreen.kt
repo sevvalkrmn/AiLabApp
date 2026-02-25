@@ -284,7 +284,7 @@ fun ProjectDetailScreen(
                             }
                         }
 
-                        if (uiState.isAdmin) {
+                        if (uiState.canEdit) {
                             item {
                                 StaggeredAnimatedItem(index = uiState.tasks.size + 4 + captains.size + members.size) {
                                     AdminActionsSection(
@@ -812,7 +812,7 @@ fun MemberCard(
                 shape = RoundedCornerShape(screenWidth * 0.02f)
             ) {
                 Text(
-                    text = member.role,
+                    text = if (member.role == "Captain") "Kaptan" else "Üye",
                     color = if (member.role == "Captain") White else PrimaryBlue,
                     fontSize = (screenWidth.value * 0.03f).sp,
                     modifier = Modifier.padding(
@@ -977,13 +977,13 @@ fun AddMemberDialog(
                     FilterChip(
                         selected = selectedRole == "Member",
                         onClick = { selectedRole = "Member" },
-                        label = { Text("Member") }
+                        label = { Text("Üye") }
                     )
                     Spacer(Modifier.width(8.dp))
                     FilterChip(
                         selected = selectedRole == "Captain",
                         onClick = { selectedRole = "Captain" },
-                        label = { Text("Captain") }
+                        label = { Text("Kaptan") }
                     )
                 }
 
@@ -991,7 +991,7 @@ fun AddMemberDialog(
 
                 if (selectedRole == "Captain") {
                     Text(
-                        "⚠️ Projede zaten Captain varsa eklenemez",
+                        "⚠️ Projede zaten Kaptan varsa eklenemez",
                         style = MaterialTheme.typography.bodySmall,
                         color = Color.Red
                     )

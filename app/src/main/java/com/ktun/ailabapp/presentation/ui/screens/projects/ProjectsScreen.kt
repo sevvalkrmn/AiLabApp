@@ -142,49 +142,55 @@ fun ProjectsScreen(
                         ProjectsScreenSkeleton(screenWidth, screenHeight)
                     }
                     uiState.errorMessage != null -> {
-                        Box(
+                        LazyColumn(
                             modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Icon(
-                                    Icons.Default.Warning,
-                                    contentDescription = null,
-                                    tint = Color.Red,
-                                    modifier = Modifier.size(screenWidth * 0.15f)
-                                )
-                                Spacer(modifier = Modifier.height(screenHeight * 0.02f))
-                                Text(
-                                    text = uiState.errorMessage ?: "Hata oluştu",
-                                    color = Color.Red,
-                                    fontSize = (screenWidth.value * 0.04f).sp
-                                )
-                                Spacer(modifier = Modifier.height(screenHeight * 0.02f))
-                                Button(onClick = { viewModel.refreshProjects() }) {
-                                    Text("Tekrar Dene")
+                            item {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Icon(
+                                        Icons.Default.Warning,
+                                        contentDescription = null,
+                                        tint = Color.Red,
+                                        modifier = Modifier.size(screenWidth * 0.15f)
+                                    )
+                                    Spacer(modifier = Modifier.height(screenHeight * 0.02f))
+                                    Text(
+                                        text = uiState.errorMessage ?: "Hata oluştu",
+                                        color = Color.Red,
+                                        fontSize = (screenWidth.value * 0.04f).sp
+                                    )
+                                    Spacer(modifier = Modifier.height(screenHeight * 0.02f))
+                                    Button(onClick = { viewModel.refreshProjects() }) {
+                                        Text("Tekrar Dene")
+                                    }
                                 }
                             }
                         }
                     }
                     uiState.projects.isEmpty() -> {
-                        Box(
+                        LazyColumn(
                             modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Icon(
-                                    Icons.Default.FolderOpen,
-                                    contentDescription = null,
-                                    tint = PrimaryBlue.copy(alpha = 0.5f),
-                                    modifier = Modifier.size(screenWidth * 0.2f)
-                                )
-                                Spacer(modifier = Modifier.height(screenHeight * 0.02f))
-                                Text(
-                                    text = "Henüz proje yok",
-                                    color = PrimaryBlue,
-                                    fontSize = (screenWidth.value * 0.045f).sp,
-                                    fontWeight = FontWeight.Medium
-                                )
+                            item {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Icon(
+                                        Icons.Default.FolderOpen,
+                                        contentDescription = null,
+                                        tint = PrimaryBlue.copy(alpha = 0.5f),
+                                        modifier = Modifier.size(screenWidth * 0.2f)
+                                    )
+                                    Spacer(modifier = Modifier.height(screenHeight * 0.02f))
+                                    Text(
+                                        text = "Henüz proje yok",
+                                        color = PrimaryBlue,
+                                        fontSize = (screenWidth.value * 0.045f).sp,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
                             }
                         }
                     }
@@ -312,7 +318,7 @@ fun ProjectCard(
                 shape = RoundedCornerShape(screenWidth * 0.02f)
             ) {
                 Text(
-                    text = project.userRole ?: "Member",
+                    text = when (project.userRole) { "Captain" -> "Kaptan" else -> "Üye" },
                     color = if (project.userRole == "Captain") White else PrimaryBlue,
                     fontSize = (screenWidth.value * 0.03f).sp,
                     fontWeight = FontWeight.Medium,

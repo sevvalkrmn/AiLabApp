@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import kotlinx.coroutines.delay
 
 @Composable
@@ -14,7 +15,7 @@ fun StaggeredAnimatedItem(
     delayPerItem: Long = 80L,
     content: @Composable () -> Unit
 ) {
-    var visible by remember { mutableStateOf(false) }
+    var visible by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         delay(index * delayPerItem)
         visible = true
