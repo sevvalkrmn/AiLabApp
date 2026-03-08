@@ -198,7 +198,13 @@ fun NavGraph(
             )
         }
 
-        composable(Screen.AdminPanel.route) {
+        composable(
+            route = Screen.AdminPanel.route,
+            enterTransition = { EnterTransition.None },
+            exitTransition = { ExitTransition.None },
+            popEnterTransition = { EnterTransition.None },
+            popExitTransition = { ExitTransition.None }
+        ) {
             AdminPanelScreen(
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToUsersList = { navController.navigate(Screen.UsersList.route) },
@@ -210,14 +216,26 @@ fun NavGraph(
             )
         }
 
-        composable(Screen.AllProjects.route) {
+        composable(
+            route = Screen.AllProjects.route,
+            enterTransition = { EnterTransition.None },
+            exitTransition = { ExitTransition.None },
+            popEnterTransition = { EnterTransition.None },
+            popExitTransition = { ExitTransition.None }
+        ) {
             AllProjectsScreen(
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToProjectDetail = { projectId -> navController.navigate(Screen.ProjectDetail.createRoute(projectId)) }
             )
         }
 
-        composable(Screen.UsersList.route) {
+        composable(
+            route = Screen.UsersList.route,
+            enterTransition = { EnterTransition.None },
+            exitTransition = { ExitTransition.None },
+            popEnterTransition = { EnterTransition.None },
+            popExitTransition = { ExitTransition.None }
+        ) {
             UsersListScreen(
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToSendAnnouncement = { userId, userName -> navController.navigate(Screen.SendAnnouncement.createRoute(userId, userName)) },
@@ -229,7 +247,11 @@ fun NavGraph(
 
         composable(
             route = Screen.SendAnnouncement.route,
-            arguments = listOf(navArgument("userId") { type = NavType.StringType }, navArgument("userName") { type = NavType.StringType })
+            arguments = listOf(navArgument("userId") { type = NavType.StringType }, navArgument("userName") { type = NavType.StringType }),
+            enterTransition = { EnterTransition.None },
+            exitTransition = { ExitTransition.None },
+            popEnterTransition = { EnterTransition.None },
+            popExitTransition = { ExitTransition.None }
         ) { backStackEntry ->
             val userId = backStackEntry.arguments?.getString("userId") ?: ""
             val userName = backStackEntry.arguments?.getString("userName") ?: ""
@@ -238,7 +260,11 @@ fun NavGraph(
 
         composable(
             route = Screen.ManageRoles.route,
-            arguments = listOf(navArgument("userId") { type = NavType.StringType })
+            arguments = listOf(navArgument("userId") { type = NavType.StringType }),
+            enterTransition = { EnterTransition.None },
+            exitTransition = { ExitTransition.None },
+            popEnterTransition = { EnterTransition.None },
+            popExitTransition = { ExitTransition.None }
         ) { backStackEntry ->
             val userId = backStackEntry.arguments?.getString("userId") ?: ""
             ManageRolesScreen(userId = userId, onNavigateBack = { navController.popBackStack() })
@@ -246,26 +272,54 @@ fun NavGraph(
 
         composable(
             route = Screen.TaskHistory.route,
-            arguments = listOf(navArgument("userId") { type = NavType.StringType }, navArgument("userName") { type = NavType.StringType })
+            arguments = listOf(navArgument("userId") { type = NavType.StringType }, navArgument("userName") { type = NavType.StringType }),
+            enterTransition = { EnterTransition.None },
+            exitTransition = { ExitTransition.None },
+            popEnterTransition = { EnterTransition.None },
+            popExitTransition = { ExitTransition.None }
         ) { backStackEntry ->
             val userId = backStackEntry.arguments?.getString("userId") ?: ""
             val userName = backStackEntry.arguments?.getString("userName") ?: ""
             TaskHistoryScreen(userId = userId, userName = userName, onNavigateBack = { navController.popBackStack() })
         }
 
-        composable(Screen.CreateProject.route) {
+        composable(
+            route = Screen.CreateProject.route,
+            enterTransition = { EnterTransition.None },
+            exitTransition = { ExitTransition.None },
+            popEnterTransition = { EnterTransition.None },
+            popExitTransition = { ExitTransition.None }
+        ) {
             CreateProjectScreen(onNavigateBack = { navController.popBackStack() })
         }
 
-        composable(Screen.LabPeople.route) {
+        composable(
+            route = Screen.LabPeople.route,
+            enterTransition = { EnterTransition.None },
+            exitTransition = { ExitTransition.None },
+            popEnterTransition = { EnterTransition.None },
+            popExitTransition = { ExitTransition.None }
+        ) {
             LabPeopleScreen(onNavigateBack = { navController.popBackStack() })
         }
 
-        composable(Screen.PendingTasks.route) {
+        composable(
+            route = Screen.PendingTasks.route,
+            enterTransition = { EnterTransition.None },
+            exitTransition = { ExitTransition.None },
+            popEnterTransition = { EnterTransition.None },
+            popExitTransition = { ExitTransition.None }
+        ) {
             PendingTasksScreen(onNavigateBack = { navController.popBackStack() })
         }
 
-        composable(Screen.SendGlobalAnnouncement.route) {
+        composable(
+            route = Screen.SendGlobalAnnouncement.route,
+            enterTransition = { EnterTransition.None },
+            exitTransition = { ExitTransition.None },
+            popEnterTransition = { EnterTransition.None },
+            popExitTransition = { ExitTransition.None }
+        ) {
             SendGlobalAnnouncementScreen(onNavigateBack = { navController.popBackStack() })
         }
     }

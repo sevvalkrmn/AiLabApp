@@ -195,6 +195,10 @@ fun ProjectsScreen(
                         }
                     }
                     else -> {
+                        val shouldAnimate = remember { !viewModel.hasAnimated }
+                        LaunchedEffect(uiState.projects.isNotEmpty()) {
+                            if (uiState.projects.isNotEmpty()) viewModel.markAnimated()
+                        }
                         LazyColumn(
                             modifier = Modifier
                                 .fillMaxSize()
@@ -202,9 +206,10 @@ fun ProjectsScreen(
                             verticalArrangement = Arrangement.spacedBy(screenHeight * 0.015f)
                         ) {
                             items(uiState.projects.size) { index ->
-                                StaggeredAnimatedItem(index = index) {
+                                StaggeredAnimatedItem(index = index, shouldAnimate = shouldAnimate) {
                                     ProjectCard(
                                         project = uiState.projects[index],
+                                        currentUserFullName = uiState.currentUserFullName,
                                         onClick = { onNavigateToProjectDetail(uiState.projects[index].id) },
                                         screenWidth = screenWidth,
                                         screenHeight = screenHeight
@@ -241,6 +246,7 @@ fun ProjectsScreenSkeleton(screenWidth: androidx.compose.ui.unit.Dp, screenHeigh
 @Composable
 fun ProjectCard(
     project: MyProjectsResponse,
+    currentUserFullName: String = "",
     onClick: () -> Unit,
     screenWidth: androidx.compose.ui.unit.Dp,
     screenHeight: androidx.compose.ui.unit.Dp
@@ -312,14 +318,21 @@ fun ProjectCard(
                 }
             }
 
+            val isCaptain = project.userRole == "Captain" ||
+                (currentUserFullName.isNotEmpty() &&
+                    project.captainNames.any { captainEntry ->
+                        captainEntry.equals(currentUserFullName, ignoreCase = true) ||
+                        currentUserFullName.startsWith(captainEntry.trim(), ignoreCase = true) ||
+                        captainEntry.trim().startsWith(currentUserFullName, ignoreCase = true)
+                    })
+
             Surface(
-                color = if (project.userRole == "Captain")
-                    PrimaryBlue else PrimaryBlue.copy(alpha = 0.2f),
+                color = if (isCaptain) PrimaryBlue else PrimaryBlue.copy(alpha = 0.2f),
                 shape = RoundedCornerShape(screenWidth * 0.02f)
             ) {
                 Text(
-                    text = when (project.userRole) { "Captain" -> "Kaptan" else -> "Üye" },
-                    color = if (project.userRole == "Captain") White else PrimaryBlue,
+                    text = if (isCaptain) "Kaptan" else "Üye",
+                    color = if (isCaptain) White else PrimaryBlue,
                     fontSize = (screenWidth.value * 0.03f).sp,
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier.padding(

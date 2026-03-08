@@ -91,8 +91,10 @@ class FirebaseAuthManager @Inject constructor() {
         return try {
             val result = auth.signInWithEmailAndPassword(email, pass).await()
             val token = result.user?.getIdToken(false)?.await()?.token
-            if (token != null) Result.success(token)
-            else Result.failure(Exception("Token alınamadı"))
+            if (token != null) {
+                cachedToken = token
+                Result.success(token)
+            } else Result.failure(Exception("Token alınamadı"))
         } catch (e: FirebaseAuthInvalidCredentialsException) {
             Result.failure(Exception("E-posta veya şifre hatalı"))
         } catch (e: FirebaseAuthException) {
@@ -116,8 +118,10 @@ class FirebaseAuthManager @Inject constructor() {
         return try {
             val result = auth.createUserWithEmailAndPassword(email, pass).await()
             val token = result.user?.getIdToken(false)?.await()?.token
-            if (token != null) Result.success(token)
-            else Result.failure(Exception("Token alınamadı"))
+            if (token != null) {
+                cachedToken = token
+                Result.success(token)
+            } else Result.failure(Exception("Token alınamadı"))
         } catch (e: Exception) {
             Result.failure(e)
         }

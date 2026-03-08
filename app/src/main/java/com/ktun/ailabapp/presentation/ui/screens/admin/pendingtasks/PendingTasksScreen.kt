@@ -19,7 +19,6 @@ import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ktun.ailabapp.data.remote.dto.response.PendingTaskResponse
-import com.ktun.ailabapp.presentation.ui.components.StaggeredAnimatedItem
 import com.ktun.ailabapp.ui.theme.BackgroundLight
 import com.ktun.ailabapp.ui.theme.InfoBlue
 import com.ktun.ailabapp.ui.theme.PrimaryBlue
@@ -115,12 +114,10 @@ fun PendingTasksScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         items(uiState.tasks.size) { index ->
-                            StaggeredAnimatedItem(index = index) {
-                                PendingTaskItem(
-                                    task = uiState.tasks[index],
-                                    onRateClick = { selectedTask = uiState.tasks[index] }
-                                )
-                            }
+                            PendingTaskItem(
+                                task = uiState.tasks[index],
+                                onRateClick = { selectedTask = uiState.tasks[index] }
+                            )
                         }
                     }
                 }

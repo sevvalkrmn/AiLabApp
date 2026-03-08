@@ -213,7 +213,15 @@ fun RegisterScreen(
                     RegisterInput(
                         value = uiState.fullName,
                         onValueChange = viewModel::updateFullName,
-                        placeholder = "Ad Soyad",
+                        placeholder = "Ad",
+                        keyboardType = KeyboardType.Text,
+                        imeAction = ImeAction.Next
+                    )
+
+                    RegisterInput(
+                        value = uiState.surname,
+                        onValueChange = viewModel::updateSurname,
+                        placeholder = "Soyad",
                         keyboardType = KeyboardType.Text,
                         imeAction = ImeAction.Next
                     )
@@ -267,6 +275,7 @@ fun RegisterScreen(
                               uiState.password == uiState.confirmPassword
             
             val isStep2Valid = uiState.fullName.isNotBlank() &&
+                              uiState.surname.isNotBlank() &&
                               uiState.username.length >= 3 &&
                               uiState.schoolNumber.isNotBlank() &&
                               uiState.phone.matches("^5[0-9]{9}$".toRegex())

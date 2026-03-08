@@ -11,6 +11,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -208,21 +210,50 @@ fun AnnouncementScreen(
                             },
                             modifier = Modifier.fillMaxSize()
                         ) {
-                            LazyColumn(
-                                modifier = Modifier.fillMaxSize(),
-                                verticalArrangement = Arrangement.spacedBy(screenHeight * 0.015f)
-                            ) {
-                                items(
-                                    count = filteredAnnouncements.size,
-                                    key = { index -> filteredAnnouncements[index].id }
-                                ) { index ->
-                                    StaggeredAnimatedItem(index = index) {
-                                        AnnouncementCard(
-                                            announcement = filteredAnnouncements[index],
-                                            onClick = { selectedAnnouncement = filteredAnnouncements[index] },
-                                            screenWidth = screenWidth,
-                                            screenHeight = screenHeight
+                            if (filteredAnnouncements.isEmpty()) {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.spacedBy(screenHeight * 0.015f)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Info,
+                                            contentDescription = null,
+                                            tint = PrimaryBlue.copy(alpha = 0.3f),
+                                            modifier = Modifier.size(screenWidth * 0.18f)
                                         )
+                                        Text(
+                                            text = "Henüz duyuru yok",
+                                            fontSize = (screenWidth.value * 0.045f).sp,
+                                            fontWeight = FontWeight.Medium,
+                                            color = PrimaryBlue.copy(alpha = 0.5f)
+                                        )
+                                    }
+                                }
+                            } else {
+                                val shouldAnimate = remember { !viewModel.hasAnimated }
+                                LaunchedEffect(filteredAnnouncements.isNotEmpty()) {
+                                    if (filteredAnnouncements.isNotEmpty()) viewModel.markAnimated()
+                                }
+                                LazyColumn(
+                                    modifier = Modifier.fillMaxSize(),
+                                    verticalArrangement = Arrangement.spacedBy(screenHeight * 0.015f)
+                                ) {
+                                    items(
+                                        count = filteredAnnouncements.size,
+                                        key = { index -> filteredAnnouncements[index].id }
+                                    ) { index ->
+                                        StaggeredAnimatedItem(index = index, shouldAnimate = shouldAnimate) {
+                                            AnnouncementCard(
+                                                announcement = filteredAnnouncements[index],
+                                                onClick = { selectedAnnouncement = filteredAnnouncements[index] },
+                                                screenWidth = screenWidth,
+                                                screenHeight = screenHeight
+                                            )
+                                        }
                                     }
                                 }
                             }

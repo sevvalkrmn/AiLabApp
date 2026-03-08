@@ -1,4 +1,4 @@
-package com.ktun.ailabapp.presentation.ui.components
+package com.ktun.ailabapp.presentation.ui.screens.bugreport
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

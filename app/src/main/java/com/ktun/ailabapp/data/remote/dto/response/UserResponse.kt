@@ -15,6 +15,9 @@ data class UserResponse(
     @SerializedName("fullName")
     val fullName: String,
 
+    @SerializedName("surname")
+    val surname: String? = null,
+
     @SerializedName("schoolNumber")
     val schoolNumber: String?,
 
@@ -50,7 +53,7 @@ data class UserResponse(
 fun UserResponse.toUser(): User {
     return User(
         id = id,
-        fullName = fullName,
+        fullName = "$fullName ${surname ?: ""}".trim(),
         email = email,
         phoneNumber = phone,                    // ✅ phone → phoneNumber
         studentNumber = schoolNumber,           // ✅ schoolNumber → studentNumber

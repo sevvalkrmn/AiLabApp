@@ -92,7 +92,7 @@ class ProjectDetailViewModel @Inject constructor(
                 is NetworkResult.Success -> {
                     projectResult.data?.let { project ->
                         val isCaptain = project.captains.any { it.userId == currentUserId }
-                        val canEdit = isAdmin || isCaptain
+                        val canEdit = isAdmin
 
                         _uiState.value = _uiState.value.copy(
                             project = project,
@@ -399,4 +399,9 @@ class ProjectDetailViewModel @Inject constructor(
             }
         }
     }
+
+    var hasAnimated = false
+        private set
+
+    fun markAnimated() { hasAnimated = true }
 }

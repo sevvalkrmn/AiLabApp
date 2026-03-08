@@ -156,5 +156,11 @@ class AnnouncementViewModel @Inject constructor(
     fun clearAnnouncements() {
         Logger.d("Clearing all announcements and state", tag = "AnnouncementVM")
         _uiState.value = AnnouncementUiState() // Tüm state'i sıfırla
+        hasAnimated = false
     }
+
+    var hasAnimated = false
+        private set
+
+    fun markAnimated() { hasAnimated = true }
 }

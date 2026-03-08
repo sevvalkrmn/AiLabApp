@@ -98,6 +98,11 @@ class LabPeopleViewModel @Inject constructor(
         }
     }
 
+    var hasAnimated = false
+        private set
+
+    fun markAnimated() { hasAnimated = true }
+
     // ✅ YENİ: Zorla Çıkış
     fun forceCheckout(userId: String) {
         viewModelScope.launch {

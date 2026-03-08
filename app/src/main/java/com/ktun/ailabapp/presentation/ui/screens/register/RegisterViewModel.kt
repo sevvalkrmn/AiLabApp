@@ -16,6 +16,7 @@ data class RegisterUiState(
     val step: Int = 1, // 1: Email/Pass, 2: Details
     val idToken: String? = null,
     val fullName: String = "",
+    val surname: String = "",
     val username: String = "",
     val email: String = "",
     val schoolNumber: String = "",
@@ -40,6 +41,7 @@ class RegisterViewModel @Inject constructor(
 
     // ... Update functions ...
     fun updateFullName(fullName: String) { _uiState.value = _uiState.value.copy(fullName = fullName) }
+    fun updateSurname(surname: String) { _uiState.value = _uiState.value.copy(surname = surname) }
     fun updateUsername(username: String) { _uiState.value = _uiState.value.copy(username = username) }
     fun updateEmail(email: String) { _uiState.value = _uiState.value.copy(email = email) }
     fun updateSchoolNumber(schoolNumber: String) { _uiState.value = _uiState.value.copy(schoolNumber = schoolNumber) }
@@ -105,7 +107,8 @@ class RegisterViewModel @Inject constructor(
         
         // Validate Step 2
         val error = when {
-            state.fullName.isBlank() -> "Ad Soyad boş bırakılamaz"
+            state.fullName.isBlank() -> "Ad boş bırakılamaz"
+            state.surname.isBlank() -> "Soyad boş bırakılamaz"
             state.username.isBlank() -> "Kullanıcı adı boş bırakılamaz"
             state.username.length < 3 -> "Kullanıcı adı en az 3 karakter olmalıdır"
             state.schoolNumber.isBlank() -> "Okul numarası boş bırakılamaz"
@@ -130,6 +133,7 @@ class RegisterViewModel @Inject constructor(
             val result = authRepository.completeRegistration(
                 idToken = state.idToken,
                 fullName = state.fullName,
+                surname = state.surname,
                 username = state.username,
                 email = state.email,
                 schoolNumber = state.schoolNumber,

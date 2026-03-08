@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -132,7 +133,7 @@ fun HomeScreen(
                 ) {
                     Column {
                         Text(
-                            text = "Merhaba, ${uiState.user?.fullName ?: ""}",
+                            text = "Merhaba, ${"${uiState.user?.fullName ?: ""} ${uiState.user?.surname ?: ""}".trim()}",
                             fontSize = (screenWidth.value * 0.050f).sp,
                             fontWeight = FontWeight.Bold,
                             color = White
@@ -194,6 +195,8 @@ fun HomeScreen(
                         }
                     )
 
+                    val shouldAnimate = remember { !viewModel.hasAnimated }
+                    LaunchedEffect(Unit) { viewModel.markAnimated() }
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxSize()
@@ -202,10 +205,12 @@ fun HomeScreen(
                         contentPadding = PaddingValues(top = screenHeight * 0.02f, bottom = screenHeight * 0.02f)
                     ) {
                         items(cardItems.size, key = { it }) { index ->
-                            var visible by rememberSaveable { mutableStateOf(false) }
+                            var visible by remember { mutableStateOf(!shouldAnimate) }
                             LaunchedEffect(Unit) {
-                                kotlinx.coroutines.delay(index * 100L)
-                                visible = true
+                                if (shouldAnimate) {
+                                    kotlinx.coroutines.delay(index * 100L)
+                                    visible = true
+                                }
                             }
                             Box {
                                 androidx.compose.animation.AnimatedVisibility(

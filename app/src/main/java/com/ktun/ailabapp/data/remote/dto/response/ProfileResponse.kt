@@ -11,6 +11,8 @@ data class ProfileResponse(
     val schoolNumber: String,
     @SerializedName("fullName")
     val fullName: String,
+    @SerializedName("surname")
+    val surname: String = "",
     val phone: String,
     @SerializedName("profileImageUrl")
     val profileImageUrl: String?,

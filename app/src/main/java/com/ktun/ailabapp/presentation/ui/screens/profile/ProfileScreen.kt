@@ -250,6 +250,8 @@ fun ProfileScreen(
                 if (uiState.isLoading && !uiState.isRefreshing) {
                     ProfileScreenSkeleton(screenWidth, screenHeight)
                 } else {
+                    val shouldAnimate = remember { !viewModel.hasAnimated }
+                    LaunchedEffect(Unit) { viewModel.markAnimated() }
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
@@ -258,8 +260,8 @@ fun ProfileScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         // Avatar + isim animasyonu
-                        var visibleAvatar by rememberSaveable { mutableStateOf(false) }
-                        LaunchedEffect(Unit) { visibleAvatar = true }
+                        var visibleAvatar by remember { mutableStateOf(!shouldAnimate) }
+                        LaunchedEffect(Unit) { if (shouldAnimate) visibleAvatar = true }
                         AnimatedVisibility(
                             visible = visibleAvatar,
                             enter = slideInVertically(
@@ -320,7 +322,7 @@ fun ProfileScreen(
                                 Spacer(modifier = Modifier.height(screenHeight * 0.02f))
 
                                 Text(
-                                    text = uiState.fullName,
+                                    text = "${uiState.fullName} ${uiState.surname}".trim(),
                                     fontSize = (screenWidth.value * 0.06f).sp,
                                     fontWeight = FontWeight.Bold,
                                     color = PrimaryBlue
@@ -339,8 +341,8 @@ fun ProfileScreen(
                         Spacer(modifier = Modifier.height(screenHeight * 0.03f))
 
                         // Puan kartı animasyonu
-                        var visibleScore by rememberSaveable { mutableStateOf(false) }
-                        LaunchedEffect(Unit) { delay(80L); visibleScore = true }
+                        var visibleScore by remember { mutableStateOf(!shouldAnimate) }
+                        LaunchedEffect(Unit) { if (shouldAnimate) { delay(80L); visibleScore = true } }
                         AnimatedVisibility(
                             visible = visibleScore,
                             enter = slideInVertically(
@@ -389,8 +391,8 @@ fun ProfileScreen(
                         }
 
                         menuItems.forEachIndexed { idx, (icon, text, onClick) ->
-                            var visibleItem by rememberSaveable(key = "menu_item_visible_$idx") { mutableStateOf(false) }
-                            LaunchedEffect(Unit) { delay((idx + 2) * 80L); visibleItem = true }
+                            var visibleItem by remember { mutableStateOf(!shouldAnimate) }
+                            LaunchedEffect(Unit) { if (shouldAnimate) { delay((idx + 2) * 80L); visibleItem = true } }
                             AnimatedVisibility(
                                 visible = visibleItem,
                                 enter = slideInVertically(
@@ -413,8 +415,8 @@ fun ProfileScreen(
 
                         Spacer(modifier = Modifier.height(screenHeight * 0.04f))
 
-                        var visibleLogout by rememberSaveable { mutableStateOf(false) }
-                        LaunchedEffect(Unit) { delay((menuItems.size + 2) * 80L); visibleLogout = true }
+                        var visibleLogout by remember { mutableStateOf(!shouldAnimate) }
+                        LaunchedEffect(Unit) { if (shouldAnimate) { delay((menuItems.size + 2) * 80L); visibleLogout = true } }
                         AnimatedVisibility(
                             visible = visibleLogout,
                             enter = slideInVertically(

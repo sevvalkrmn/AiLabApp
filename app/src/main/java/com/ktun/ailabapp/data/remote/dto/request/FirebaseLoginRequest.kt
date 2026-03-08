@@ -9,6 +9,9 @@ data class FirebaseLoginRequest(
     @SerializedName("fullName")
     val fullName: String? = null,
 
+    @SerializedName("surname")
+    val surname: String? = null,
+
     @SerializedName("userName")
     val userName: String? = null,
 

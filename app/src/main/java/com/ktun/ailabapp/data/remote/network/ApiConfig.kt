@@ -2,9 +2,6 @@ package com.ktun.ailabapp.data.remote.network
 
 object ApiConfig {
 
-    // 🔧 Backend URL - Arkadaşınızdan alacağınız gerçek URL'i yazın
-    const val BASE_URL = "https://api.ailab.org.tr/"
-
     // API Endpoints
     object Endpoints {
         const val REGISTER = "api/auth/register"

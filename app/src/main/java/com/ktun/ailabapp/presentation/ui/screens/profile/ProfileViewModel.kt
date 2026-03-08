@@ -44,6 +44,7 @@ class ProfileViewModel @Inject constructor(
                     _uiState.value = _uiState.value.copy(
                         id = profile.id,
                         fullName = profile.fullName,
+                        surname = profile.surname,
                         email = profile.email,
                         schoolNumber = profile.schoolNumber,
                         phone = profile.phone,
@@ -251,4 +252,9 @@ class ProfileViewModel @Inject constructor(
             }
         }
     }
+
+    var hasAnimated = false
+        private set
+
+    fun markAnimated() { hasAnimated = true }
 }

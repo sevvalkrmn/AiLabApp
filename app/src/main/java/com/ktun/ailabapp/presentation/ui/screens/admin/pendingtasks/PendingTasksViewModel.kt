@@ -88,4 +88,9 @@ class PendingTasksViewModel @Inject constructor(
     fun clearMessages() {
         _uiState.update { it.copy(errorMessage = null, successMessage = null) }
     }
+
+    var hasAnimated = false
+        private set
+
+    fun markAnimated() { hasAnimated = true }
 }

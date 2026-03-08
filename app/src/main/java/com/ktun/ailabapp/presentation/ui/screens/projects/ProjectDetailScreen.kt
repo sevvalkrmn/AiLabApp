@@ -145,6 +145,10 @@ fun ProjectDetailScreen(
                         .fillMaxSize()
                         .padding(paddingValues)
                 ) {
+                    val shouldAnimate = remember { !viewModel.hasAnimated }
+                    LaunchedEffect(uiState.project != null) {
+                        if (uiState.project != null) viewModel.markAnimated()
+                    }
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxSize()
@@ -152,7 +156,7 @@ fun ProjectDetailScreen(
                         verticalArrangement = Arrangement.spacedBy(screenHeight * 0.02f)
                     ) {
                         item {
-                            StaggeredAnimatedItem(index = 0) {
+                            StaggeredAnimatedItem(index = 0, shouldAnimate = shouldAnimate) {
                                 ProjectInfoCard(
                                     project = uiState.project!!,
                                     screenWidth = screenWidth,
@@ -164,7 +168,7 @@ fun ProjectDetailScreen(
                         }
 
                         item {
-                            StaggeredAnimatedItem(index = 1) {
+                            StaggeredAnimatedItem(index = 1, shouldAnimate = shouldAnimate) {
                                 TaskStatisticsCard(
                                     statistics = uiState.project!!.taskStatistics,
                                     screenWidth = screenWidth,
@@ -174,7 +178,7 @@ fun ProjectDetailScreen(
                         }
 
                         item {
-                            StaggeredAnimatedItem(index = 2) {
+                            StaggeredAnimatedItem(index = 2, shouldAnimate = shouldAnimate) {
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -202,7 +206,7 @@ fun ProjectDetailScreen(
 
                         if (uiState.tasks.isEmpty()) {
                             item {
-                                StaggeredAnimatedItem(index = 3) {
+                                StaggeredAnimatedItem(index = 3, shouldAnimate = shouldAnimate) {
                                     Card(
                                         modifier = Modifier.fillMaxWidth(),
                                         colors = CardDefaults.cardColors(containerColor = White)
@@ -232,7 +236,7 @@ fun ProjectDetailScreen(
                             }
                         } else {
                             items(uiState.tasks.size) { index ->
-                                StaggeredAnimatedItem(index = index + 3) {
+                                StaggeredAnimatedItem(index = index + 3, shouldAnimate = shouldAnimate) {
                                     TaskCard(
                                         task = uiState.tasks[index],
                                         onStatusChange = { newStatus ->
@@ -249,7 +253,7 @@ fun ProjectDetailScreen(
                         }
 
                         item {
-                            StaggeredAnimatedItem(index = uiState.tasks.size + 3) {
+                            StaggeredAnimatedItem(index = uiState.tasks.size + 3, shouldAnimate = shouldAnimate) {
                                 Column {
                                     Spacer(modifier = Modifier.height(screenHeight * 0.01f))
                                     Text(
@@ -264,7 +268,7 @@ fun ProjectDetailScreen(
 
                         val captains = uiState.project!!.captains
                         items(captains.size) { index ->
-                            StaggeredAnimatedItem(index = uiState.tasks.size + 4 + index) {
+                            StaggeredAnimatedItem(index = uiState.tasks.size + 4 + index, shouldAnimate = shouldAnimate) {
                                 MemberCard(
                                     member = captains[index],
                                     screenWidth = screenWidth,
@@ -275,7 +279,7 @@ fun ProjectDetailScreen(
 
                         val members = uiState.project!!.members
                         items(members.size) { index ->
-                            StaggeredAnimatedItem(index = uiState.tasks.size + 4 + captains.size + index) {
+                            StaggeredAnimatedItem(index = uiState.tasks.size + 4 + captains.size + index, shouldAnimate = shouldAnimate) {
                                 MemberCard(
                                     member = members[index],
                                     screenWidth = screenWidth,
@@ -286,7 +290,7 @@ fun ProjectDetailScreen(
 
                         if (uiState.canEdit) {
                             item {
-                                StaggeredAnimatedItem(index = uiState.tasks.size + 4 + captains.size + members.size) {
+                                StaggeredAnimatedItem(index = uiState.tasks.size + 4 + captains.size + members.size, shouldAnimate = shouldAnimate) {
                                     AdminActionsSection(
                                         onAddMember = { viewModel.showAddMemberDialog() },
                                         onRemoveMember = { viewModel.showRemoveMemberDialog() },
@@ -832,8 +836,8 @@ fun AdminActionsSection(
     onDeleteProject: () -> Unit,
     screenWidth: androidx.compose.ui.unit.Dp,
     screenHeight: androidx.compose.ui.unit.Dp,
-    isCaptain: Boolean,
-    isAdmin: Boolean
+    isCaptain: Boolean = false,
+    isAdmin: Boolean = false
 ) {
     Column(
         modifier = Modifier
@@ -841,7 +845,7 @@ fun AdminActionsSection(
             .padding(vertical = screenHeight * 0.02f)
     ) {
         Text(
-            text = if (isCaptain) "🔧 Proje Yönetimi (Kaptan)" else "🔧 Proje Yönetimi (Admin)",
+            text = "🔧 Proje Yönetimi (Admin)",
             fontSize = (screenWidth.value * 0.045f).sp,
             fontWeight = FontWeight.Bold,
             color = PrimaryBlue
@@ -881,23 +885,21 @@ fun AdminActionsSection(
             Text("Üye Çıkar", fontSize = (screenWidth.value * 0.04f).sp)
         }
 
-        if (isAdmin) {
-            Spacer(Modifier.height(screenHeight * 0.01f))
+        Spacer(Modifier.height(screenHeight * 0.01f))
 
-            // Projeyi Sil
-            Button(
-                onClick = onDeleteProject,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(screenHeight * 0.06f),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Red
-                )
-            ) {
-                Icon(Icons.Default.Delete, contentDescription = null)
-                Spacer(Modifier.width(screenWidth * 0.02f))
-                Text("Projeyi Sil", fontSize = (screenWidth.value * 0.04f).sp)
-            }
+        // Projeyi Sil
+        Button(
+            onClick = onDeleteProject,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(screenHeight * 0.06f),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.Red
+            )
+        ) {
+            Icon(Icons.Default.Delete, contentDescription = null)
+            Spacer(Modifier.width(screenWidth * 0.02f))
+            Text("Projeyi Sil", fontSize = (screenWidth.value * 0.04f).sp)
         }
     }
 }

@@ -12,9 +12,15 @@ import kotlinx.coroutines.delay
 @Composable
 fun StaggeredAnimatedItem(
     index: Int,
+    shouldAnimate: Boolean = true,
     delayPerItem: Long = 80L,
     content: @Composable () -> Unit
 ) {
+    if (!shouldAnimate) {
+        Box { content() }
+        return
+    }
+
     var visible by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         delay(index * delayPerItem)

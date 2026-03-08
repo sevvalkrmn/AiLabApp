@@ -28,6 +28,9 @@ data class AuthResponse(
     @SerializedName("fullName")
     val fullName: String? = null,
 
+    @SerializedName("surname")
+    val surname: String? = null,
+
     @SerializedName("phoneNumber")
     val phoneNumber: String? = null,
 

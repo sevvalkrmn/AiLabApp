@@ -31,7 +31,6 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import coil.compose.AsyncImage
 import com.ktun.ailabapp.data.model.User
-import com.ktun.ailabapp.presentation.ui.components.StaggeredAnimatedItem
 import com.ktun.ailabapp.util.Logger
 import com.ktun.ailabapp.presentation.ui.screens.admin.users.DeleteUserDialog
 import com.ktun.ailabapp.ui.theme.BackgroundLight
@@ -399,12 +398,10 @@ private fun UsersList(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(users.size) { index ->
-            StaggeredAnimatedItem(index = index) {
-                UserListItem(
-                    user = users[index],
-                    onClick = { onUserClick(users[index]) }
-                )
-            }
+            UserListItem(
+                user = users[index],
+                onClick = { onUserClick(users[index]) }
+            )
         }
     }
 }

@@ -5,6 +5,9 @@ data class LeaderboardUserResponse(
     @SerializedName("fullName")
     val fullName: String,
 
+    @SerializedName("surname")
+    val surname: String? = null,
+
     @SerializedName("totalScore")
     val totalScore: Double,
 

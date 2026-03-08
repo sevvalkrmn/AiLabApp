@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.ktun.ailabapp.presentation.ui.screens.bugreport.BugReportViewModel
 import com.ktun.ailabapp.ui.theme.BorderGray
 import com.ktun.ailabapp.ui.theme.ErrorRed
 import com.ktun.ailabapp.ui.theme.PrimaryBlue // ✅ Import added

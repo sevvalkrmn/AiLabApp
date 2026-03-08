@@ -22,7 +22,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.ktun.ailabapp.presentation.ui.components.StaggeredAnimatedItem
 import com.ktun.ailabapp.ui.theme.BackgroundLight
 import com.ktun.ailabapp.ui.theme.PrimaryBlue
 import com.ktun.ailabapp.ui.theme.White
@@ -105,43 +104,41 @@ fun LabPeopleScreen(
                         modifier = Modifier.fillMaxSize()
                     ) {
                         // Occupancy Header
-                        StaggeredAnimatedItem(index = 0) {
-                            Surface(
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            color = White,
+                            shadowElevation = 2.dp
+                        ) {
+                            Row(
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                shape = RoundedCornerShape(12.dp),
-                                color = White,
-                                shadowElevation = 2.dp
+                                    .padding(16.dp)
+                                    .fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Row(
-                                    modifier = Modifier
-                                        .padding(16.dp)
-                                        .fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Column {
-                                        Text(
-                                            text = "Doluluk Oranı",
-                                            fontSize = 14.sp,
-                                            color = Color.Gray
-                                        )
-                                        Text(
-                                            text = "${uiState.currentOccupancy} / ${uiState.totalCapacity}",
-                                            fontSize = 24.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = PrimaryBlue
-                                        )
-                                    }
-
-                                    CircularProgressIndicator(
-                                        progress = { if (uiState.totalCapacity > 0) uiState.currentOccupancy.toFloat() / uiState.totalCapacity else 0f },
-                                        modifier = Modifier.size(50.dp),
-                                        color = PrimaryBlue,
-                                        trackColor = PrimaryBlue.copy(alpha = 0.2f)
+                                Column {
+                                    Text(
+                                        text = "Doluluk Oranı",
+                                        fontSize = 14.sp,
+                                        color = Color.Gray
+                                    )
+                                    Text(
+                                        text = "${uiState.currentOccupancy} / ${uiState.totalCapacity}",
+                                        fontSize = 24.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = PrimaryBlue
                                     )
                                 }
+
+                                CircularProgressIndicator(
+                                    progress = { if (uiState.totalCapacity > 0) uiState.currentOccupancy.toFloat() / uiState.totalCapacity else 0f },
+                                    modifier = Modifier.size(50.dp),
+                                    color = PrimaryBlue,
+                                    trackColor = PrimaryBlue.copy(alpha = 0.2f)
+                                )
                             }
                         }
 
@@ -163,25 +160,21 @@ fun LabPeopleScreen(
                                 contentPadding = PaddingValues(bottom = 16.dp)
                             ) {
                                 item {
-                                    StaggeredAnimatedItem(index = 1) {
-                                        Text(
-                                            text = "İçerideki Kişiler (${uiState.peopleInside.size})",
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 18.sp,
-                                            modifier = Modifier.padding(vertical = 8.dp)
-                                        )
-                                    }
+                                    Text(
+                                        text = "İçerideki Kişiler (${uiState.peopleInside.size})",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 18.sp,
+                                        modifier = Modifier.padding(vertical = 8.dp)
+                                    )
                                 }
 
                                 items(uiState.peopleInside.size) { index ->
-                                    StaggeredAnimatedItem(index = index + 2) {
-                                        PersonItem(
-                                            person = uiState.peopleInside[index],
-                                            onCheckoutClick = {
-                                                uiState.peopleInside[index].id?.let { viewModel.forceCheckout(it) }
-                                            }
-                                        )
-                                    }
+                                    PersonItem(
+                                        person = uiState.peopleInside[index],
+                                        onCheckoutClick = {
+                                            uiState.peopleInside[index].id?.let { viewModel.forceCheckout(it) }
+                                        }
+                                    )
                                 }
                             }
                         }

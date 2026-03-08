@@ -4,6 +4,7 @@ package com.ktun.ailabapp.data.model
 data class ProfileUiState(
     val id: String = "",
     val fullName: String = "",
+    val surname: String = "",
     val email: String = "",
     val schoolNumber: String = "",
     val phone: String = "",

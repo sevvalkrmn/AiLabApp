@@ -53,6 +53,7 @@ class AuthRepository @Inject constructor(
     suspend fun completeRegistration(
         idToken: String,
         fullName: String,
+        surname: String,
         username: String,
         email: String,
         schoolNumber: String,
@@ -62,6 +63,7 @@ class AuthRepository @Inject constructor(
             val request = FirebaseLoginRequest(
                 idToken = idToken,
                 fullName = fullName,
+                surname = surname,
                 userName = username,
                 schoolNumber = schoolNumber,
                 phoneNumber = phone
@@ -71,20 +73,17 @@ class AuthRepository @Inject constructor(
 
             if (response.isSuccessful && response.body() != null) {
                 val authResponse = response.body()!!
-                
+
                 val userId = authResponse.actualUserId
                 if (userId.isBlank()) {
                     return@withContext NetworkResult.Error("Backend hatası: Kullanıcı ID bulunamadı")
                 }
 
-                val respFullName = authResponse.fullName ?: fullName
-                val splitName = respFullName.split(" ")
-
                 preferencesManager.saveUserData(
                     userId = userId,
                     email = authResponse.email ?: email,
-                    firstName = splitName.firstOrNull() ?: "",
-                    lastName = splitName.drop(1).joinToString(" "),
+                    firstName = authResponse.fullName ?: fullName,
+                    lastName = authResponse.surname ?: surname,
                     phone = authResponse.phoneNumber ?: phone
                 )
 
@@ -107,6 +106,7 @@ class AuthRepository @Inject constructor(
 
     suspend fun register(
         fullName: String,
+        surname: String,
         username: String,
         email: String,
         schoolNumber: String,
@@ -119,7 +119,7 @@ class AuthRepository @Inject constructor(
                 return@withContext NetworkResult.Error("Firebase Kayıt Hatası: ${it.message}")
             }
 
-            completeRegistration(idToken, fullName, username, email, schoolNumber, phone)
+            completeRegistration(idToken, fullName, surname, username, email, schoolNumber, phone)
         } catch (e: Exception) {
             NetworkResult.Error(e.message ?: "Bilinmeyen hata")
         }
@@ -149,14 +149,11 @@ class AuthRepository @Inject constructor(
 
                 preferencesManager.saveRememberMe(rememberMe)
 
-                val fullName = authResponse.fullName ?: ""
-                val splitName = fullName.split(" ")
-
                 preferencesManager.saveUserData(
                     userId = userId,
                     email = authResponse.email ?: email,
-                    firstName = splitName.firstOrNull() ?: "",
-                    lastName = splitName.drop(1).joinToString(" "),
+                    firstName = authResponse.fullName ?: "",
+                    lastName = authResponse.surname ?: "",
                     phone = authResponse.phoneNumber ?: ""
                 )
 

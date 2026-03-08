@@ -112,10 +112,9 @@ class HomeViewModel @Inject constructor(
         when (val result = authRepository.getProfile()) {
             is NetworkResult.Success -> {
                 result.data?.let { profile ->
-                    val firstName = profile.fullName.split(" ").firstOrNull() ?: "Kullanıcı"
                     _uiState.value = _uiState.value.copy(
                         user = profile,
-                        userName = firstName
+                        userName = profile.fullName.ifBlank { "Kullanıcı" }
                     )
                 }
             }
@@ -136,7 +135,7 @@ class HomeViewModel @Inject constructor(
                     result.data?.let { leaderboard ->
                         val topUsers = leaderboard.take(3).map { user ->
                             TopUserItem(
-                                name = user.fullName,
+                                name = "${user.fullName} ${user.surname ?: ""}".trim(),
                                 score = user.totalScore,
                                 avatarUrl = user.profileImageUrl
                             )
@@ -228,4 +227,9 @@ class HomeViewModel @Inject constructor(
         }
         _uiState.value = _uiState.value.copy(greeting = greeting)
     }
+
+    var hasAnimated = false
+        private set
+
+    fun markAnimated() { hasAnimated = true }
 }

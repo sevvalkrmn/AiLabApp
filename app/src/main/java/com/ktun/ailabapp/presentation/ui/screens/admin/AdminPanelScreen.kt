@@ -23,7 +23,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import android.widget.Toast
-import com.ktun.ailabapp.presentation.ui.components.StaggeredAnimatedItem
 import com.ktun.ailabapp.ui.theme.BackgroundLight
 import com.ktun.ailabapp.ui.theme.ErrorRed
 import com.ktun.ailabapp.ui.theme.PrimaryBlue
@@ -209,9 +208,7 @@ fun AdminPanelScreen(
                     )
 
                     items(adminItems.size) { index ->
-                        StaggeredAnimatedItem(index = index) {
-                            adminItems[index]()
-                        }
+                        adminItems[index]()
                     }
                 }
             }
