@@ -18,8 +18,8 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ktun.ailabapp.data.remote.dto.response.TaskHistory
 import com.ktun.ailabapp.data.remote.dto.response.TaskStatus
-import com.ktun.ailabapp.ui.theme.PrimaryBlue
-import com.ktun.ailabapp.ui.theme.TaskHistoryBg
+import com.ktun.ailabapp.ui.theme.*
+import com.ktun.ailabapp.presentation.ui.components.navigation.AiLabTopBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,38 +36,29 @@ fun TaskHistoryScreen(
     }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Görev Geçmişi") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, "Geri")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = PrimaryBlue,
-                    titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White
-                )
-            )
-        },
         containerColor = TaskHistoryBg
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(16.dp)
         ) {
+            AiLabTopBar(title = "Görev Geçmişi", onBackClick = onNavigateBack)
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(AppSpacing.lg)
+            ) {
             // User Info
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
-                color = Color.White,
-                shadowElevation = 2.dp
+                color = White,
+                shadowElevation = AppDimensions.cardElevation
             ) {
                 Column(
-                    modifier = Modifier.padding(16.dp)
+                    modifier = Modifier.padding(AppSpacing.lg)
                 ) {
                     Text(
                         text = userName,
@@ -75,21 +66,21 @@ fun TaskHistoryScreen(
                         fontWeight = FontWeight.Bold,
                         color = PrimaryBlue
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(AppSpacing.xxs))
                     Text(
                         text = "Toplam ${uiState.tasks.size} görev",
                         fontSize = 14.sp,
-                        color = Color.Gray
+                        color = TextGray
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(AppSpacing.lg))
 
             // Filter Chips
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
             ) {
                 FilterChip(
                     label = "Tümü",
@@ -124,7 +115,7 @@ fun TaskHistoryScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(AppSpacing.lg))
 
             // Task List
             when {
@@ -156,14 +147,14 @@ fun TaskHistoryScreen(
                     ) {
                         Text(
                             text = "Görev bulunamadı",
-                            color = Color.Gray
+                            color = TextGray
                         )
                     }
                 }
 
                 else -> {
                     LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                        verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
                     ) {
                         items(viewModel.getFilteredTasks()) { task ->
                             TaskCard(task = task)
@@ -171,7 +162,8 @@ fun TaskHistoryScreen(
                     }
                 }
             }
-        }
+            } // inner Column
+        } // outer Column
     }
 }
 
@@ -188,8 +180,8 @@ private fun FilterChip(
         onClick = onClick,
         modifier = modifier.height(48.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = if (isSelected) color else Color.White,
-            contentColor = if (isSelected) Color.White else color
+            containerColor = if (isSelected) color else White,
+            contentColor = if (isSelected) White else color
         ),
         shape = RoundedCornerShape(12.dp),
         border = androidx.compose.foundation.BorderStroke(2.dp, color)
@@ -215,8 +207,8 @@ private fun TaskCard(task: TaskHistory) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
-        color = Color.White,
-        shadowElevation = 2.dp
+        color = White,
+        shadowElevation = AppDimensions.cardElevation
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -245,13 +237,13 @@ private fun TaskCard(task: TaskHistory) {
                 Text(
                     text = task.projectName,
                     fontSize = 12.sp,
-                    color = Color.Gray
+                    color = TextGray
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = task.createdAt,
                     fontSize = 11.sp,
-                    color = Color.Gray.copy(alpha = 0.7f)
+                    color = TextGray.copy(alpha = 0.7f)
                 )
             }
 
