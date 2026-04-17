@@ -16,8 +16,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
@@ -31,6 +29,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ktun.ailabapp.R
+import com.ktun.ailabapp.presentation.ui.components.buttons.GradientButton
 import com.ktun.ailabapp.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -210,61 +209,6 @@ fun LoginScreen(
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.padding(bottom = AppSpacing.xxxl, top = AppSpacing.lg)
             )
-        }
-    }
-}
-
-@Composable
-private fun GradientButton(
-    text: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    isLoading: Boolean = false,
-    enabled: Boolean = true,
-) {
-    Button(
-        onClick = onClick,
-        modifier = modifier
-            .fillMaxWidth()
-            .height(AppDimensions.buttonHeightLarge)
-            .shadow(
-                elevation = AppSpacing.sm,
-                shape = MaterialTheme.shapes.medium,
-                ambientColor = SecondaryBlue.copy(alpha = 0.3f),
-                spotColor = SecondaryBlue.copy(alpha = 0.3f)
-            ),
-        shape = MaterialTheme.shapes.medium,
-        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-        contentPadding = PaddingValues(),
-        enabled = enabled,
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    brush = Brush.radialGradient(
-                        colors = listOf(SecondaryBlue, PrimaryBlue),
-                        center = Offset(0.5f, 0.5f),
-                        radius = 800f
-                    ),
-                    shape = MaterialTheme.shapes.medium
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            if (isLoading) {
-                CircularProgressIndicator(
-                    color = White,
-                    modifier = Modifier.size(AppDimensions.progressSizeLg),
-                    strokeWidth = 2.dp,
-                )
-            } else {
-                Text(
-                    text = text,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.SemiBold,
-                    color = White
-                )
-            }
         }
     }
 }

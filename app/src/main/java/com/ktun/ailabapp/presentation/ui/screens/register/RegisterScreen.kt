@@ -7,7 +7,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -18,10 +17,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -30,19 +28,12 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.ktun.ailabapp.presentation.ui.screens.register.RegisterViewModel
 import com.ktun.ailabapp.R
-import com.ktun.ailabapp.ui.theme.BackgroundLight
-import com.ktun.ailabapp.ui.theme.Black
-import com.ktun.ailabapp.ui.theme.BorderGray
-import com.ktun.ailabapp.ui.theme.LabelGray
-import com.ktun.ailabapp.ui.theme.PrimaryBlue
-import com.ktun.ailabapp.ui.theme.SecondaryBlue
-import com.ktun.ailabapp.ui.theme.TextGray
+import com.ktun.ailabapp.presentation.ui.components.buttons.GradientButton
+import com.ktun.ailabapp.presentation.ui.screens.register.RegisterViewModel
+import com.ktun.ailabapp.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -56,17 +47,13 @@ fun RegisterScreen(
     val configuration = LocalConfiguration.current
     val screenHeight = configuration.screenHeightDp.dp
 
-    // Back tuşuna basıldığında adım 2'den 1'e dön
     BackHandler(enabled = uiState.step == 2) {
         viewModel.previousStep()
     }
 
     LaunchedEffect(uiState.errorMessage) {
-        uiState.errorMessage?.let { error ->
-            Toast.makeText(context, error, Toast.LENGTH_LONG).show()
-        }
+        uiState.errorMessage?.let { Toast.makeText(context, it, Toast.LENGTH_LONG).show() }
     }
-
     LaunchedEffect(uiState.isRegistered) {
         if (uiState.isRegistered) {
             Toast.makeText(context, "Kayıt başarılı!", Toast.LENGTH_SHORT).show()
@@ -80,12 +67,12 @@ fun RegisterScreen(
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        BackgroundLight, // Top - light
-                        BackgroundLight, // Keep light
-                        BackgroundLight, // Still light
-                        Color(0xFFE8E8EC), // Slight transition
-                        Color(0xFFD4D4D8), // Mid gray
-                        Color(0xFFC0C0C4)  // Bottom - light gray
+                        BackgroundLight,
+                        BackgroundLight,
+                        BackgroundLight,
+                        GradientStart,
+                        GradientMid,
+                        GradientEnd,
                     ),
                     startY = 0f,
                     endY = Float.POSITIVE_INFINITY
@@ -98,61 +85,52 @@ fun RegisterScreen(
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // --- TOP SECTION (Same as Login) ---
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(screenHeight * 0.35f),
                 contentAlignment = Alignment.Center
             ) {
-                // Background shape
                 Image(
                     painter = painterResource(id = R.drawable.login_background),
                     contentDescription = null,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.FillBounds
                 )
-
-                // Logo with inner shadow
                 Image(
                     painter = painterResource(id = R.drawable.ai_lab_logo_in),
                     contentDescription = "AI Lab Logo",
                     modifier = Modifier
                         .size(200.dp)
-                        .padding(top = 8.dp),
+                        .padding(top = AppSpacing.sm),
                     contentScale = ContentScale.Fit
                 )
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(AppSpacing.xxxl))
 
-            // --- TITLE SECTION ---
             Text(
                 text = "Hesap Oluştur",
-                fontSize = 24.sp,
+                style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = PrimaryBlue,
-                modifier = Modifier.padding(bottom = 4.dp)
+                modifier = Modifier.padding(bottom = AppSpacing.xxs)
             )
 
             Text(
                 text = if (uiState.step == 1) "Adım 1/2: Giriş Bilgileri" else "Adım 2/2: Kişisel Bilgiler",
-                fontSize = 14.sp,
+                style = MaterialTheme.typography.bodyMedium,
                 color = TextGray,
-                modifier = Modifier.padding(bottom = 24.dp)
+                modifier = Modifier.padding(bottom = AppSpacing.xxl)
             )
 
-            // --- FORM SECTION ---
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 32.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(horizontal = AppSpacing.xxxl),
+                verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
             ) {
                 if (uiState.step == 1) {
-                    // --- STEP 1: Email & Password ---
-
-                    // Şifre kuralları: Min 8 karakter, en az 1 büyük harf, en az 1 rakam
                     val passwordRegex = "^(?=.*[A-Z])(?=.*[0-9]).{8,}$".toRegex()
                     val isValidPassword = passwordRegex.matches(uiState.password)
                     val passwordsMatch = uiState.password == uiState.confirmPassword && uiState.password.isNotBlank()
@@ -180,9 +158,9 @@ fun RegisterScreen(
                     if (uiState.password.isNotBlank() && !isValidPassword) {
                         Text(
                             text = "En az 8 karakter, 1 büyük harf ve 1 rakam gereklidir.",
-                            color = Color.Red,
-                            fontSize = 11.sp,
-                            modifier = Modifier.padding(start = 4.dp)
+                            style = MaterialTheme.typography.labelSmall,
+                            color = ErrorRed,
+                            modifier = Modifier.padding(start = AppSpacing.xxs)
                         )
                     }
 
@@ -201,15 +179,13 @@ fun RegisterScreen(
                     if (uiState.confirmPassword.isNotBlank() && !passwordsMatch) {
                         Text(
                             text = "Şifreler uyuşmuyor.",
-                            color = Color.Red,
-                            fontSize = 11.sp,
-                            modifier = Modifier.padding(start = 4.dp)
+                            style = MaterialTheme.typography.labelSmall,
+                            color = ErrorRed,
+                            modifier = Modifier.padding(start = AppSpacing.xxs)
                         )
                     }
 
                 } else {
-                    // --- STEP 2: Personal Details ---
-
                     RegisterInput(
                         value = uiState.fullName,
                         onValueChange = viewModel::updateFullName,
@@ -258,88 +234,40 @@ fun RegisterScreen(
                     if (uiState.phone.isNotBlank() && !isValidPhone) {
                         Text(
                             text = "Telefon numarası 5 ile başlamalı ve 10 haneli olmalıdır.",
-                            color = Color.Red,
-                            fontSize = 11.sp,
-                            modifier = Modifier.padding(start = 4.dp)
+                            style = MaterialTheme.typography.labelSmall,
+                            color = ErrorRed,
+                            modifier = Modifier.padding(start = AppSpacing.xxs)
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(AppSpacing.xl))
 
-            // --- ACTION BUTTON ---
             val passwordRegex = "^(?=.*[A-Z])(?=.*[0-9]).{8,}$".toRegex()
-            val isStep1Valid = uiState.email.isNotBlank() && 
-                              passwordRegex.matches(uiState.password) && 
-                              uiState.password == uiState.confirmPassword
-            
+            val isStep1Valid = uiState.email.isNotBlank() &&
+                    passwordRegex.matches(uiState.password) &&
+                    uiState.password == uiState.confirmPassword
             val isStep2Valid = uiState.fullName.isNotBlank() &&
-                              uiState.surname.isNotBlank() &&
-                              uiState.username.length >= 3 &&
-                              uiState.schoolNumber.isNotBlank() &&
-                              uiState.phone.matches("^5[0-9]{9}$".toRegex())
-
+                    uiState.surname.isNotBlank() &&
+                    uiState.username.length >= 3 &&
+                    uiState.schoolNumber.isNotBlank() &&
+                    uiState.phone.matches("^5[0-9]{9}$".toRegex())
             val isButtonEnabled = if (uiState.step == 1) isStep1Valid else isStep2Valid
 
-            Button(
+            GradientButton(
+                text = if (uiState.step == 1) "Devam Et" else "Kayıt Ol",
                 onClick = {
-                    if (uiState.step == 1) {
-                        viewModel.createFirebaseUser()
-                    } else {
-                        viewModel.completeRegistration(onSuccess = onRegisterSuccess)
-                    }
+                    if (uiState.step == 1) viewModel.createFirebaseUser()
+                    else viewModel.completeRegistration(onSuccess = onRegisterSuccess)
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 32.dp)
-                    .height(52.dp)
-                    .shadow(
-                        elevation = 8.dp,
-                        shape = RoundedCornerShape(12.dp),
-                        ambientColor = SecondaryBlue.copy(alpha = 0.3f),
-                        spotColor = SecondaryBlue.copy(alpha = 0.3f)
-                    ),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                contentPadding = PaddingValues(),
-                enabled = !uiState.isLoading && isButtonEnabled
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            brush = Brush.radialGradient(
-                                colors = listOf(
-                                    SecondaryBlue,
-                                    PrimaryBlue
-                                ),
-                                center = Offset(0.5f, 0.5f),
-                                radius = 800f
-                            ),
-                            shape = RoundedCornerShape(12.dp)
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (uiState.isLoading) {
-                        CircularProgressIndicator(
-                            color = Color.White,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    } else {
-                        Text(
-                            text = if (uiState.step == 1) "Devam Et" else "Kayıt Ol",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color.White
-                        )
-                    }
-                }
-            }
+                isLoading = uiState.isLoading,
+                enabled = !uiState.isLoading && isButtonEnabled,
+                modifier = Modifier.padding(horizontal = AppSpacing.xxxl)
+            )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(AppSpacing.lg))
 
-            // --- FOOTER (Login Link) ---
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
@@ -347,12 +275,12 @@ fun RegisterScreen(
             ) {
                 Text(
                     text = "Zaten hesabınız var mı? ",
-                    fontSize = 14.sp,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = TextGray
                 )
                 Text(
                     text = "Giriş Yap",
-                    fontSize = 14.sp,
+                    style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                     color = SecondaryBlue,
                     modifier = Modifier.clickable {
@@ -367,10 +295,10 @@ fun RegisterScreen(
 
             Text(
                 text = "Yapay Zeka ve Veri Bilimi Laboratuvarı, D114",
-                fontSize = 11.sp,
+                style = MaterialTheme.typography.labelSmall,
                 color = PrimaryBlue,
                 fontWeight = FontWeight.Medium,
-                modifier = Modifier.padding(bottom = 32.dp, top = 16.dp)
+                modifier = Modifier.padding(bottom = AppSpacing.xxxl, top = AppSpacing.lg)
             )
         }
     }
@@ -388,40 +316,40 @@ fun RegisterInput(
     isPasswordVisible: Boolean = false,
     onTogglePasswordVisibility: () -> Unit = {},
     prefix: String? = null,
-    isError: Boolean = false // ✅ Parametre eklendi
+    isError: Boolean = false,
 ) {
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        isError = isError, // ✅ Atama yapıldı
+        isError = isError,
         placeholder = {
             Text(
                 placeholder,
                 color = LabelGray,
-                fontSize = 13.sp
+                style = MaterialTheme.typography.bodySmall,
             )
         },
         prefix = if (prefix != null) {
-            { Text(prefix, color = Black, fontSize = 13.sp) }
+            { Text(prefix, color = Black, style = MaterialTheme.typography.bodySmall) }
         } else null,
         modifier = Modifier
             .fillMaxWidth()
-            .height(52.dp),
-        shape = RoundedCornerShape(12.dp),
+            .height(AppDimensions.buttonHeightLarge),
+        shape = MaterialTheme.shapes.medium,
         colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = if (isError) Color.Red else BorderGray, // ✅ Hata rengi
-            unfocusedBorderColor = if (isError) Color.Red else BorderGray,
-            focusedContainerColor = Color.White,
-            unfocusedContainerColor = Color.White,
+            focusedBorderColor = if (isError) ErrorRed else BorderGray,
+            unfocusedBorderColor = if (isError) ErrorRed else BorderGray,
+            focusedContainerColor = White,
+            unfocusedContainerColor = White,
             focusedTextColor = Black,
             unfocusedTextColor = Black,
-            cursorColor = SecondaryBlue
+            cursorColor = SecondaryBlue,
         ),
         visualTransformation = if (isPassword && !isPasswordVisible)
             PasswordVisualTransformation() else VisualTransformation.None,
         keyboardOptions = KeyboardOptions(
             keyboardType = keyboardType,
-            imeAction = imeAction
+            imeAction = imeAction,
         ),
         trailingIcon = if (isPassword) {
             {
@@ -430,11 +358,11 @@ fun RegisterInput(
                         imageVector = if (isPasswordVisible)
                             Icons.Default.Visibility else Icons.Default.VisibilityOff,
                         contentDescription = null,
-                        tint = LabelGray
+                        tint = LabelGray,
                     )
                 }
             }
         } else null,
-        singleLine = true
+        singleLine = true,
     )
 }
