@@ -7,7 +7,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
@@ -21,10 +20,9 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ktun.ailabapp.data.model.User
 import com.ktun.ailabapp.data.remote.dto.response.ProjectMember
+import com.ktun.ailabapp.presentation.ui.components.navigation.AiLabTopBar
 import com.ktun.ailabapp.presentation.ui.screens.admin.roles.ManageRolesViewModel
-import com.ktun.ailabapp.ui.theme.ErrorRed
-import com.ktun.ailabapp.ui.theme.PrimaryBlue
-import com.ktun.ailabapp.ui.theme.TaskHistoryBg
+import com.ktun.ailabapp.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -56,55 +54,30 @@ fun ManageRolesScreen(
     }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Kaptan Değişimi") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, "Geri")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = PrimaryBlue,
-                    titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White
-                )
-            )
-        },
         containerColor = TaskHistoryBg
     ) { paddingValues ->
-        if (uiState.isLoadingUser) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(color = PrimaryBlue)
-            }
-        } else if (uiState.user == null) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "Kullanıcı yüklenemedi",
-                    color = MaterialTheme.colorScheme.error
-                )
-            }
-        } else {
-            val user = uiState.user!!
-            val captainProjects = uiState.captainProjects
+        Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+            AiLabTopBar(title = "Kaptan Değişimi", onBackClick = onNavigateBack)
+            when {
+                uiState.isLoadingUser -> Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) { CircularProgressIndicator(color = PrimaryBlue) }
 
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
+                uiState.user == null -> Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) { Text(text = "Kullanıcı yüklenemedi", color = MaterialTheme.colorScheme.error) }
+
+                else -> {
+                    val user = uiState.user!!
+                    val captainProjects = uiState.captainProjects
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(AppSpacing.lg),
+                        verticalArrangement = Arrangement.spacedBy(AppSpacing.lg)
+                    ) {
                 UserInfoCard(user = user)
 
                 if (captainProjects.isEmpty()) {
@@ -138,7 +111,7 @@ fun ManageRolesScreen(
                         if (uiState.selectedProjectId != null) {
                             item {
                                 Spacer(modifier = Modifier.height(8.dp))
-                                HorizontalDivider(color = Color.Gray.copy(alpha = 0.3f))
+                                HorizontalDivider(color = TextGray.copy(alpha = 0.3f))
                                 Spacer(modifier = Modifier.height(8.dp))
 
                                 Text(
@@ -210,7 +183,7 @@ fun ManageRolesScreen(
                                         if (uiState.isLoading) {
                                             CircularProgressIndicator(
                                                 modifier = Modifier.size(20.dp),
-                                                color = Color.White,
+                                                color = White,
                                                 strokeWidth = 2.dp
                                             )
                                         } else {
@@ -238,13 +211,15 @@ fun ManageRolesScreen(
                 if (uiState.isSuccess) {
                     Text(
                         text = "Kaptan değişimi başarıyla tamamlandı!",
-                        color = Color(0xFF4CAF50),
+                        color = SuccessGreen,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
             }
-        }
+        } // else ->
+        } // when
+        } // outer Column
     }
 }
 
@@ -253,7 +228,7 @@ private fun UserInfoCard(user: User) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        color = Color.White,
+        color = White,
         shadowElevation = 2.dp
     ) {
         Row(
@@ -286,7 +261,7 @@ private fun UserInfoCard(user: User) {
                 Text(
                     text = user.email,
                     fontSize = 12.sp,
-                    color = Color.Gray
+                    color = TextGray
                 )
             }
         }
@@ -304,10 +279,10 @@ private fun ProjectSelectionCard(
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(12.dp),
-        color = if (isSelected) PrimaryBlue.copy(alpha = 0.1f) else Color.White,
+        color = if (isSelected) PrimaryBlue.copy(alpha = 0.1f) else White,
         border = BorderStroke(
             width = if (isSelected) 2.dp else 1.dp,
-            color = if (isSelected) PrimaryBlue else Color.Gray.copy(alpha = 0.3f)
+            color = if (isSelected) PrimaryBlue else TextGray.copy(alpha = 0.3f)
         )
     ) {
         Row(
@@ -325,7 +300,7 @@ private fun ProjectSelectionCard(
                 Text(
                     text = "Mevcut Rol: Kaptan",
                     fontSize = 12.sp,
-                    color = Color.Gray
+                    color = TextGray
                 )
             }
 
@@ -351,10 +326,10 @@ private fun MemberSelectionCard(
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(12.dp),
-        color = if (isSelected) PrimaryBlue.copy(alpha = 0.1f) else Color.White,
+        color = if (isSelected) PrimaryBlue.copy(alpha = 0.1f) else White,
         border = BorderStroke(
             width = if (isSelected) 2.dp else 1.dp,
-            color = if (isSelected) PrimaryBlue else Color.Gray.copy(alpha = 0.3f)
+            color = if (isSelected) PrimaryBlue else TextGray.copy(alpha = 0.3f)
         )
     ) {
         Row(
@@ -387,7 +362,7 @@ private fun MemberSelectionCard(
                 Text(
                     text = member.email,
                     fontSize = 12.sp,
-                    color = Color.Gray
+                    color = TextGray
                 )
             }
 
@@ -444,7 +419,7 @@ private fun TransferConfirmDialog(
                 Text(
                     text = "Bu işlem sonucunda mevcut kaptan Member rolüne düşürülecektir.",
                     fontSize = 12.sp,
-                    color = Color.Red
+                    color = ErrorRed
                 )
             }
         },
@@ -463,6 +438,6 @@ private fun TransferConfirmDialog(
                 Text("İptal")
             }
         },
-        containerColor = Color.White
+        containerColor = White
     )
 }

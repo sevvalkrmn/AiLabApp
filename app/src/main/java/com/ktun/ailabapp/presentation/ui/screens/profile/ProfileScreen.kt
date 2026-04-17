@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.ktun.ailabapp.presentation.ui.components.*
+import com.ktun.ailabapp.presentation.ui.components.navigation.AiLabTopBar
 import com.ktun.ailabapp.presentation.ui.screens.announcement.AnnouncementViewModel
 import com.ktun.ailabapp.ui.theme.*
 import androidx.compose.animation.AnimatedVisibility
@@ -212,33 +213,10 @@ fun ProfileScreen(
                 .fillMaxSize()
                 .padding(bottom = paddingValues.calculateBottomPadding())
         ) {
-            // ✅ HEADER (Kıvrımlı ve Kesintisiz)
-            Surface(
-                color = PrimaryBlue,
-                shape = RoundedCornerShape(bottomStart = screenWidth * 0.1f, bottomEnd = screenWidth * 0.1f),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .windowInsetsPadding(WindowInsets.statusBars) // ✅ Beyaz çizgiyi kapatır
-                        .padding(screenWidth * 0.04f)
-                        .padding(top = screenHeight * 0.01f, bottom = screenHeight * 0.02f)
-                ) {
-                    Text(
-                        text = "Profilim",
-                        fontSize = (screenWidth.value * 0.06f).sp,
-                        fontWeight = FontWeight.Bold,
-                        color = White,
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-
-                    DebugButton(
-                        onClick = { showFeedbackDialog = true },
-                        modifier = Modifier.align(Alignment.CenterEnd)
-                    )
-                }
-            }
+            AiLabTopBar(
+                title = "Profilim",
+                actions = { DebugButton(onClick = { showFeedbackDialog = true }) }
+            )
 
             androidx.compose.material3.pulltorefresh.PullToRefreshBox(
                 isRefreshing = uiState.isRefreshing,
@@ -473,14 +451,14 @@ fun ProfileScreenSkeleton(screenWidth: androidx.compose.ui.unit.Dp, screenHeight
         Spacer(modifier = Modifier.height(screenHeight * 0.03f))
         ShimmerBox(modifier = Modifier.size(screenWidth * 0.35f), shape = CircleShape)
         Spacer(modifier = Modifier.height(screenHeight * 0.02f))
-        ShimmerBox(modifier = Modifier.width(screenWidth * 0.5f).height(24.dp))
-        Spacer(modifier = Modifier.height(8.dp))
-        ShimmerBox(modifier = Modifier.width(screenWidth * 0.3f).height(16.dp))
+        ShimmerBox(modifier = Modifier.width(screenWidth * 0.5f).height(AppSpacing.xxl))
+        Spacer(modifier = Modifier.height(AppSpacing.sm))
+        ShimmerBox(modifier = Modifier.width(screenWidth * 0.3f).height(AppSpacing.lg))
         Spacer(modifier = Modifier.height(screenHeight * 0.03f))
         ShimmerBox(modifier = Modifier.fillMaxWidth().height(screenHeight * 0.15f), shape = RoundedCornerShape(screenWidth * 0.04f))
         Spacer(modifier = Modifier.height(screenHeight * 0.04f))
         repeat(4) {
-            ShimmerBox(modifier = Modifier.fillMaxWidth().height(56.dp), shape = RoundedCornerShape(screenWidth * 0.03f))
+            ShimmerBox(modifier = Modifier.fillMaxWidth().height(AppDimensions.buttonHeightLarge + AppSpacing.xxs), shape = RoundedCornerShape(screenWidth * 0.03f))
             Spacer(modifier = Modifier.height(screenHeight * 0.015f))
         }
     }
@@ -501,7 +479,7 @@ fun ProfileMenuItem(
             .clickable { onClick() },
         colors = CardDefaults.cardColors(containerColor = White),
         shape = RoundedCornerShape(screenWidth * 0.03f),
-        elevation = CardDefaults.cardElevation(2.dp)
+        elevation = CardDefaults.cardElevation(AppDimensions.cardElevation)
     ) {
         Row(
             modifier = Modifier

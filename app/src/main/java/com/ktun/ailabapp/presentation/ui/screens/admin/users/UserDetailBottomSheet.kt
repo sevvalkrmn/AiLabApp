@@ -25,13 +25,7 @@ import coil.compose.AsyncImage
 import com.ktun.ailabapp.data.model.User
 import com.ktun.ailabapp.presentation.ui.screens.admin.users.profile.UpdateProfileImageDialog
 import com.ktun.ailabapp.presentation.ui.screens.admin.users.score.AdjustScoreDialog
-import com.ktun.ailabapp.ui.theme.BackgroundLight
-import com.ktun.ailabapp.ui.theme.BorderGray
-import com.ktun.ailabapp.ui.theme.CaptainGold
-import com.ktun.ailabapp.ui.theme.ErrorRed
-import com.ktun.ailabapp.ui.theme.Gold
-import com.ktun.ailabapp.ui.theme.PrimaryBlue
-import com.ktun.ailabapp.ui.theme.WarningOrange
+import com.ktun.ailabapp.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,7 +49,7 @@ fun UserDetailBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = Color.White,
+        containerColor = White,
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
     ) {
         Column(
@@ -185,7 +179,7 @@ private fun InfoRow(label: String, value: String) {
         Text(
             text = "$label: ",
             fontSize = 12.sp,
-            color = Color.Gray,
+            color = TextGray,
             fontWeight = FontWeight.Medium
         )
         Text(
@@ -210,7 +204,7 @@ private fun LabInfoSection(user: User) {
         Text(
             text = user.lastLabEntry ?: "Henüz giriş yapılmadı",
             fontSize = 12.sp,
-            color = Color.Gray
+            color = TextGray
         )
     }
 }
@@ -230,13 +224,13 @@ private fun RolesSection(user: User) {
             Text(
                 text = "Rol atanmamış",
                 fontSize = 12.sp,
-                color = Color.Gray
+                color = TextGray
             )
         } else {
             Text(
                 text = user.roles.joinToString(", "),
                 fontSize = 12.sp,
-                color = Color.Gray
+                color = TextGray
             )
         }
     }
@@ -260,7 +254,7 @@ private fun ProjectsSection(
             Text(
                 text = "Henüz proje ataması yapılmamış",
                 fontSize = 12.sp,
-                color = Color.Gray
+                color = TextGray
             )
         } else {
             user.projects.forEach { project ->
@@ -274,7 +268,7 @@ private fun ProjectsSection(
                     Text(
                         text = "• ${project.name}",
                         fontSize = 12.sp,
-                        color = Color.Gray,
+                        color = TextGray,
                         modifier = Modifier.weight(1f)
                     )
 
@@ -291,7 +285,7 @@ private fun ProjectsSection(
                                 color = if (role.equals("Captain", ignoreCase = true)) {
                                     Gold
                                 } else {
-                                    Color.Gray.copy(alpha = 0.5f)
+                                    TextGray.copy(alpha = 0.5f)
                                 }
                             ),
                             modifier = Modifier.padding(start = 4.dp)
@@ -302,7 +296,7 @@ private fun ProjectsSection(
                                 color = if (role.equals("Captain", ignoreCase = true)) {
                                     CaptainGold
                                 } else {
-                                    Color.Gray
+                                    TextGray
                                 },
                                 fontWeight = FontWeight.SemiBold,
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
