@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
+import com.ktun.ailabapp.ui.theme.AppSpacing
+import com.ktun.ailabapp.presentation.ui.components.navigation.AiLabTopBar
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -22,24 +24,19 @@ fun CreateProjectScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        topBar = {
-            TopAppBar(
-                title = { Text("Proje Oluştur") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, "Geri")
-                    }
-                }
-            )
-        }
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp)
         ) {
+            AiLabTopBar(title = "Proje Oluştur", onBackClick = onNavigateBack)
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(AppSpacing.lg)
+            ) {
             // Proje Adı
             OutlinedTextField(
                 value = state.projectName,
@@ -146,7 +143,8 @@ fun CreateProjectScreen(
                     Text("Proje Oluştur")
                 }
             }
-        }
+            } // inner Column
+        } // outer Column
     }
 
     // Error Snackbar

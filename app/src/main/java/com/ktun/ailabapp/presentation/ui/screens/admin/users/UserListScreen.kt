@@ -33,8 +33,8 @@ import coil.compose.AsyncImage
 import com.ktun.ailabapp.data.model.User
 import com.ktun.ailabapp.util.Logger
 import com.ktun.ailabapp.presentation.ui.screens.admin.users.DeleteUserDialog
-import com.ktun.ailabapp.ui.theme.BackgroundLight
-import com.ktun.ailabapp.ui.theme.PrimaryBlue
+import com.ktun.ailabapp.ui.theme.*
+import com.ktun.ailabapp.presentation.ui.components.navigation.AiLabTopBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -134,23 +134,6 @@ fun UsersListScreen(
     }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Geri",
-                            tint = Color.White
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = PrimaryBlue
-                )
-            )
-        },
         containerColor = PrimaryBlue
     ) { paddingValues ->
         Box(modifier = Modifier.fillMaxSize()) {
@@ -159,28 +142,19 @@ fun UsersListScreen(
                     .fillMaxSize()
                     .padding(paddingValues)
             ) {
-                // Header Section
+                AiLabTopBar(
+                    title = "Tüm Kullanıcılar",
+                    subtitle = "Tüm kullanıcıları sayfalı bir şekilde listeler",
+                    onBackClick = onNavigateBack
+                )
+
+                // Header Section (search bar)
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(PrimaryBlue)
-                        .padding(horizontal = 16.dp, vertical = 20.dp)
+                        .padding(horizontal = AppSpacing.lg, vertical = AppSpacing.lg)
                 ) {
-                    Text(
-                        text = "Tüm Kullanıcılar",
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "Tüm kullanıcıları sayfalı bir şekilde listeler",
-                        fontSize = 14.sp,
-                        color = Color.White.copy(alpha = 0.8f)
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
                     SearchBar(
                         query = uiState.searchQuery,
                         onQueryChange = viewModel::onSearchQueryChange
@@ -244,10 +218,10 @@ fun UsersListScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.3f)),
+                        .background(Black.copy(alpha = 0.3f)),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = Color.White)
+                    CircularProgressIndicator(color = White)
                 }
             }
         }
@@ -358,24 +332,24 @@ private fun SearchBar(
         placeholder = {
             Text(
                 "Search",
-                color = Color.Gray
+                color = TextGray
             )
         },
         leadingIcon = {
             Icon(
                 imageVector = Icons.Default.Search,
                 contentDescription = "Ara",
-                tint = Color.Gray
+                tint = TextGray
             )
         },
         shape = RoundedCornerShape(28.dp),
         colors = OutlinedTextFieldDefaults.colors(
-            focusedContainerColor = Color.White,
-            unfocusedContainerColor = Color.White,
+            focusedContainerColor = White,
+            unfocusedContainerColor = White,
             focusedBorderColor = Color.Transparent,
             unfocusedBorderColor = Color.Transparent,
-            focusedTextColor = Color.Black,
-            unfocusedTextColor = Color.Black
+            focusedTextColor = Black,
+            unfocusedTextColor = Black
         ),
         singleLine = true
     )
@@ -389,13 +363,8 @@ private fun UsersList(
 {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(
-            start = 16.dp,
-            end = 16.dp,
-            top = 16.dp,
-            bottom = 16.dp
-        ),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        contentPadding = PaddingValues(all = AppSpacing.lg),
+        verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
     ) {
         items(users.size) { index ->
             UserListItem(
@@ -417,8 +386,8 @@ private fun UserListItem(
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
-        color = Color.White,
-        shadowElevation = 2.dp
+        color = White,
+        shadowElevation = AppDimensions.cardElevation
     ) {
         Row(
             modifier = Modifier
@@ -453,7 +422,7 @@ private fun UserListItem(
                     Text(
                         text = it,
                         fontSize = 12.sp,
-                        color = Color.Gray,
+                        color = TextGray,
                         maxLines = 1
                     )
                 }
@@ -490,7 +459,7 @@ private fun EmptyState(
                     "\"$searchQuery\" için sonuç bulunamadı"
                 },
                 fontSize = 16.sp,
-                color = Color.Gray
+                color = TextGray
             )
         }
     }
@@ -516,12 +485,12 @@ private fun ErrorState(
                 text = "Bir hata oluştu",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.Red
+                color = ErrorRed
             )
             Text(
                 text = message,
                 fontSize = 14.sp,
-                color = Color.Gray
+                color = TextGray
             )
             Button(
                 onClick = onRetry,

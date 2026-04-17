@@ -22,9 +22,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.ktun.ailabapp.ui.theme.BackgroundLight
-import com.ktun.ailabapp.ui.theme.PrimaryBlue
-import com.ktun.ailabapp.ui.theme.White
+import com.ktun.ailabapp.ui.theme.*
+import com.ktun.ailabapp.presentation.ui.components.navigation.AiLabTopBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,30 +41,17 @@ fun LabPeopleScreen(
     }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Lab'daki Kişiler", color = White) },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Geri", tint = White)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = PrimaryBlue
-                )
-            )
-        },
         containerColor = BackgroundLight
     ) { paddingValues ->
+        Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+            AiLabTopBar(title = "Lab'daki Kişiler", onBackClick = onNavigateBack)
         androidx.compose.material3.pulltorefresh.PullToRefreshBox(
             isRefreshing = isRefreshing,
             onRefresh = {
                 isRefreshing = true
                 viewModel.loadData()
             },
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
+            modifier = Modifier.fillMaxSize()
         ) {
             when {
                 uiState.isLoading && !isRefreshing -> {
@@ -88,7 +74,7 @@ fun LabPeopleScreen(
                             Text(
                                 text = "Hata Oluştu",
                                 fontWeight = FontWeight.Bold,
-                                color = Color.Red
+                                color = ErrorRed
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(text = uiState.errorMessage ?: "")
@@ -110,7 +96,7 @@ fun LabPeopleScreen(
                                 .padding(16.dp),
                             shape = RoundedCornerShape(12.dp),
                             color = White,
-                            shadowElevation = 2.dp
+                            shadowElevation = AppDimensions.cardElevation
                         ) {
                             Row(
                                 modifier = Modifier
@@ -123,7 +109,7 @@ fun LabPeopleScreen(
                                     Text(
                                         text = "Doluluk Oranı",
                                         fontSize = 14.sp,
-                                        color = Color.Gray
+                                        color = TextGray
                                     )
                                     Text(
                                         text = "${uiState.currentOccupancy} / ${uiState.totalCapacity}",
@@ -182,6 +168,7 @@ fun LabPeopleScreen(
                 }
             }
         }
+        } // Column
     }
 }
 
@@ -234,7 +221,7 @@ fun PersonItem(
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ExitToApp,
                     contentDescription = "Zorla Çıkar",
-                    tint = if (person.id != null) Color.Red else Color.Gray
+                    tint = if (person.id != null) ErrorRed else TextGray
                 )
             }
         }

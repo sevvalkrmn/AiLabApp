@@ -14,9 +14,8 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.ktun.ailabapp.ui.theme.BorderGray
-import com.ktun.ailabapp.ui.theme.PrimaryBlue
-import com.ktun.ailabapp.ui.theme.TaskHistoryBg
+import com.ktun.ailabapp.ui.theme.*
+import com.ktun.ailabapp.presentation.ui.components.navigation.AiLabTopBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,30 +35,20 @@ fun SendAnnouncementScreen(
     }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Kişiye Özel Duyuru") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, "Geri")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = PrimaryBlue,
-                    titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White
-                )
-            )
-        },
         containerColor = TaskHistoryBg
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            AiLabTopBar(title = "Kişiye Özel Duyuru", onBackClick = onNavigateBack)
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(AppSpacing.lg),
+                verticalArrangement = Arrangement.spacedBy(AppSpacing.lg)
+            ) {
             // To field - Read-only
             OutlinedTextField(
                 value = userName,
@@ -140,7 +129,7 @@ fun SendAnnouncementScreen(
                 if (uiState.isLoading) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(24.dp),
-                        color = Color.White
+                        color = White
                     )
                 } else {
                     Text(
@@ -160,6 +149,7 @@ fun SendAnnouncementScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
             }
-        }
+            } // inner Column
+        } // outer Column
     }
 }

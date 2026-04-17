@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
-import com.ktun.ailabapp.ui.theme.PrimaryBlue
+import com.ktun.ailabapp.ui.theme.*
 
 @Composable
 fun UpdateProfileImageDialog(
@@ -61,7 +61,7 @@ fun UpdateProfileImageDialog(
                 .fillMaxWidth()
                 .wrapContentHeight(),
             shape = RoundedCornerShape(16.dp),
-            color = Color.White
+            color = White
         ) {
             Column(
                 modifier = Modifier.padding(24.dp),
@@ -106,7 +106,7 @@ fun UpdateProfileImageDialog(
                             Text(
                                 text = "Mevcut fotoğraf",
                                 fontSize = 12.sp,
-                                color = Color.Gray
+                                color = TextGray
                             )
                         }
                     }
@@ -124,7 +124,7 @@ fun UpdateProfileImageDialog(
                     Text("Galeriden Fotoğraf Seç")
                 }
 
-                Divider(color = Color.LightGray.copy(alpha = 0.5f))
+                Divider(color = BorderGray.copy(alpha = 0.5f))
 
                 // ✅ Avatar Grid
                 Text(
@@ -148,7 +148,7 @@ fun UpdateProfileImageDialog(
                                 .clip(CircleShape)
                                 .border(
                                     width = if (avatarUrl == uiState.imageUrl) 3.dp else 1.dp,
-                                    color = if (avatarUrl == uiState.imageUrl) PrimaryBlue else Color.LightGray,
+                                    color = if (avatarUrl == uiState.imageUrl) PrimaryBlue else BorderGray,
                                     shape = CircleShape
                                 )
                                 .clickable { viewModel.onImageUrlChange(avatarUrl) }
@@ -204,7 +204,7 @@ fun UpdateProfileImageDialog(
                         if (uiState.isLoading) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(20.dp),
-                                color = Color.White,
+                                color = White,
                                 strokeWidth = 2.dp
                             )
                         } else {

@@ -21,12 +21,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ktun.ailabapp.presentation.ui.screens.admin.score.AdjustScoreViewModel
-import com.ktun.ailabapp.ui.theme.BackgroundLight
-import com.ktun.ailabapp.ui.theme.BorderGray
-import com.ktun.ailabapp.ui.theme.ErrorRed
-import com.ktun.ailabapp.ui.theme.InfoBlue
-import com.ktun.ailabapp.ui.theme.PrimaryBlue
-import com.ktun.ailabapp.ui.theme.SuccessGreen
+import com.ktun.ailabapp.ui.theme.*
 
 @Composable
 fun AdjustScoreDialog(
@@ -56,7 +51,7 @@ fun AdjustScoreDialog(
                 .fillMaxWidth()
                 .wrapContentHeight(),
             shape = RoundedCornerShape(16.dp),
-            color = Color.White
+            color = White
         ) {
             Column(
                 modifier = Modifier
@@ -91,7 +86,7 @@ fun AdjustScoreDialog(
                         Text(
                             text = "Mevcut Puan: $currentScore",
                             fontSize = 14.sp,
-                            color = Color.Gray
+                            color = TextGray
                         )
                     }
                 }
@@ -231,7 +226,7 @@ fun AdjustScoreDialog(
                         if (uiState.isLoading) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(20.dp),
-                                color = Color.White,
+                                color = White,
                                 strokeWidth = 2.dp
                             )
                         } else {
@@ -257,7 +252,7 @@ private fun ToggleButton(
             .height(48.dp)
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(12.dp),
-        color = if (isSelected) color else Color.White,
+        color = if (isSelected) color else White,
         border = if (isSelected) null else androidx.compose.foundation.BorderStroke(2.dp, color)
     ) {
         Box(
@@ -267,7 +262,7 @@ private fun ToggleButton(
                 text = text,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
-                color = if (isSelected) Color.White else color
+                color = if (isSelected) White else color
             )
         }
     }

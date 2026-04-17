@@ -19,12 +19,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ktun.ailabapp.data.remote.dto.response.PendingTaskResponse
-import com.ktun.ailabapp.ui.theme.BackgroundLight
-import com.ktun.ailabapp.ui.theme.InfoBlue
-import com.ktun.ailabapp.ui.theme.PrimaryBlue
-import com.ktun.ailabapp.ui.theme.SuccessGreen
-import com.ktun.ailabapp.ui.theme.WarningOrange
-import com.ktun.ailabapp.ui.theme.White
+import com.ktun.ailabapp.ui.theme.*
+import com.ktun.ailabapp.presentation.ui.components.navigation.AiLabTopBar
 import com.ktun.ailabapp.util.formatDate
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -51,28 +47,17 @@ fun PendingTasksScreen(
     }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Puanlama Bekleyenler", color = White) },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Geri", tint = White)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = PrimaryBlue)
-            )
-        },
         containerColor = BackgroundLight
     ) { paddingValues ->
+        Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+            AiLabTopBar(title = "Puanlama Bekleyenler", onBackClick = onNavigateBack)
         androidx.compose.material3.pulltorefresh.PullToRefreshBox(
             isRefreshing = isRefreshing,
             onRefresh = {
                 isRefreshing = true
                 viewModel.loadPendingTasks()
             },
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
+            modifier = Modifier.fillMaxSize()
         ) {
             when {
                 uiState.isLoading && !isRefreshing -> {
@@ -92,7 +77,7 @@ fun PendingTasksScreen(
                             modifier = Modifier.padding(16.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Text(text = "Hata: ${uiState.errorMessage}", color = Color.Red)
+                            Text(text = "Hata: ${uiState.errorMessage}", color = ErrorRed)
                             Button(onClick = { viewModel.loadPendingTasks() }) {
                                 Text("Tekrar Dene")
                             }
@@ -110,8 +95,8 @@ fun PendingTasksScreen(
                 else -> {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                        contentPadding = PaddingValues(AppSpacing.lg),
+                        verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
                     ) {
                         items(uiState.tasks.size) { index ->
                             PendingTaskItem(
@@ -123,6 +108,7 @@ fun PendingTasksScreen(
                 }
             }
         }
+        } // Column
     }
 
     if (selectedTask != null) {
@@ -146,7 +132,7 @@ fun PendingTaskItem(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = AppDimensions.cardElevation)
     ) {
         Column(
             modifier = Modifier
@@ -171,7 +157,7 @@ fun PendingTaskItem(
                         0 -> WarningOrange
                         1 -> InfoBlue
                         2 -> SuccessGreen
-                        else -> Color.Gray
+                        else -> TextGray
                     },
                     shape = RoundedCornerShape(8.dp)
                 ) {
@@ -191,9 +177,9 @@ fun PendingTaskItem(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Text("Proje: ${task.projectName ?: "Bilinmiyor"}", fontSize = 14.sp, color = Color.Gray)
-            Text("Atanan: ${task.assigneeName ?: "Atanmamış"}", fontSize = 14.sp, color = Color.Gray)
-            Text("Tarih: ${formatDate(task.createdAt)}", fontSize = 12.sp, color = Color.LightGray)
+            Text("Proje: ${task.projectName ?: "Bilinmiyor"}", fontSize = 14.sp, color = TextGray)
+            Text("Atanan: ${task.assigneeName ?: "Atanmamış"}", fontSize = 14.sp, color = TextGray)
+            Text("Tarih: ${formatDate(task.createdAt)}", fontSize = 12.sp, color = BorderGray)
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -242,7 +228,7 @@ fun ScorePickerDialog(
                 Text(
                     text = taskTitle,
                     fontSize = 14.sp,
-                    color = Color.Gray
+                    color = TextGray
                 )
                 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -272,7 +258,7 @@ fun ScorePickerDialog(
                     horizontalArrangement = Arrangement.End
                 ) {
                     TextButton(onClick = onDismiss) {
-                        Text("İptal", color = Color.Gray)
+                        Text("İptal", color = TextGray)
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Button(

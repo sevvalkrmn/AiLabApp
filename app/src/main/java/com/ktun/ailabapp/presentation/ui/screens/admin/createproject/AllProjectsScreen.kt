@@ -9,6 +9,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
+import com.ktun.ailabapp.ui.theme.AppDimensions
+import com.ktun.ailabapp.ui.theme.AppSpacing
+import com.ktun.ailabapp.presentation.ui.components.navigation.AiLabTopBar
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,24 +28,13 @@ fun AllProjectsScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Tüm Projeler") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, "Geri")
-                    }
-                }
-            )
-        }
-    ) { padding ->
+    Scaffold { padding ->
+        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
+            AiLabTopBar(title = "Tüm Projeler", onBackClick = onNavigateBack)
         when {
             state.isLoading -> {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding),
+                    modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator()
@@ -51,9 +43,7 @@ fun AllProjectsScreen(
 
             state.error != null -> {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding),
+                    modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
                     Column(
@@ -73,9 +63,7 @@ fun AllProjectsScreen(
 
             state.projects.isEmpty() -> {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding),
+                    modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
                     Text("Henüz proje yok")
@@ -84,11 +72,9 @@ fun AllProjectsScreen(
 
             else -> {
                 LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(AppSpacing.lg),
+                    verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
                 ) {
                     items(state.projects) { project ->
                         ProjectItem(
@@ -99,6 +85,7 @@ fun AllProjectsScreen(
                 }
             }
         }
+        } // Column
     }
 }
 
@@ -111,7 +98,7 @@ private fun ProjectItem(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = AppDimensions.cardElevation)
     ) {
         Column(
             modifier = Modifier

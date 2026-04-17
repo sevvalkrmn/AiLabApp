@@ -4,9 +4,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.ktun.ailabapp.ui.theme.ErrorRed
 
 @Composable
 fun DeleteUserDialog(
@@ -21,7 +21,7 @@ fun DeleteUserDialog(
             Column {
                 Text(
                     text = "⚠️ Bu işlem geri alınamaz!",
-                    color = Color.Red,
+                    color = ErrorRed,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(Modifier.height(8.dp))
@@ -37,7 +37,7 @@ fun DeleteUserDialog(
         confirmButton = {
             Button(
                 onClick = onConfirm,
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                colors = ButtonDefaults.buttonColors(containerColor = ErrorRed)
             ) {
                 Text("Sil")
             }

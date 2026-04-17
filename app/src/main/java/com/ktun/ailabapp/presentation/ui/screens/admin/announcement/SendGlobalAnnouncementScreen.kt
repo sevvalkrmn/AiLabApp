@@ -16,9 +16,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.ktun.ailabapp.ui.theme.BackgroundLight
-import com.ktun.ailabapp.ui.theme.PrimaryBlue
-import com.ktun.ailabapp.ui.theme.White
+import com.ktun.ailabapp.ui.theme.*
+import com.ktun.ailabapp.presentation.ui.components.navigation.AiLabTopBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,30 +37,24 @@ fun SendGlobalAnnouncementScreen(
     }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Genel Duyuru Gönder", color = White) },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Geri", tint = White)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = PrimaryBlue)
-            )
-        },
         containerColor = BackgroundLight
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            AiLabTopBar(title = "Genel Duyuru Gönder", onBackClick = onNavigateBack)
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(AppSpacing.lg),
+                verticalArrangement = Arrangement.spacedBy(AppSpacing.lg)
+            ) {
             Card(
                 colors = CardDefaults.cardColors(containerColor = White),
                 shape = RoundedCornerShape(12.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = AppDimensions.cardElevation)
             ) {
                 Column(
                     modifier = Modifier
@@ -127,8 +120,9 @@ fun SendGlobalAnnouncementScreen(
             Text(
                 text = "Not: Bu duyuru sisteme kayıtlı tüm kullanıcılara gönderilecektir.",
                 style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray
+                color = TextGray
             )
-        }
+            } // inner Column
+        } // outer Column
     }
 }
