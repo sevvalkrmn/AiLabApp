@@ -35,6 +35,7 @@ import com.ktun.ailabapp.presentation.ui.components.DebugButton
 import com.ktun.ailabapp.presentation.ui.components.FeedbackDialog
 import com.ktun.ailabapp.presentation.ui.components.ShimmerBox
 import com.ktun.ailabapp.presentation.ui.components.StaggeredAnimatedItem
+import com.ktun.ailabapp.presentation.ui.components.navigation.AiLabTopBar
 import com.ktun.ailabapp.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -119,33 +120,10 @@ fun AnnouncementScreen(
                 .fillMaxSize()
                 .padding(bottom = paddingValues.calculateBottomPadding())
         ) {
-            // ✅ HEADER (Kıvrımlı ve Kesintisiz)
-            Surface(
-                color = PrimaryBlue,
-                shape = RoundedCornerShape(bottomStart = screenWidth * 0.1f, bottomEnd = screenWidth * 0.1f),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .windowInsetsPadding(WindowInsets.statusBars) // ✅ Beyaz çizgiyi kapatır
-                        .padding(screenWidth * 0.04f)
-                        .padding(top = screenHeight * 0.01f, bottom = screenHeight * 0.02f)
-                ) {
-                    Text(
-                        text = "Duyurular",
-                        fontSize = (screenWidth.value * 0.06f).sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-
-                    DebugButton(
-                        onClick = {showFeedbackDialog = true},
-                        modifier = Modifier.align(Alignment.CenterEnd)
-                    )
-                }
-            }
+            AiLabTopBar(
+                title = "Duyurular",
+                actions = { DebugButton(onClick = { showFeedbackDialog = true }) }
+            )
 
             Column(
                 modifier = Modifier
@@ -295,7 +273,7 @@ fun AnnouncementFilterChip(
         modifier = modifier.height(screenHeight * 0.05f),
         colors = ButtonDefaults.buttonColors(
             containerColor = if (isSelected) PrimaryBlue else FilterChipUnselected,
-            contentColor = Color.White
+            contentColor = White
         ),
         shape = RoundedCornerShape(screenWidth * 0.05f)
     ) {
@@ -320,9 +298,9 @@ fun AnnouncementCard(
             .clickable { onClick() },
         colors = CardDefaults.cardColors(
             containerColor = if (announcement.isRead)
-                Color.White.copy(alpha = 0.7f)
+                White.copy(alpha = 0.7f)
             else
-                Color.White
+                White
         ),
         shape = RoundedCornerShape(screenWidth * 0.04f),
         border = if (!announcement.isRead)
@@ -498,7 +476,7 @@ fun AnnouncementDetailDialog(
                 )
             }
         },
-        containerColor = Color.White,
+        containerColor = White,
         shape = RoundedCornerShape(screenWidth * 0.05f)
     )
 }

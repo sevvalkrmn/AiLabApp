@@ -22,6 +22,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ktun.ailabapp.presentation.ui.components.navigation.AiLabTopBar
+import com.ktun.ailabapp.ui.theme.AppDimensions
+import com.ktun.ailabapp.ui.theme.ErrorRed
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -93,41 +96,10 @@ fun ProjectsScreen(
                 .fillMaxSize()
                 .padding(bottom = paddingValues.calculateBottomPadding()) // ✅ Sadece alt boşluk
         ) {
-            // HEADER (Kıvrımlı ve Tam Ekran)
-            Surface(
-                color = PrimaryBlue,
-                shape = RoundedCornerShape(bottomStart = screenWidth * 0.1f, bottomEnd = screenWidth * 0.1f),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .windowInsetsPadding(WindowInsets.statusBars) // ✅ Beyaz çizgiyi yok eder
-                        .padding(screenWidth * 0.04f)
-                        .padding(top = screenHeight * 0.01f, bottom = screenHeight * 0.02f),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Ortalama için sol tarafa görünmez bir Spacer koyabiliriz veya Text'i ortalayabiliriz.
-                    // Mevcut tasarımda sol tarafta boşluk var, sağda buton var.
-                    // HomeScreen'de "Hi, User" sola yaslıydı. Burada "Projelerim" ortada olsun istenebilir ama
-                    // tutarlılık için sola yaslı veya mevcut yapıyı (başlık ortada) koruyarak yapalım.
-                    
-                    // Mevcut yapı: Spacer - Text - Button
-                    Spacer(modifier = Modifier.width(screenWidth * 0.1f)) // Sol dengeleyici
-
-                    Text(
-                        text = "Projelerim",
-                        fontSize = (screenWidth.value * 0.06f).sp,
-                        fontWeight = FontWeight.Bold,
-                        color = White
-                    )
-
-                    DebugButton(
-                        onClick = { showFeedbackDialog = true }
-                    )
-                }
-            }
+            AiLabTopBar(
+                title = "Projelerim",
+                actions = { DebugButton(onClick = { showFeedbackDialog = true }) }
+            )
 
             // CONTENT
             androidx.compose.material3.pulltorefresh.PullToRefreshBox(
@@ -152,13 +124,13 @@ fun ProjectsScreen(
                                     Icon(
                                         Icons.Default.Warning,
                                         contentDescription = null,
-                                        tint = Color.Red,
+                                        tint = ErrorRed,
                                         modifier = Modifier.size(screenWidth * 0.15f)
                                     )
                                     Spacer(modifier = Modifier.height(screenHeight * 0.02f))
                                     Text(
                                         text = uiState.errorMessage ?: "Hata oluştu",
-                                        color = Color.Red,
+                                        color = ErrorRed,
                                         fontSize = (screenWidth.value * 0.04f).sp
                                     )
                                     Spacer(modifier = Modifier.height(screenHeight * 0.02f))
@@ -257,7 +229,7 @@ fun ProjectCard(
             .clickable { onClick() },
         colors = CardDefaults.cardColors(containerColor = White),
         shape = RoundedCornerShape(screenWidth * 0.03f),
-        elevation = CardDefaults.cardElevation(2.dp)
+        elevation = CardDefaults.cardElevation(AppDimensions.cardElevation)
     ) {
         Row(
             modifier = Modifier
