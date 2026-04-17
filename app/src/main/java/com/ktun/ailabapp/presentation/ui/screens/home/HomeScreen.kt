@@ -35,6 +35,7 @@ import com.ktun.ailabapp.presentation.ui.components.DebugButton
 import com.ktun.ailabapp.presentation.ui.components.FeedbackDialog
 import com.ktun.ailabapp.presentation.ui.components.ShimmerBox
 import com.ktun.ailabapp.presentation.ui.components.TaskDetailDialog
+import com.ktun.ailabapp.presentation.ui.components.navigation.AiLabTopBar
 import com.ktun.ailabapp.presentation.ui.screens.announcement.AnnouncementViewModel
 import com.ktun.ailabapp.ui.theme.*
 import java.text.SimpleDateFormat
@@ -78,7 +79,7 @@ fun HomeScreen(
     // Görev Detay Dialog
     if (uiState.isTaskDetailLoading) {
         Box(
-            modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.3f)),
+            modifier = Modifier.fillMaxSize().background(Black.copy(alpha = 0.3f)),
             contentAlignment = Alignment.Center
         ) {
             CircularProgressIndicator(color = White)
@@ -116,38 +117,11 @@ fun HomeScreen(
                 .fillMaxSize()
                 .padding(bottom = paddingValues.calculateBottomPadding()) // ✅ Sadece alt boşluğu koru
         ) {
-            // ✅ KIVRIMLI HEADER (Durum çubuğuna kadar uzanır)
-            Surface(
-                color = PrimaryBlue,
-                shape = RoundedCornerShape(bottomStart = screenWidth * 0.1f, bottomEnd = screenWidth * 0.1f),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .windowInsetsPadding(WindowInsets.statusBars) // ✅ Üstteki beyaz çizgiyi kapatır
-                        .padding(screenWidth * 0.04f)
-                        .padding(top = screenHeight * 0.01f, bottom = screenHeight * 0.02f),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            text = "Merhaba, ${"${uiState.user?.fullName ?: ""} ${uiState.user?.surname ?: ""}".trim()}",
-                            fontSize = (screenWidth.value * 0.050f).sp,
-                            fontWeight = FontWeight.Bold,
-                            color = White
-                        )
-                        Text(
-                            text = uiState.greeting,
-                            fontSize = (screenWidth.value * 0.035f).sp,
-                            color = White.copy(alpha = 0.8f)
-                        )
-                    }
-
-                    DebugButton(onClick = { showFeedbackDialog = true })
-                }
-            }
+            AiLabTopBar(
+                title = "Merhaba, ${"${uiState.user?.fullName ?: ""} ${uiState.user?.surname ?: ""}".trim()}",
+                subtitle = uiState.greeting,
+                actions = { DebugButton(onClick = { showFeedbackDialog = true }) }
+            )
 
             // ✅ İÇERİK ALANI (Card kaldırıldı, doğrudan akış sağlandı)
             androidx.compose.material3.pulltorefresh.PullToRefreshBox(
@@ -246,8 +220,8 @@ fun HomeScreenSkeleton(screenWidth: Dp, screenHeight: Dp) {
     ) {
         // Lab Occupancy Skeleton
         Column {
-            ShimmerBox(modifier = Modifier.width(screenWidth * 0.5f).height(20.dp))
-            Spacer(modifier = Modifier.height(8.dp))
+            ShimmerBox(modifier = Modifier.width(screenWidth * 0.5f).height(AppSpacing.xl))
+            Spacer(modifier = Modifier.height(AppSpacing.sm))
             ShimmerBox(modifier = Modifier.fillMaxWidth().height(screenHeight * 0.031f), shape = RoundedCornerShape(screenWidth * 0.08f))
         }
 
@@ -308,7 +282,7 @@ fun ProfileCard(totalScore: Double, avatarUrl: String?, lastEntryDate: String?, 
                     }
                 }
                 Spacer(modifier = Modifier.height(screenHeight * 0.015f))
-                HorizontalDivider(color = White.copy(alpha = 0.3f), thickness = 1.dp)
+                HorizontalDivider(color = White.copy(alpha = 0.3f), thickness = AppDimensions.borderWidth)
                 Spacer(modifier = Modifier.height(screenHeight * 0.015f))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.Group, contentDescription = null, tint = White, modifier = Modifier.size(screenWidth * 0.05f))
@@ -378,7 +352,7 @@ fun CurrentTasksCard(
                                 "InProgress" -> InfoBlue
                                 "Done" -> SuccessGreen
                                 "Todo" -> WarningOrange
-                                else -> Color.Gray
+                                else -> TextGray
                             },
                             onClick = { onTaskClick(task) },
                             screenWidth = screenWidth,
@@ -416,7 +390,7 @@ fun TaskItem(
         Spacer(modifier = Modifier.width(screenWidth * 0.025f))
         Column(modifier = Modifier.weight(1f)) {
             Text(text = title, fontSize = (screenWidth.value * 0.035f).sp, fontWeight = FontWeight.Bold, color = PrimaryBlue, maxLines = 1)
-            Text(text = frequency, fontSize = (screenWidth.value * 0.025f).sp, color = Color.Gray, maxLines = 1)
+            Text(text = frequency, fontSize = (screenWidth.value * 0.025f).sp, color = TextGray, maxLines = 1)
         }
         Text(text = status, fontSize = (screenWidth.value * 0.025f).sp, fontWeight = FontWeight.Bold, color = statusColor)
     }
