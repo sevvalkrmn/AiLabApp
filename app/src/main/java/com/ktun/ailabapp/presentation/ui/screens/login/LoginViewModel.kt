@@ -3,9 +3,8 @@ package com.ktun.ailabapp.presentation.ui.screens.login
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ktun.ailabapp.data.model.LoginUiState
-import com.ktun.ailabapp.data.repository.AuthRepository
-import com.ktun.ailabapp.util.FirebaseAuthManager
-import com.ktun.ailabapp.util.Logger
+import com.ktun.ailabapp.domain.usecase.auth.LoginUseCase
+import com.ktun.ailabapp.domain.usecase.auth.SendPasswordResetEmailUseCase
 import com.ktun.ailabapp.util.NetworkResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,8 +15,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    private val authRepository: AuthRepository,
-    private val authManager: FirebaseAuthManager
+    private val loginUseCase: LoginUseCase,
+    private val sendPasswordResetEmailUseCase: SendPasswordResetEmailUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginUiState())
@@ -32,30 +31,23 @@ class LoginViewModel @Inject constructor(
     }
 
     fun toggleRememberMe() {
-        _uiState.value = _uiState.value.copy(
-            rememberMe = !_uiState.value.rememberMe
-        )
+        _uiState.value = _uiState.value.copy(rememberMe = !_uiState.value.rememberMe)
     }
 
     fun togglePasswordVisibility() {
-        _uiState.value = _uiState.value.copy(
-            isPasswordVisible = !_uiState.value.isPasswordVisible
-        )
+        _uiState.value = _uiState.value.copy(isPasswordVisible = !_uiState.value.isPasswordVisible)
     }
 
     fun login(onSuccess: () -> Unit) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
 
-            val email = _uiState.value.email.trim()
-            val password = _uiState.value.password
-            val rememberMe = _uiState.value.rememberMe  // ✅ YENİ
-
-            Logger.d("Login attempt started", "LoginViewModel")
-
-            when (val result = authRepository.login(email, password, rememberMe)) {
+            when (val result = loginUseCase(
+                email = _uiState.value.email,
+                password = _uiState.value.password,
+                rememberMe = _uiState.value.rememberMe
+            )) {
                 is NetworkResult.Success -> {
-                    Logger.d("Login successful", "LoginViewModel")
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         isLoggedIn = true,
@@ -64,7 +56,6 @@ class LoginViewModel @Inject constructor(
                     onSuccess()
                 }
                 is NetworkResult.Error -> {
-                    Logger.e("Login failed: ${result.message}", tag = "LoginViewModel")
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         isLoggedIn = false,
@@ -77,16 +68,10 @@ class LoginViewModel @Inject constructor(
     }
 
     fun sendPasswordResetEmail(onResult: (Boolean, String) -> Unit) {
-        val email = _uiState.value.email.trim()
-        if (email.isBlank()) {
-            onResult(false, "Lütfen e-posta adresinizi girin")
-            return
-        }
-
         viewModelScope.launch {
-            val result = authManager.sendPasswordResetEmail(email)
+            val result = sendPasswordResetEmailUseCase(_uiState.value.email.trim())
             if (result.isSuccess) {
-                onResult(true, "Şifre sıfırlama bağlantısı e-posta adresinize gönderildi")
+                onResult(true, result.getOrDefault(""))
             } else {
                 onResult(false, result.exceptionOrNull()?.message ?: "Bir hata oluştu")
             }

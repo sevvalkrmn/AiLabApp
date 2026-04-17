@@ -10,6 +10,7 @@ import com.ktun.ailabapp.data.remote.dto.request.UpdateProfileImageRequest
 import com.ktun.ailabapp.data.remote.dto.response.AuthResponse
 import com.ktun.ailabapp.data.remote.dto.response.LeaderboardUserResponse
 import com.ktun.ailabapp.data.remote.dto.response.ProfileResponse
+import com.ktun.ailabapp.domain.repository.IAuthRepository
 import com.ktun.ailabapp.util.CacheEntry
 import com.ktun.ailabapp.util.FirebaseAuthManager
 import com.ktun.ailabapp.util.FirebaseStorageHelper
@@ -28,7 +29,7 @@ class AuthRepository @Inject constructor(
     private val notificationRepository: NotificationRepository,
     private val projectRepository: ProjectRepository,
     private val taskRepository: TaskRepository
-) {
+) : IAuthRepository {
 
     private companion object {
         const val PROFILE_TTL_MS = 5 * 60 * 1000L
@@ -50,7 +51,7 @@ class AuthRepository @Inject constructor(
         profileCache = null
     }
 
-    suspend fun completeRegistration(
+    override suspend fun completeRegistration(
         idToken: String,
         fullName: String,
         surname: String,
@@ -125,7 +126,7 @@ class AuthRepository @Inject constructor(
         }
     }
 
-    suspend fun login(
+    override suspend fun login(
         email: String,
         password: String,
         rememberMe: Boolean
