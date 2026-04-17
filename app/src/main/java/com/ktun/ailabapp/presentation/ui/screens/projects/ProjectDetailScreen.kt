@@ -34,16 +34,12 @@ import com.ktun.ailabapp.data.remote.dto.response.ProjectMember
 import com.ktun.ailabapp.data.remote.dto.response.TaskResponse
 import com.ktun.ailabapp.data.remote.dto.response.TaskStatistics
 import com.ktun.ailabapp.util.formatDate
-import com.ktun.ailabapp.ui.theme.BackgroundLight
-import com.ktun.ailabapp.ui.theme.PrimaryBlue
-import com.ktun.ailabapp.ui.theme.White
+import com.ktun.ailabapp.ui.theme.*
 import java.util.Calendar
 
 import com.ktun.ailabapp.presentation.ui.components.StaggeredAnimatedItem
 import com.ktun.ailabapp.presentation.ui.components.TaskDetailDialog
-import com.ktun.ailabapp.ui.theme.InfoBlue
-import com.ktun.ailabapp.ui.theme.SuccessGreen
-import com.ktun.ailabapp.ui.theme.WarningOrange
+import com.ktun.ailabapp.presentation.ui.components.navigation.AiLabTopBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -72,35 +68,26 @@ fun ProjectDetailScreen(
     }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(uiState.project?.name ?: "Proje Detayı") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Geri")
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { viewModel.refreshProject() }) {
-                        Icon(Icons.Default.Refresh, contentDescription = "Yenile")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = PrimaryBlue,
-                    titleContentColor = White,
-                    navigationIconContentColor = White,
-                    actionIconContentColor = White
-                )
-            )
-        },
         containerColor = BackgroundLight
     ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            AiLabTopBar(
+                title = uiState.project?.name ?: "Proje Detayı",
+                onBackClick = onNavigateBack,
+                actions = {
+                    IconButton(onClick = { viewModel.refreshProject() }) {
+                        Icon(Icons.Default.Refresh, contentDescription = "Yenile", tint = White)
+                    }
+                }
+            )
         when {
             uiState.isLoading -> {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
+                    modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator(color = PrimaryBlue)
@@ -109,22 +96,20 @@ fun ProjectDetailScreen(
 
             uiState.errorMessage != null -> {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
+                    modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(
                             Icons.Default.Warning,
                             contentDescription = null,
-                            tint = Color.Red,
+                            tint = ErrorRed,
                             modifier = Modifier.size(screenWidth * 0.15f)
                         )
                         Spacer(modifier = Modifier.height(screenHeight * 0.02f))
                         Text(
                             text = uiState.errorMessage ?: "Hata oluştu",
-                            color = Color.Red
+                            color = ErrorRed
                         )
                         Spacer(modifier = Modifier.height(screenHeight * 0.02f))
                         Button(onClick = { viewModel.refreshProject() }) {
@@ -141,9 +126,7 @@ fun ProjectDetailScreen(
                         isRefreshing = true
                         viewModel.refreshProject()
                     },
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues)
+                    modifier = Modifier.fillMaxSize()
                 ) {
                     val shouldAnimate = remember { !viewModel.hasAnimated }
                     LaunchedEffect(uiState.project != null) {
@@ -307,12 +290,13 @@ fun ProjectDetailScreen(
                 }
             }
         }
+        } // Column
     }
 
     // ✅ YENİ: Görev Detay Dialog (API'den gelen veriye göre)
     if (uiState.isTaskDetailLoading) {
         Box(
-            modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.3f)),
+            modifier = Modifier.fillMaxSize().background(Black.copy(alpha = 0.3f)),
             contentAlignment = Alignment.Center
         ) {
             CircularProgressIndicator(color = White)
@@ -689,7 +673,7 @@ fun ProjectInfoCard(
                         text = "Mesaj Gönder",
                         fontSize = (screenWidth.value * 0.028f).sp,
                         fontWeight = FontWeight.Medium,
-                        color = Color.White
+                        color = White
                     )
                 }
             }
@@ -726,7 +710,7 @@ fun TaskStatisticsCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                StatItem("Toplam", statistics.total.toString(), Color.Gray, screenWidth)
+                StatItem("Toplam", statistics.total.toString(), TextGray, screenWidth)
                 StatItem("Yapılacak", statistics.todo.toString(), WarningOrange, screenWidth)
                 StatItem("Devam Eden", statistics.inProgress.toString(), InfoBlue, screenWidth)
                 StatItem("Tamamlanan", statistics.done.toString(), SuccessGreen, screenWidth)
@@ -894,7 +878,7 @@ fun AdminActionsSection(
                 .fillMaxWidth()
                 .height(screenHeight * 0.06f),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color.Red
+                containerColor = ErrorRed
             )
         ) {
             Icon(Icons.Default.Delete, contentDescription = null)
@@ -995,7 +979,7 @@ fun AddMemberDialog(
                     Text(
                         "⚠️ Projede zaten Kaptan varsa eklenemez",
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color.Red
+                        color = ErrorRed
                     )
                 }
             }
@@ -1038,7 +1022,7 @@ fun RemoveMemberDialog(
                 Text(
                     "⚠️ Captain çıkarılamaz",
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color.Red
+                    color = ErrorRed
                 )
 
                 Spacer(Modifier.height(16.dp))
@@ -1094,7 +1078,7 @@ fun RemoveMemberDialog(
                 },
                 enabled = selectedMember != null,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Red
+                    containerColor = ErrorRed
                 )
             ) {
                 Text("Çıkar")
@@ -1119,7 +1103,7 @@ fun DeleteProjectDialog(
         title = { Text("Projeyi Sil") },
         text = {
             Column {
-                Text("⚠️ Bu işlem geri alınamaz!", color = Color.Red, fontWeight = FontWeight.Bold)
+                Text("⚠️ Bu işlem geri alınamaz!", color = ErrorRed, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(8.dp))
                 Text("\"$projectName\" projesini silmek istediğinizden emin misiniz?")
                 Spacer(Modifier.height(8.dp))
@@ -1134,7 +1118,7 @@ fun DeleteProjectDialog(
             Button(
                 onClick = onConfirm,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Red
+                    containerColor = ErrorRed
                 )
             ) {
                 Text("Sil")
@@ -1236,7 +1220,7 @@ fun SendAnnouncementDialog(
                                         text = {
                                             Column {
                                                 Text(member.fullName, fontWeight = FontWeight.Medium)
-                                                Text(member.email, fontSize = 12.sp, color = Color.Gray)
+                                                Text(member.email, fontSize = 12.sp, color = TextGray)
                                             }
                                         },
                                         onClick = {
@@ -1324,7 +1308,7 @@ fun getStatusColor(status: String): Color {
         "Todo" -> WarningOrange
         "InProgress" -> InfoBlue
         "Done" -> SuccessGreen
-        else -> Color.Gray
+        else -> TextGray
     }
 }
 
