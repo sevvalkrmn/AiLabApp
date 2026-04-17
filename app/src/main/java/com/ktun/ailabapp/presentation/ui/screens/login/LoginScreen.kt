@@ -6,7 +6,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -30,7 +29,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ktun.ailabapp.R
 import com.ktun.ailabapp.ui.theme.*
@@ -60,12 +58,12 @@ fun LoginScreen(
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        BackgroundLight, // Top - light
-                        BackgroundLight, // Keep light
-                        BackgroundLight, // Still light
-                        Color(0xFFE8E8EC), // Slight transition
-                        Color(0xFFD4D4D8), // Mid gray
-                        Color(0xFFC0C0C4)  // Bottom - light gray
+                        BackgroundLight,
+                        BackgroundLight,
+                        BackgroundLight,
+                        GradientStart,
+                        GradientMid,
+                        GradientEnd,
                     ),
                     startY = 0f,
                     endY = Float.POSITIVE_INFINITY
@@ -84,47 +82,44 @@ fun LoginScreen(
                     .height(screenHeight * 0.35f),
                 contentAlignment = Alignment.Center
             ) {
-                // Background shape
                 Image(
                     painter = painterResource(id = R.drawable.login_background),
                     contentDescription = null,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.FillBounds
                 )
-
-                // Logo with inner shadow - moved up 8dp
                 Image(
                     painter = painterResource(id = R.drawable.ai_lab_logo_in),
                     contentDescription = "AI Lab Logo",
                     modifier = Modifier
                         .size(200.dp)
-                        .padding(top = 8.dp),
+                        .padding(top = AppSpacing.sm),
                     contentScale = ContentScale.Fit
                 )
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(AppSpacing.xxxl))
 
             Text(
                 text = "Ai Lab'e Hoşgeldin",
-                fontSize = 24.sp,
+                style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = PrimaryBlue,
-                modifier = Modifier.padding(bottom = 4.dp)
+                modifier = Modifier.padding(bottom = AppSpacing.xxs)
             )
 
             Text(
                 text = "Hesabına giriş yap",
-                fontSize = 14.sp,
+                style = MaterialTheme.typography.bodyMedium,
                 color = TextGray,
-                modifier = Modifier.padding(bottom = 24.dp)
+                modifier = Modifier.padding(bottom = AppSpacing.xxl)
             )
 
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 32.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(horizontal = AppSpacing.xxxl),
+                verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
             ) {
                 RoundedInput(
                     value = uiState.email,
@@ -147,12 +142,12 @@ fun LoginScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(AppSpacing.sm))
 
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 32.dp),
+                    .padding(horizontal = AppSpacing.xxxl),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -170,7 +165,7 @@ fun LoginScreen(
                     )
                     Text(
                         "Beni Hatırla",
-                        fontSize = 13.sp,
+                        style = MaterialTheme.typography.bodySmall,
                         color = TextGray
                     )
                 }
@@ -182,117 +177,94 @@ fun LoginScreen(
                 }) {
                     Text(
                         "Şifremi Unuttum",
-                        fontSize = 13.sp,
+                        style = MaterialTheme.typography.bodySmall,
                         color = SecondaryBlue
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(AppSpacing.xl))
 
-            // Log In Button
-            Button(
+            GradientButton(
+                text = "Giriş Yap",
                 onClick = { viewModel.login(onSuccess = onLoginSuccess) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 32.dp)
-                    .height(52.dp)
-                    .shadow(
-                        elevation = 8.dp,
-                        shape = RoundedCornerShape(12.dp),
-                        ambientColor = SecondaryBlue.copy(alpha = 0.3f),
-                        spotColor = SecondaryBlue.copy(alpha = 0.3f)
-                    ),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                contentPadding = PaddingValues(),
-                enabled = !uiState.isLoading
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            brush = Brush.radialGradient(
-                                colors = listOf(
-                                    SecondaryBlue,
-                                    PrimaryBlue
-                                ),
-                                center = Offset(0.5f, 0.5f),
-                                radius = 800f
-                            ),
-                            shape = RoundedCornerShape(12.dp)
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (uiState.isLoading) {
-                        CircularProgressIndicator(
-                            color = Color.White,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    } else {
-                        Text(
-                            text = "Giriş Yap",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color.White
-                        )
-                    }
-                }
-            }
+                isLoading = uiState.isLoading,
+                enabled = !uiState.isLoading,
+                modifier = Modifier.padding(horizontal = AppSpacing.xxxl)
+            )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(AppSpacing.md))
 
-            // Register Button
-            Button(
+            GradientButton(
+                text = "Hesabın Yok Mu? Kaydol",
                 onClick = onNavigateToRegister,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 32.dp)
-                    .height(52.dp)
-                    .shadow(
-                        elevation = 8.dp,
-                        shape = RoundedCornerShape(12.dp),
-                        ambientColor = SecondaryBlue.copy(alpha = 0.3f),
-                        spotColor = SecondaryBlue.copy(alpha = 0.3f)
-                    ),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                contentPadding = PaddingValues()
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            brush = Brush.radialGradient(
-                                colors = listOf(
-                                    SecondaryBlue,
-                                    PrimaryBlue
-                                ),
-                                center = Offset(0.5f, 0.5f),
-                                radius = 800f
-                            ),
-                            shape = RoundedCornerShape(12.dp)
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Hesabın Yok Mu? Kaydol",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color.White
-                    )
-                }
-            }
+                modifier = Modifier.padding(horizontal = AppSpacing.xxxl)
+            )
 
             Spacer(modifier = Modifier.weight(1f))
 
             Text(
                 text = "Yapay Zeka ve Veri Bilimi Laboratuvarı, D114",
-                fontSize = 11.sp,
+                style = MaterialTheme.typography.labelSmall,
                 color = PrimaryBlue,
                 fontWeight = FontWeight.Medium,
-                modifier = Modifier.padding(bottom = 32.dp, top = 16.dp)
+                modifier = Modifier.padding(bottom = AppSpacing.xxxl, top = AppSpacing.lg)
             )
+        }
+    }
+}
+
+@Composable
+private fun GradientButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    isLoading: Boolean = false,
+    enabled: Boolean = true,
+) {
+    Button(
+        onClick = onClick,
+        modifier = modifier
+            .fillMaxWidth()
+            .height(AppDimensions.buttonHeightLarge)
+            .shadow(
+                elevation = AppSpacing.sm,
+                shape = MaterialTheme.shapes.medium,
+                ambientColor = SecondaryBlue.copy(alpha = 0.3f),
+                spotColor = SecondaryBlue.copy(alpha = 0.3f)
+            ),
+        shape = MaterialTheme.shapes.medium,
+        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+        contentPadding = PaddingValues(),
+        enabled = enabled,
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    brush = Brush.radialGradient(
+                        colors = listOf(SecondaryBlue, PrimaryBlue),
+                        center = Offset(0.5f, 0.5f),
+                        radius = 800f
+                    ),
+                    shape = MaterialTheme.shapes.medium
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            if (isLoading) {
+                CircularProgressIndicator(
+                    color = White,
+                    modifier = Modifier.size(AppDimensions.progressSizeLg),
+                    strokeWidth = 2.dp,
+                )
+            } else {
+                Text(
+                    text = text,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    color = White
+                )
+            }
         }
     }
 }
@@ -317,18 +289,18 @@ fun RoundedInput(
             Text(
                 placeholder,
                 color = LabelGray,
-                fontSize = 13.sp
+                style = MaterialTheme.typography.bodySmall
             )
         },
         modifier = Modifier
             .fillMaxWidth()
-            .height(52.dp),
-        shape = RoundedCornerShape(12.dp),
+            .height(AppDimensions.buttonHeightLarge),
+        shape = MaterialTheme.shapes.medium,
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = BorderGray,
             unfocusedBorderColor = BorderGray,
-            focusedContainerColor = Color.White,
-            unfocusedContainerColor = Color.White,
+            focusedContainerColor = White,
+            unfocusedContainerColor = White,
             focusedTextColor = Black,
             unfocusedTextColor = Black,
             cursorColor = SecondaryBlue

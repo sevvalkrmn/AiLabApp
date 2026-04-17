@@ -33,3 +33,12 @@ val FilterChipUnselected = Color(0xFFB0B8D4)
 val AnnouncementBadgeBg = Color(0xFF9FA8DA)
 val AnnouncementBadgeText = Color(0xFF5C6BC0)
 val TaskHistoryBg = Color(0xFFE8EAF6)
+
+// Shimmer renkleri
+val ShimmerBase      = Color(0xFFE0E0E0)
+val ShimmerHighlight = Color(0xFFF5F5F5)
+
+// Login / Register arka plan gradient
+val GradientStart = Color(0xFFE8E8EC)
+val GradientMid   = Color(0xFFD4D4D8)
+val GradientEnd   = Color(0xFFC0C0C4)

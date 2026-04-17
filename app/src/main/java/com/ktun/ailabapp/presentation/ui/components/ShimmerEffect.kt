@@ -21,8 +21,9 @@ import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip // ✅ Correct location
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
+import com.ktun.ailabapp.ui.theme.ShimmerBase
+import com.ktun.ailabapp.ui.theme.ShimmerHighlight
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 
@@ -41,9 +42,9 @@ fun Modifier.shimmerEffect(): Modifier = composed {
     background(
         brush = Brush.linearGradient(
             colors = listOf(
-                Color(0xFFE0E0E0),
-                Color(0xFFF5F5F5),
-                Color(0xFFE0E0E0),
+                ShimmerBase,
+                ShimmerHighlight,
+                ShimmerBase,
             ),
             start = Offset(startOffsetX, 0f),
             end = Offset(startOffsetX + size.width.toFloat(), size.height.toFloat())

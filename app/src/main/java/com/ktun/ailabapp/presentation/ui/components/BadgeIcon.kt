@@ -13,6 +13,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ktun.ailabapp.ui.theme.ErrorRed
+import com.ktun.ailabapp.ui.theme.White
 
 @Composable
 fun BadgeIcon(
@@ -37,12 +39,12 @@ fun BadgeIcon(
                     .align(Alignment.TopEnd)
                     .offset(x = 8.dp, y = (-4).dp)
                     .size(18.dp)
-                    .background(Color.Red, CircleShape),
+                    .background(ErrorRed, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = if (badgeCount > 9) "9+" else badgeCount.toString(),
-                    color = Color.White,
+                    color = White,
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Bold
                 )

@@ -25,7 +25,7 @@ fun AiLabAppTheme(
     MaterialTheme(
         colorScheme = LightColors,
         typography = Typography,
-        //shapes = AppShapes,
+        shapes = AppShapes,
         content = content
     )
 }
