@@ -2,9 +2,7 @@ package com.ktun.ailabapp.presentation.ui.screens.admin.users.personalAnnounceme
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ktun.ailabapp.data.remote.api.AnnouncementApi
-import com.ktun.ailabapp.data.remote.dto.request.CreateAnnouncementRequest
-import com.ktun.ailabapp.util.Logger
+import com.ktun.ailabapp.domain.usecase.announcement.CreateAnnouncementUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,38 +23,26 @@ data class SendAnnouncementUiState(
 
 @HiltViewModel
 class SendAnnouncementViewModel @Inject constructor(
-    private val announcementApi: AnnouncementApi
+    private val createAnnouncementUseCase: CreateAnnouncementUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SendAnnouncementUiState())
     val uiState: StateFlow<SendAnnouncementUiState> = _uiState.asStateFlow()
 
     fun onTitleChange(title: String) {
-        _uiState.update {
-            it.copy(
-                title = title,
-                titleError = null
-            )
-        }
+        _uiState.update { it.copy(title = title, titleError = null) }
     }
 
     fun onContentChange(content: String) {
-        _uiState.update {
-            it.copy(
-                content = content,
-                contentError = null
-            )
-        }
+        _uiState.update { it.copy(content = content, contentError = null) }
     }
 
     fun sendAnnouncement(userId: String) {
-        // Validation
         val titleError = when {
             _uiState.value.title.isBlank() -> "Başlık boş olamaz"
             _uiState.value.title.length < 3 -> "Başlık en az 3 karakter olmalı"
             else -> null
         }
-
         val contentError = when {
             _uiState.value.content.isBlank() -> "İçerik boş olamaz"
             _uiState.value.content.length < 10 -> "İçerik en az 10 karakter olmalı"
@@ -64,55 +50,26 @@ class SendAnnouncementViewModel @Inject constructor(
         }
 
         if (titleError != null || contentError != null) {
-            _uiState.update {
-                it.copy(
-                    titleError = titleError,
-                    contentError = contentError
-                )
-            }
+            _uiState.update { it.copy(titleError = titleError, contentError = contentError) }
             return
         }
 
-        // API Call
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
-            try {
-                val request = CreateAnnouncementRequest(
-                    title = _uiState.value.title,
-                    content = _uiState.value.content,
-                    scope = 2, // PERSONAL
-                    targetUserIds = listOf(userId)
-                )
-
-                val response = announcementApi.createAnnouncement(request)
-
-                if (response.isSuccessful) {
-                    Logger.d( "✅ Announcement sent successfully")
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            isSuccess = true
-                        )
-                    }
-                } else {
-                    Logger.e( "❌ Error: ${response.code()}")
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            errorMessage = "Duyuru gönderilemedi: ${response.code()}"
-                        )
-                    }
+            createAnnouncementUseCase(
+                title = _uiState.value.title,
+                content = _uiState.value.content,
+                scope = 2,
+                userId = userId
+            ).fold(
+                onSuccess = {
+                    _uiState.update { it.copy(isLoading = false, isSuccess = true) }
+                },
+                onFailure = { e ->
+                    _uiState.update { it.copy(isLoading = false, errorMessage = e.message ?: "Duyuru gönderilemedi") }
                 }
-            } catch (e: Exception) {
-                Logger.e( "❌ Exception: ${e.message}")
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        errorMessage = "Hata: ${e.message}"
-                    )
-                }
-            }
+            )
         }
     }
 }

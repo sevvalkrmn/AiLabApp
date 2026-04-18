@@ -2,7 +2,7 @@ package com.ktun.ailabapp.presentation.ui.screens.admin.announcement
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ktun.ailabapp.data.repository.AnnouncementRepository
+import com.ktun.ailabapp.domain.usecase.announcement.CreateAnnouncementUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,7 +21,7 @@ data class SendGlobalAnnouncementUiState(
 
 @HiltViewModel
 class SendGlobalAnnouncementViewModel @Inject constructor(
-    private val announcementRepository: AnnouncementRepository
+    private val createAnnouncementUseCase: CreateAnnouncementUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SendGlobalAnnouncementUiState())
@@ -47,26 +47,12 @@ class SendGlobalAnnouncementViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
-            // 0: ALL (Genel Duyuru)
-            val result = announcementRepository.createAnnouncement(
-                title = title,
-                content = content,
-                scope = 0, 
-                userId = null,
-                projectId = null
-            )
-
-            result.fold(
+            createAnnouncementUseCase(title = title, content = content, scope = 0).fold(
                 onSuccess = {
                     _uiState.update { it.copy(isLoading = false, isSuccess = true) }
                 },
                 onFailure = { exception ->
-                    _uiState.update { 
-                        it.copy(
-                            isLoading = false, 
-                            errorMessage = exception.message ?: "Duyuru gönderilemedi"
-                        ) 
-                    }
+                    _uiState.update { it.copy(isLoading = false, errorMessage = exception.message ?: "Duyuru gönderilemedi") }
                 }
             )
         }

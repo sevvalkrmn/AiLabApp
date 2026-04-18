@@ -4,9 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ktun.ailabapp.data.remote.dto.response.ProfileResponse
 import com.ktun.ailabapp.data.remote.dto.response.TaskResponse
-import com.ktun.ailabapp.data.repository.AuthRepository
 import com.ktun.ailabapp.data.repository.LabStatsRepository
-import com.ktun.ailabapp.data.repository.TaskRepository
+import com.ktun.ailabapp.domain.repository.IAuthRepository
+import com.ktun.ailabapp.domain.repository.ITaskRepository
 import com.ktun.ailabapp.util.Logger
 import com.ktun.ailabapp.util.NetworkResult
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -48,8 +48,8 @@ data class TopUserItem(
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val authRepository: AuthRepository,
-    private val taskRepository: TaskRepository,
+    private val authRepository: IAuthRepository,
+    private val taskRepository: ITaskRepository,
     private val labStatsRepository: LabStatsRepository
 ) : ViewModel() {
 
@@ -159,7 +159,7 @@ class HomeViewModel @Inject constructor(
     }
 
     private suspend fun loadCurrentTasksInternal() {
-        when (val result = taskRepository.getMyTasks()) {
+        when (val result = taskRepository.getMyTasks(null)) {
             is NetworkResult.Success -> {
                 result.data?.let { allTasks ->
                     val activeTasks = allTasks.filter { it.status != "Done" }

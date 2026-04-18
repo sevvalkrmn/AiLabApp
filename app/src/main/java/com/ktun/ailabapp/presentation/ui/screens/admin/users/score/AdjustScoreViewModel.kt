@@ -1,12 +1,9 @@
-// presentation/ui/screens/admin/score/AdjustScoreViewModel.kt
-
 package com.ktun.ailabapp.presentation.ui.screens.admin.score
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ktun.ailabapp.data.remote.api.AdminScoreApi
-import com.ktun.ailabapp.data.remote.dto.request.AdjustScoreRequest
-import com.ktun.ailabapp.util.Logger
+import com.ktun.ailabapp.domain.usecase.admin.score.AdjustUserScoreUseCase
+import com.ktun.ailabapp.util.NetworkResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,51 +14,37 @@ import javax.inject.Inject
 
 data class AdjustScoreUiState(
     val scoreInput: String = "",
-    val reasonInput: String = "", // ✅ EKLE
+    val reasonInput: String = "",
     val isAdding: Boolean = true,
     val isLoading: Boolean = false,
     val isSuccess: Boolean = false,
     val errorMessage: String? = null,
     val inputError: String? = null,
-    val reasonError: String? = null // ✅ EKLE
+    val reasonError: String? = null
 )
 
 @HiltViewModel
 class AdjustScoreViewModel @Inject constructor(
-    private val adminScoreApi: AdminScoreApi
+    private val adjustUserScoreUseCase: AdjustUserScoreUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AdjustScoreUiState())
     val uiState: StateFlow<AdjustScoreUiState> = _uiState.asStateFlow()
 
     fun onScoreInputChange(input: String) {
-        if (input.isEmpty() || input.matches(Regex("^\\d*\\.?\\d*$"))) { // ✅ Decimal regex
-            _uiState.update {
-                it.copy(
-                    scoreInput = input,
-                    inputError = null
-                )
-            }
+        if (input.isEmpty() || input.matches(Regex("^\\d*\\.?\\d*$"))) {
+            _uiState.update { it.copy(scoreInput = input, inputError = null) }
         }
     }
 
-    // ✅ YENİ
     fun onReasonInputChange(input: String) {
-        _uiState.update {
-            it.copy(
-                reasonInput = input,
-                reasonError = null
-            )
-        }
+        _uiState.update { it.copy(reasonInput = input, reasonError = null) }
     }
 
     fun toggleAddSubtract() {
-        _uiState.update {
-            it.copy(isAdding = !it.isAdding)
-        }
+        _uiState.update { it.copy(isAdding = !it.isAdding) }
     }
 
-    // ✅ YENİ: State'i sıfırla (Dialog açıldığında çağrılmalı)
     fun resetState() {
         _uiState.value = AdjustScoreUiState()
     }
@@ -70,69 +53,36 @@ class AdjustScoreViewModel @Inject constructor(
         val scoreInput = _uiState.value.scoreInput
         val reasonInput = _uiState.value.reasonInput.trim()
 
-        // Validation
         var hasError = false
-
         if (scoreInput.isBlank()) {
             _uiState.update { it.copy(inputError = "Puan giriniz") }
             hasError = true
         }
-
         if (reasonInput.isBlank()) {
             _uiState.update { it.copy(reasonError = "Açıklama giriniz") }
             hasError = true
         }
-
         if (hasError) return
 
-        val scoreValue = scoreInput.toDoubleOrNull() // ✅ toIntOrNull -> toDoubleOrNull
+        val scoreValue = scoreInput.toDoubleOrNull()
         if (scoreValue == null || scoreValue <= 0) {
             _uiState.update { it.copy(inputError = "Geçerli bir puan giriniz") }
             return
         }
 
-        // ✅ Pozitif/Negatif değer
-        val finalScore = if (_uiState.value.isAdding) scoreValue else -scoreValue
+        val finalAmount = if (_uiState.value.isAdding) scoreValue else -scoreValue
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
-            try {
-                val response = adminScoreApi.adjustUserScore(
-                    userId = userId,
-                    request = AdjustScoreRequest(
-                        amount = finalScore,
-                        reason = reasonInput
-                    )
-                )
-
-                if (response.isSuccessful) {
-                    Logger.d( "✅ Score adjusted: $finalScore, reason: $reasonInput")
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            isSuccess = true
-                        )
-                    }
-                } else {
-                    val errorBody = response.errorBody()?.string()
-                    Logger.e( "❌ Error ${response.code()}: $errorBody")
-
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            errorMessage = "Puan güncellenemedi: ${response.code()}"
-                        )
-                    }
+            when (val result = adjustUserScoreUseCase(userId, finalAmount, reasonInput)) {
+                is NetworkResult.Success -> {
+                    _uiState.update { it.copy(isLoading = false, isSuccess = true) }
                 }
-            } catch (e: Exception) {
-                Logger.e( "❌ Exception: ${e.message}")
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        errorMessage = "Hata: ${e.message}"
-                    )
+                is NetworkResult.Error -> {
+                    _uiState.update { it.copy(isLoading = false, errorMessage = result.message) }
                 }
+                is NetworkResult.Loading -> {}
             }
         }
     }

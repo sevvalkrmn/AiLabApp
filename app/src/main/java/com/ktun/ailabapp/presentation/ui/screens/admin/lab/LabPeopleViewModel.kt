@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-import com.ktun.ailabapp.data.repository.UserRepository // ✅ Import
+import com.ktun.ailabapp.domain.repository.IUserRepository
 import com.ktun.ailabapp.data.model.User // ✅ Import
 
 data class LabPeopleUiState(
@@ -31,7 +31,7 @@ data class LabPerson(
 @HiltViewModel
 class LabPeopleViewModel @Inject constructor(
     private val labStatsRepository: LabStatsRepository,
-    private val userRepository: UserRepository // ✅ Inject
+    private val userRepository: IUserRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LabPeopleUiState())
@@ -48,7 +48,7 @@ class LabPeopleViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             
             // 1. Önce tüm kullanıcıları çek (ID eşleşmesi için)
-            when (val userResult = userRepository.getAllUsers(pageSize = 1000)) { // Büyük bir sayfa boyutu
+            when (val userResult = userRepository.getAllUsers(1, 1000)) {
                 is NetworkResult.Success -> {
                     allUsers = userResult.data ?: emptyList()
                 }

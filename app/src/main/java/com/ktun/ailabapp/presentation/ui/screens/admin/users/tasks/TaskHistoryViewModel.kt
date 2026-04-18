@@ -2,11 +2,10 @@ package com.ktun.ailabapp.presentation.ui.screens.admin.users.tasks
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ktun.ailabapp.data.remote.api.TaskApi
 import com.ktun.ailabapp.data.remote.dto.response.TaskHistory
 import com.ktun.ailabapp.data.remote.dto.response.TaskStatus
-import com.ktun.ailabapp.data.remote.dto.response.toTaskHistory
-import com.ktun.ailabapp.util.Logger
+import com.ktun.ailabapp.domain.usecase.task.GetUserTaskHistoryUseCase
+import com.ktun.ailabapp.util.NetworkResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,7 +23,7 @@ data class TaskHistoryUiState(
 
 @HiltViewModel
 class TaskHistoryViewModel @Inject constructor(
-    private val taskApi: TaskApi
+    private val getUserTaskHistoryUseCase: GetUserTaskHistoryUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TaskHistoryUiState())
@@ -34,35 +33,14 @@ class TaskHistoryViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
-            try {
-                val response = taskApi.getUserTaskHistory(userId)
-
-                if (response.isSuccessful) {
-                    val tasks = response.body()?.map { it.toTaskHistory() } ?: emptyList()
-                    Logger.d( "✅ Loaded ${tasks.size} tasks")
-
-                    _uiState.update {
-                        it.copy(
-                            tasks = tasks,
-                            isLoading = false
-                        )
-                    }
-                } else {
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            errorMessage = "Görevler yüklenemedi: ${response.code()}"
-                        )
-                    }
+            when (val result = getUserTaskHistoryUseCase(userId)) {
+                is NetworkResult.Success -> {
+                    _uiState.update { it.copy(tasks = result.data ?: emptyList(), isLoading = false) }
                 }
-            } catch (e: Exception) {
-                Logger.e( "❌ Error: ${e.message}")
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        errorMessage = "Hata: ${e.message}"
-                    )
+                is NetworkResult.Error -> {
+                    _uiState.update { it.copy(isLoading = false, errorMessage = result.message) }
                 }
+                is NetworkResult.Loading -> {}
             }
         }
     }
@@ -74,11 +52,6 @@ class TaskHistoryViewModel @Inject constructor(
     fun getFilteredTasks(): List<TaskHistory> {
         val filter = _uiState.value.selectedFilter
         val tasks = _uiState.value.tasks
-
-        return if (filter == null) {
-            tasks
-        } else {
-            tasks.filter { it.status == filter }
-        }
+        return if (filter == null) tasks else tasks.filter { it.status == filter }
     }
 }

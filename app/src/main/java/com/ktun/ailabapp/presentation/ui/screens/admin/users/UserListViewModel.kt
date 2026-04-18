@@ -1,12 +1,12 @@
-// presentation/ui/screens/admin/users/UsersListViewModel.kt
-
 package com.ktun.ailabapp.presentation.ui.screens.admin.users
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ktun.ailabapp.data.model.User
 import com.ktun.ailabapp.data.repository.RfidRepository
-import com.ktun.ailabapp.data.repository.UserRepository
+import com.ktun.ailabapp.domain.usecase.user.DeleteUserUseCase
+import com.ktun.ailabapp.domain.usecase.user.GetAllUsersUseCase
+import com.ktun.ailabapp.domain.usecase.user.GetUserByIdUseCase
 import com.ktun.ailabapp.util.Logger
 import com.ktun.ailabapp.util.NetworkResult
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -44,7 +44,9 @@ sealed interface RfidEvent {
 
 @HiltViewModel
 class UsersListViewModel @Inject constructor(
-    private val userRepository: UserRepository,
+    private val getAllUsersUseCase: GetAllUsersUseCase,
+    private val getUserByIdUseCase: GetUserByIdUseCase,
+    private val deleteUserUseCase: DeleteUserUseCase,
     private val rfidRepository: RfidRepository
 ) : ViewModel() {
 
@@ -67,26 +69,15 @@ class UsersListViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
-            when (val result = userRepository.getAllUsers()) {
+            when (val result = getAllUsersUseCase()) {
                 is NetworkResult.Success -> {
                     val users = result.data ?: emptyList()
-                    _uiState.update {
-                        it.copy(
-                            users = users,
-                            filteredUsers = users,
-                            isLoading = false
-                        )
-                    }
-                    Logger.d( "✅ ${users.size} kullanıcı yüklendi")
+                    _uiState.update { it.copy(users = users, filteredUsers = users, isLoading = false) }
+                    Logger.d("✅ ${users.size} kullanıcı yüklendi")
                 }
                 is NetworkResult.Error -> {
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            errorMessage = result.message
-                        )
-                    }
-                    Logger.e( "❌ Hata: ${result.message}")
+                    _uiState.update { it.copy(isLoading = false, errorMessage = result.message) }
+                    Logger.e("❌ Hata: ${result.message}")
                 }
                 is NetworkResult.Loading -> {}
             }
@@ -95,17 +86,17 @@ class UsersListViewModel @Inject constructor(
 
     fun loadUserDetail(userId: String, onSuccess: (User) -> Unit) {
         viewModelScope.launch {
-            Logger.d( "🔍 Loading detail for userId: $userId")
+            Logger.d("🔍 Loading detail for userId: $userId")
 
-            when (val result = userRepository.getUserById(userId)) {
+            when (val result = getUserByIdUseCase(userId)) {
                 is NetworkResult.Success -> {
                     result.data?.let { user ->
-                        Logger.d( "✅ User loaded: ${user.fullName}")
+                        Logger.d("✅ User loaded: ${user.fullName}")
                         onSuccess(user)
                     }
                 }
                 is NetworkResult.Error -> {
-                    Logger.e( "❌ Error: ${result.message}")
+                    Logger.e("❌ Error: ${result.message}")
                 }
                 is NetworkResult.Loading -> {}
             }
@@ -123,50 +114,39 @@ class UsersListViewModel @Inject constructor(
                             (user.studentNumber?.contains(query, ignoreCase = true) == true)
                 }
             }
-
-            currentState.copy(
-                searchQuery = query,
-                filteredUsers = filtered
-            )
+            currentState.copy(searchQuery = query, filteredUsers = filtered)
         }
     }
 
     fun onSendAnnouncementClick(userId: String, userName: String) {
         viewModelScope.launch {
-            _navigationEvent.emit(
-                AdminNavigationEvent.ToSendAnnouncement(userId, userName)
-            )
+            _navigationEvent.emit(AdminNavigationEvent.ToSendAnnouncement(userId, userName))
         }
     }
 
     fun onManageRolesClick(userId: String) {
         viewModelScope.launch {
-            _navigationEvent.emit(
-                AdminNavigationEvent.ToManageRoles(userId)
-            )
+            _navigationEvent.emit(AdminNavigationEvent.ToManageRoles(userId))
         }
     }
 
     fun onTaskHistoryClick(userId: String, userName: String) {
         viewModelScope.launch {
-            _navigationEvent.emit(
-                AdminNavigationEvent.ToTaskHistory(userId, userName)
-            )
+            _navigationEvent.emit(AdminNavigationEvent.ToTaskHistory(userId, userName))
         }
     }
 
-    // ✅ RFID Kayıt Başlat
     fun startRfidRegistration(userId: String, userName: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
         viewModelScope.launch {
             when (val result = rfidRepository.startRegistration(userId)) {
                 is NetworkResult.Success -> {
-                    Logger.d( "✅ RFID Kayıt Modu Başlatıldı: $userId")
+                    Logger.d("✅ RFID Kayıt Modu Başlatıldı: $userId")
                     _uiState.update { it.copy(rfidRegistering = true) }
                     onSuccess()
                     startRfidPolling(userName)
                 }
                 is NetworkResult.Error -> {
-                    Logger.e( "❌ RFID Hata: ${result.message}")
+                    Logger.e("❌ RFID Hata: ${result.message}")
                     onError(result.message ?: "Bilinmeyen hata")
                 }
                 is NetworkResult.Loading -> {}
@@ -202,27 +182,25 @@ class UsersListViewModel @Inject constructor(
                 }
             }
 
-            // Timeout
             Logger.d("RFID kayıt zaman aşımına uğradı")
             _uiState.update { it.copy(rfidRegistering = false) }
             _rfidEvent.emit(RfidEvent.RegistrationTimeout)
         }
     }
 
-    // ✅ Kullanıcı Sil
     fun deleteUser(userId: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
 
-            when (val result = userRepository.deleteUser(userId)) {
+            when (val result = deleteUserUseCase(userId)) {
                 is NetworkResult.Success -> {
-                    Logger.d( "✅ Kullanıcı silindi: $userId")
-                    loadUsers() // Listeyi yenile
+                    Logger.d("✅ Kullanıcı silindi: $userId")
+                    loadUsers()
                     onSuccess()
                 }
                 is NetworkResult.Error -> {
                     _uiState.update { it.copy(isLoading = false) }
-                    Logger.e( "❌ Silme hatası: ${result.message}")
+                    Logger.e("❌ Silme hatası: ${result.message}")
                     onError(result.message ?: "Silme işlemi başarısız")
                 }
                 is NetworkResult.Loading -> {}

@@ -6,10 +6,12 @@ import com.ktun.ailabapp.data.model.UserProject
 import com.ktun.ailabapp.data.remote.api.ProjectApi
 import com.ktun.ailabapp.data.remote.dto.request.AddMemberRequest
 import com.ktun.ailabapp.data.remote.dto.request.CreateProjectRequest
+import com.ktun.ailabapp.data.remote.dto.request.TransferOwnershipRequest
 import com.ktun.ailabapp.data.remote.dto.response.MyProjectsResponse
 import com.ktun.ailabapp.data.remote.dto.response.ProjectDetailResponse
 import com.ktun.ailabapp.data.remote.dto.response.ProjectMember
 import com.ktun.ailabapp.data.remote.dto.response.toUserProject
+import com.ktun.ailabapp.domain.repository.IProjectRepository
 import com.ktun.ailabapp.util.CacheEntry
 import com.ktun.ailabapp.util.Logger
 import com.ktun.ailabapp.util.NetworkResult
@@ -23,7 +25,7 @@ import javax.inject.Singleton
 @Singleton
 class ProjectRepository @Inject constructor(
     private val projectApi: ProjectApi
-) {
+) : IProjectRepository {
 
     private companion object {
         const val PROJECTS_TTL_MS = 5 * 60 * 1000L
@@ -35,20 +37,20 @@ class ProjectRepository @Inject constructor(
     private val membersCacheMap = ConcurrentHashMap<String, CacheEntry<List<ProjectMember>>>()
     private val projectDetailCache = ConcurrentHashMap<String, CacheEntry<ProjectDetailResponse>>()
 
-    fun clearCache() {
+    override fun clearCache() {
         myProjectsCache.clear()
         membersCacheMap.clear()
         projectDetailCache.clear()
     }
 
-    fun invalidateProjectDetail(projectId: String) {
+    override fun invalidateProjectDetail(projectId: String) {
         projectDetailCache.remove(projectId)
     }
     /**
      * Kullanıcının kendi projelerini çeker
      * GET /api/projects/my-projects
      */
-    suspend fun getMyProjects(roleFilter: String? = null): NetworkResult<List<MyProjectsResponse>> = withContext(Dispatchers.IO) {
+    override suspend fun getMyProjects(roleFilter: String?): NetworkResult<List<MyProjectsResponse>> = withContext(Dispatchers.IO) {
         val cacheKey = roleFilter ?: "all"
         myProjectsCache[cacheKey]?.let { if (it.isValid(PROJECTS_TTL_MS)) return@withContext NetworkResult.Success(it.data) }
 
@@ -87,7 +89,7 @@ class ProjectRepository @Inject constructor(
      * Sistemdeki TÜM projeleri çeker (Admin)
      * GET /api/Projects
      */
-    suspend fun getAllProjects(): NetworkResult<List<MyProjectsResponse>> = withContext(Dispatchers.IO) {
+    override suspend fun getAllProjects(): NetworkResult<List<MyProjectsResponse>> = withContext(Dispatchers.IO) {
         try {
             Logger.d( "🔍 Fetching ALL projects (Admin)")
 
@@ -113,7 +115,7 @@ class ProjectRepository @Inject constructor(
      * Belirli bir kullanıcının projelerini çeker
      * GET /api/projects/user/{userId}
      */
-    suspend fun getUserProjects(userId: String): NetworkResult<List<UserProject>> = withContext(Dispatchers.IO) {
+    override suspend fun getUserProjects(userId: String): NetworkResult<List<UserProject>> = withContext(Dispatchers.IO) {
         try {
             Logger.d( "🔍 Fetching projects for userId: $userId")
 
@@ -151,7 +153,7 @@ class ProjectRepository @Inject constructor(
      * Belirli bir projenin detaylarını getirir
      * GET /api/projects/{id}
      */
-    suspend fun getProjectDetail(projectId: String): NetworkResult<ProjectDetailResponse> = withContext(Dispatchers.IO) {
+    override suspend fun getProjectDetail(projectId: String): NetworkResult<ProjectDetailResponse> = withContext(Dispatchers.IO) {
         projectDetailCache[projectId]?.let { if (it.isValid(PROJECT_DETAIL_TTL_MS)) return@withContext NetworkResult.Success(it.data) }
 
         try {
@@ -190,7 +192,7 @@ class ProjectRepository @Inject constructor(
      * Proje üyelerini listele
      * GET /api/projects/{id}/members
      */
-    suspend fun getProjectMembers(projectId: String): NetworkResult<List<ProjectMember>> = withContext(Dispatchers.IO) {
+    override suspend fun getProjectMembers(projectId: String): NetworkResult<List<ProjectMember>> = withContext(Dispatchers.IO) {
         membersCacheMap[projectId]?.let { if (it.isValid(MEMBERS_TTL_MS)) return@withContext NetworkResult.Success(it.data) }
 
         try {
@@ -234,7 +236,7 @@ class ProjectRepository @Inject constructor(
      * ✅ YENİ - Proje oluştur
      * POST /api/projects
      */
-    suspend fun createProject(request: CreateProjectRequest): NetworkResult<ProjectDetailResponse> = withContext(Dispatchers.IO) {
+    override suspend fun createProject(request: CreateProjectRequest): NetworkResult<ProjectDetailResponse> = withContext(Dispatchers.IO) {
         try {
             Logger.d( "🔍 Creating project: ${request.name}")
 
@@ -271,7 +273,7 @@ class ProjectRepository @Inject constructor(
         }
     }
 
-    suspend fun addMember(
+    override suspend fun addMember(
         projectId: String,
         request: AddMemberRequest
     ): NetworkResult<ProjectMember> = withContext(Dispatchers.IO) {
@@ -320,7 +322,7 @@ class ProjectRepository @Inject constructor(
      * Projeden üye çıkar
      * DELETE /api/projects/{projectId}/members/{userId}
      */
-    suspend fun removeMember(
+    override suspend fun removeMember(
         projectId: String,
         userId: String
     ): NetworkResult<Unit> = withContext(Dispatchers.IO) {
@@ -369,7 +371,7 @@ class ProjectRepository @Inject constructor(
      * Projeyi sil
      * DELETE /api/projects/{projectId}
      */
-    suspend fun deleteProject(
+    override suspend fun deleteProject(
         projectId: String
     ): NetworkResult<Unit> = withContext(Dispatchers.IO) {
         try {
@@ -396,6 +398,32 @@ class ProjectRepository @Inject constructor(
             return@withContext NetworkResult.Error("HTTP ${e.code()}: ${e.message()}")
         } catch (e: Exception) {
             Logger.e( "❌ Exception: ${e.message}", e)
+            return@withContext NetworkResult.Error(e.message ?: "Bilinmeyen hata")
+        }
+    }
+
+    override suspend fun transferOwnership(
+        projectId: String,
+        currentCaptainId: String,
+        newCaptainId: String
+    ): NetworkResult<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val request = TransferOwnershipRequest(currentCaptainId, newCaptainId)
+            val response = projectApi.transferOwnership(projectId, request)
+
+            return@withContext when {
+                response.code() == 401 -> NetworkResult.Error("Oturum süresi doldu")
+                response.code() == 403 -> NetworkResult.Error("Kaptan değişimi için yetkiniz yok")
+                response.isSuccessful -> {
+                    membersCacheMap.remove(projectId)
+                    NetworkResult.Success(Unit)
+                }
+                else -> {
+                    val errorBody = response.errorBody()?.string()
+                    NetworkResult.Error("Kaptan değişimi başarısız: ${response.code()} $errorBody")
+                }
+            }
+        } catch (e: Exception) {
             return@withContext NetworkResult.Error(e.message ?: "Bilinmeyen hata")
         }
     }

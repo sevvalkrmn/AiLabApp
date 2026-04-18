@@ -3,18 +3,19 @@ package com.ktun.ailabapp.data.repository
 import com.ktun.ailabapp.data.model.Announcement
 import com.ktun.ailabapp.data.remote.api.AnnouncementApi
 import com.ktun.ailabapp.data.remote.dto.response.toAnnouncement
+import com.ktun.ailabapp.domain.repository.IAnnouncementRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class AnnouncementRepository @Inject constructor(
     private val announcementApi: AnnouncementApi
-) {
+) : IAnnouncementRepository {
 
-    suspend fun getMyAnnouncements(
-        pageNumber: Int = 1,
-        pageSize: Int = 20,
-        isRead: Boolean? = null
+    override suspend fun getMyAnnouncements(
+        pageNumber: Int,
+        pageSize: Int,
+        isRead: Boolean?
     ): Result<List<Announcement>> = withContext(Dispatchers.IO) {
         try {
             val response = announcementApi.getMyAnnouncements(pageNumber, pageSize, isRead)
@@ -30,7 +31,7 @@ class AnnouncementRepository @Inject constructor(
         }
     }
 
-    suspend fun getAnnouncementDetail(id: String): Result<Announcement> = withContext(Dispatchers.IO) {
+    override suspend fun getAnnouncementDetail(id: String): Result<Announcement> = withContext(Dispatchers.IO) {
         try {
             val response = announcementApi.getAnnouncementDetail(id)
 
@@ -49,7 +50,7 @@ class AnnouncementRepository @Inject constructor(
         }
     }
 
-    suspend fun markAsRead(id: String): Result<Unit> = withContext(Dispatchers.IO) {
+    override suspend fun markAsRead(id: String): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             val response = announcementApi.markAsRead(id)
 
@@ -63,12 +64,12 @@ class AnnouncementRepository @Inject constructor(
         }
     }
 
-    suspend fun createAnnouncement(
+    override suspend fun createAnnouncement(
         title: String,
         content: String,
         scope: Int,
-        userId: String? = null,
-        projectId: String? = null
+        userId: String?,
+        projectId: String?
     ): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             val targetUserIds = if (userId != null) listOf(userId) else null

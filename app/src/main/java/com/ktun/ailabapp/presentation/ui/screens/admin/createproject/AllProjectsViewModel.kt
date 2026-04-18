@@ -1,11 +1,9 @@
-// presentation/ui/screens/admin/allprojects/AllProjectsViewModel.kt
-
 package com.ktun.ailabapp.presentation.ui.screens.admin.createproject
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ktun.ailabapp.data.remote.dto.response.MyProjectsResponse
-import com.ktun.ailabapp.data.repository.ProjectRepository
+import com.ktun.ailabapp.domain.usecase.project.GetAllProjectsUseCase
 import com.ktun.ailabapp.util.NetworkResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -14,7 +12,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AllProjectsViewModel @Inject constructor(
-    private val projectRepository: ProjectRepository
+    private val getAllProjectsUseCase: GetAllProjectsUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(AllProjectsState())
@@ -28,25 +26,14 @@ class AllProjectsViewModel @Inject constructor(
         _state.update { it.copy(isLoading = true, error = null) }
 
         viewModelScope.launch {
-            // ✅ DEĞİŞTİRİLDİ: Sadece Adminlerin erişebildiği 'Tüm Projeler' endpoint'i
-            when (val result = projectRepository.getAllProjects()) {
+            when (val result = getAllProjectsUseCase()) {
                 is NetworkResult.Success -> {
-                    _state.update {
-                        it.copy(
-                            isLoading = false,
-                            projects = result.data ?: emptyList()
-                        )
-                    }
+                    _state.update { it.copy(isLoading = false, projects = result.data ?: emptyList()) }
                 }
                 is NetworkResult.Error -> {
-                    _state.update {
-                        it.copy(
-                            isLoading = false,
-                            error = result.message
-                        )
-                    }
+                    _state.update { it.copy(isLoading = false, error = result.message) }
                 }
-                is NetworkResult.Loading -> { /* Ignore */ }
+                is NetworkResult.Loading -> {}
             }
         }
     }

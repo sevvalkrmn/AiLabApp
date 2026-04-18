@@ -3,6 +3,7 @@ package com.ktun.ailabapp.data.repository
 import com.ktun.ailabapp.data.model.User
 import com.ktun.ailabapp.data.remote.api.UsersApi
 import com.ktun.ailabapp.data.remote.dto.response.toUser
+import com.ktun.ailabapp.domain.repository.IUserRepository
 import com.ktun.ailabapp.util.Logger
 import com.ktun.ailabapp.util.NetworkResult
 import kotlinx.coroutines.Dispatchers
@@ -14,10 +15,10 @@ import javax.inject.Singleton
 class UserRepository @Inject constructor(
     private val usersApi: UsersApi,
     private val projectRepository: ProjectRepository
-) {
-    suspend fun getAllUsers(
-        pageNumber: Int = 1,
-        pageSize: Int = 50
+) : IUserRepository {
+    override suspend fun getAllUsers(
+        pageNumber: Int,
+        pageSize: Int
     ): NetworkResult<List<User>> = withContext(Dispatchers.IO) {
         try {
             val response = usersApi.getAllUsers(pageNumber, pageSize)
@@ -39,7 +40,7 @@ class UserRepository @Inject constructor(
         }
     }
 
-    suspend fun getUserById(userId: String): NetworkResult<User> = withContext(Dispatchers.IO) {
+    override suspend fun getUserById(userId: String): NetworkResult<User> = withContext(Dispatchers.IO) {
         try {
             Logger.d("Fetching user: $userId", tag = "UserRepository")
 
@@ -77,7 +78,7 @@ class UserRepository @Inject constructor(
         }
     }
 
-    suspend fun updateUserProfileImage(
+    override suspend fun updateUserProfileImage(
         userId: String,
         imageUrl: String
     ): NetworkResult<String> = withContext(Dispatchers.IO) {
@@ -95,7 +96,7 @@ class UserRepository @Inject constructor(
         }
     }
 
-    suspend fun deleteUser(userId: String): NetworkResult<Unit> = withContext(Dispatchers.IO) {
+    override suspend fun deleteUser(userId: String): NetworkResult<Unit> = withContext(Dispatchers.IO) {
         try {
             val response = usersApi.deleteUser(userId)
             if (response.isSuccessful) {

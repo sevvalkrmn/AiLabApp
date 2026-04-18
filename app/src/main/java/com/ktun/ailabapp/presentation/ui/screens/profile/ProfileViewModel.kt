@@ -1,5 +1,3 @@
-// screens/profile/ProfileViewModel.kt
-
 package com.ktun.ailabapp.presentation.ui.screens.profile
 
 import android.content.Context
@@ -7,20 +5,36 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ktun.ailabapp.data.model.ProfileUiState
-import com.ktun.ailabapp.data.repository.AuthRepository
+import com.ktun.ailabapp.domain.usecase.profile.ChangePasswordUseCase
+import com.ktun.ailabapp.domain.usecase.profile.GetDefaultAvatarsUseCase
+import com.ktun.ailabapp.domain.usecase.profile.GetProfileUseCase
+import com.ktun.ailabapp.domain.usecase.profile.InvalidateProfileCacheUseCase
+import com.ktun.ailabapp.domain.usecase.profile.LogoutUseCase
+import com.ktun.ailabapp.domain.usecase.profile.SelectDefaultAvatarUseCase
+import com.ktun.ailabapp.domain.usecase.profile.UpdateEmailUseCase
+import com.ktun.ailabapp.domain.usecase.profile.UpdatePhoneUseCase
+import com.ktun.ailabapp.domain.usecase.profile.UploadProfileImageUseCase
 import com.ktun.ailabapp.util.ImageCompressor
+import com.ktun.ailabapp.util.Logger
 import com.ktun.ailabapp.util.NetworkResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import com.ktun.ailabapp.util.Logger
 import javax.inject.Inject
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
-    private val authRepository: AuthRepository
+    private val getProfileUseCase: GetProfileUseCase,
+    private val invalidateProfileCacheUseCase: InvalidateProfileCacheUseCase,
+    private val uploadProfileImageUseCase: UploadProfileImageUseCase,
+    private val selectDefaultAvatarUseCase: SelectDefaultAvatarUseCase,
+    private val updateEmailUseCase: UpdateEmailUseCase,
+    private val changePasswordUseCase: ChangePasswordUseCase,
+    private val updatePhoneUseCase: UpdatePhoneUseCase,
+    private val getDefaultAvatarsUseCase: GetDefaultAvatarsUseCase,
+    private val logoutUseCase: LogoutUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileUiState())
@@ -34,13 +48,12 @@ class ProfileViewModel @Inject constructor(
     private suspend fun loadUserProfileInternal() {
         _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
 
-        when (val result = authRepository.getProfile()) {
+        when (val result = getProfileUseCase()) {
             is NetworkResult.Success -> {
                 result.data?.let { profile ->
                     val isAdminUser = profile.roles.any { role ->
                         role.equals("admin", ignoreCase = true)
                     }
-
                     _uiState.value = _uiState.value.copy(
                         id = profile.id,
                         fullName = profile.fullName,
@@ -55,16 +68,12 @@ class ProfileViewModel @Inject constructor(
                         isLoading = false,
                         errorMessage = null
                     )
-
                     Logger.d("✅ Profile loaded: ${profile.fullName}", "ProfileVM")
                 }
             }
             is NetworkResult.Error -> {
                 Logger.e("❌ Profile error: ${result.message}", tag = "ProfileVM")
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    errorMessage = result.message
-                )
+                _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = result.message)
             }
             is NetworkResult.Loading -> {}
         }
@@ -78,7 +87,7 @@ class ProfileViewModel @Inject constructor(
         if (_uiState.value.isRefreshing) return
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isRefreshing = true)
-            authRepository.invalidateProfileCache()
+            invalidateProfileCacheUseCase()
             try {
                 loadUserProfileInternal()
             } finally {
@@ -89,67 +98,45 @@ class ProfileViewModel @Inject constructor(
 
     fun uploadAndUpdateProfileImage(context: Context, imageUri: Uri) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(
-                isUploadingImage = true,
-                errorMessage = null
-            )
+            _uiState.value = _uiState.value.copy(isUploadingImage = true, errorMessage = null)
 
             try {
-                val compressResult = ImageCompressor.compressToWebP(
-                    context = context,
-                    imageUri = imageUri
-                )
-
+                val compressResult = ImageCompressor.compressToWebP(context = context, imageUri = imageUri)
                 if (compressResult.isFailure) {
-                    _uiState.value = _uiState.value.copy(
-                        isUploadingImage = false,
-                        errorMessage = "Fotoğraf işlenemedi"
-                    )
+                    _uiState.value = _uiState.value.copy(isUploadingImage = false, errorMessage = "Fotoğraf işlenemedi")
                     return@launch
                 }
 
                 val optimizedUri = compressResult.getOrNull()!!
                 val userId = _uiState.value.id
-                
-                when (val result = authRepository.uploadAndUpdateProfileImage(userId, optimizedUri)) {
+
+                when (val result = uploadProfileImageUseCase(userId, optimizedUri)) {
                     is NetworkResult.Success -> {
                         loadUserProfileInternal()
                         _uiState.value = _uiState.value.copy(isUploadingImage = false)
                     }
                     is NetworkResult.Error -> {
-                        _uiState.value = _uiState.value.copy(
-                            isUploadingImage = false,
-                            errorMessage = result.message ?: "Fotoğraf yüklenemedi"
-                        )
+                        _uiState.value = _uiState.value.copy(isUploadingImage = false, errorMessage = result.message ?: "Fotoğraf yüklenemedi")
                     }
                     is NetworkResult.Loading -> {}
                 }
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    isUploadingImage = false,
-                    errorMessage = "Fotoğraf işlenirken hata oluştu"
-                )
+                _uiState.value = _uiState.value.copy(isUploadingImage = false, errorMessage = "Fotoğraf işlenirken hata oluştu")
             }
         }
     }
 
     fun selectDefaultAvatar(avatarUrl: String) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(
-                isUploadingImage = true,
-                errorMessage = null
-            )
+            _uiState.value = _uiState.value.copy(isUploadingImage = true, errorMessage = null)
 
-            when (val result = authRepository.selectDefaultAvatar(avatarUrl)) {
+            when (val result = selectDefaultAvatarUseCase(avatarUrl)) {
                 is NetworkResult.Success -> {
                     loadUserProfileInternal()
                     _uiState.value = _uiState.value.copy(isUploadingImage = false)
                 }
                 is NetworkResult.Error -> {
-                    _uiState.value = _uiState.value.copy(
-                        isUploadingImage = false,
-                        errorMessage = result.message ?: "Avatar seçimi başarısız"
-                    )
+                    _uiState.value = _uiState.value.copy(isUploadingImage = false, errorMessage = result.message ?: "Avatar seçimi başarısız")
                 }
                 is NetworkResult.Loading -> {}
             }
@@ -160,17 +147,14 @@ class ProfileViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
 
-            when (val result = authRepository.updateEmail(password, newEmail)) {
+            when (val result = updateEmailUseCase(password, newEmail)) {
                 is NetworkResult.Success -> {
                     loadUserProfile()
                     _uiState.value = _uiState.value.copy(isLoading = false)
                     onSuccess()
                 }
                 is NetworkResult.Error -> {
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        errorMessage = result.message
-                    )
+                    _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = result.message)
                 }
                 is NetworkResult.Loading -> {}
             }
@@ -181,38 +165,31 @@ class ProfileViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
 
-            when (val result = authRepository.changePassword(oldPassword, newPassword)) {
+            when (val result = changePasswordUseCase(oldPassword, newPassword)) {
                 is NetworkResult.Success -> {
                     _uiState.value = _uiState.value.copy(isLoading = false)
                     onSuccess()
                 }
                 is NetworkResult.Error -> {
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        errorMessage = result.message
-                    )
+                    _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = result.message)
                 }
                 is NetworkResult.Loading -> {}
             }
         }
     }
 
-    // ✅ YENİ: Telefon Güncelleme
     fun updatePhone(newPhone: String, onSuccess: () -> Unit) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
 
-            when (val result = authRepository.updatePhone(newPhone)) {
+            when (val result = updatePhoneUseCase(newPhone)) {
                 is NetworkResult.Success -> {
                     loadUserProfile()
                     _uiState.value = _uiState.value.copy(isLoading = false)
                     onSuccess()
                 }
                 is NetworkResult.Error -> {
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        errorMessage = result.message
-                    )
+                    _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = result.message)
                 }
                 is NetworkResult.Loading -> {}
             }
@@ -221,12 +198,10 @@ class ProfileViewModel @Inject constructor(
 
     private fun loadDefaultAvatars() {
         viewModelScope.launch {
-            when (val result = authRepository.getDefaultAvatars()) {
+            when (val result = getDefaultAvatarsUseCase()) {
                 is NetworkResult.Success -> {
                     result.data?.let { avatars ->
-                        _uiState.value = _uiState.value.copy(
-                            defaultAvatars = avatars
-                        )
+                        _uiState.value = _uiState.value.copy(defaultAvatars = avatars)
                     }
                 }
                 is NetworkResult.Error -> {
@@ -241,14 +216,11 @@ class ProfileViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
             try {
-                authRepository.logout()
+                logoutUseCase()
                 _uiState.value = _uiState.value.copy(isLoading = false)
                 onSuccess()
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    errorMessage = "Çıkış yapılırken hata oluştu"
-                )
+                _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = "Çıkış yapılırken hata oluştu")
             }
         }
     }

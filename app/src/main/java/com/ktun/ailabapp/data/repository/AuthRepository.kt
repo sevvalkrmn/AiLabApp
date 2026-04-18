@@ -47,7 +47,7 @@ class AuthRepository @Inject constructor(
         defaultAvatarsCache = null
     }
 
-    fun invalidateProfileCache() {
+    override fun invalidateProfileCache() {
         profileCache = null
     }
 
@@ -126,6 +126,21 @@ class AuthRepository @Inject constructor(
         }
     }
 
+    override suspend fun logout() {
+        try {
+            notificationRepository.unregisterFcmToken()
+            authManager.signOut()
+            authApi.logout()
+        } catch (e: Exception) {
+            // Ignore
+        } finally {
+            clearCache()
+            projectRepository.clearCache()
+            taskRepository.clearCache()
+            preferencesManager.clearAllData()
+        }
+    }
+
     override suspend fun login(
         email: String,
         password: String,
@@ -170,23 +185,7 @@ class AuthRepository @Inject constructor(
         }
     }
 
-    suspend fun logout() {
-        try {
-            // Once FCM token'i backend'den sil (auth token hala gecerli)
-            notificationRepository.unregisterFcmToken()
-            authManager.signOut()
-            authApi.logout()
-        } catch (e: Exception) {
-            // Ignore
-        } finally {
-            clearCache()
-            projectRepository.clearCache()
-            taskRepository.clearCache()
-            preferencesManager.clearAllData()
-        }
-    }
-
-    suspend fun updateEmail(password: String, newEmail: String): NetworkResult<Unit> = withContext(Dispatchers.IO) {
+    override suspend fun updateEmail(password: String, newEmail: String): NetworkResult<Unit> = withContext(Dispatchers.IO) {
         try {
             // 1. Re-authenticate
             val reauthResult = authManager.reauthenticate(password)
@@ -215,7 +214,7 @@ class AuthRepository @Inject constructor(
         }
     }
 
-    suspend fun changePassword(oldPassword: String, newPassword: String): NetworkResult<Unit> = withContext(Dispatchers.IO) {
+    override suspend fun changePassword(oldPassword: String, newPassword: String): NetworkResult<Unit> = withContext(Dispatchers.IO) {
         try {
             // 1. Eski şifre ile doğrulama (Re-auth)
             val reauthResult = authManager.reauthenticate(oldPassword)
@@ -235,7 +234,7 @@ class AuthRepository @Inject constructor(
         }
     }
 
-    suspend fun updatePhone(newPhone: String): NetworkResult<Unit> = withContext(Dispatchers.IO) {
+    override suspend fun updatePhone(newPhone: String): NetworkResult<Unit> = withContext(Dispatchers.IO) {
         try {
             val request = UpdatePhoneRequest(phoneNumber = newPhone)
             val response = authApi.updatePhone(request)
@@ -251,7 +250,7 @@ class AuthRepository @Inject constructor(
         }
     }
 
-    suspend fun getProfile(): NetworkResult<ProfileResponse> = withContext(Dispatchers.IO) {
+    override suspend fun getProfile(): NetworkResult<ProfileResponse> = withContext(Dispatchers.IO) {
         profileCache?.let { if (it.isValid(PROFILE_TTL_MS)) return@withContext NetworkResult.Success(it.data) }
 
         try {
@@ -275,7 +274,7 @@ class AuthRepository @Inject constructor(
         }
     }
 
-    suspend fun uploadAndUpdateProfileImage(
+    override suspend fun uploadAndUpdateProfileImage(
         userId: String,
         imageUri: Uri
     ): NetworkResult<ProfileResponse> = withContext(Dispatchers.IO) {
@@ -301,7 +300,7 @@ class AuthRepository @Inject constructor(
         }
     }
 
-    suspend fun selectDefaultAvatar(avatarUrl: String): NetworkResult<ProfileResponse> = withContext(Dispatchers.IO) {
+    override suspend fun selectDefaultAvatar(avatarUrl: String): NetworkResult<ProfileResponse> = withContext(Dispatchers.IO) {
         try {
             val request = UpdateProfileImageRequest(profileImageUrl = avatarUrl)
             val response = authApi.updateProfileImage(request)
@@ -317,7 +316,7 @@ class AuthRepository @Inject constructor(
         }
     }
 
-    suspend fun getDefaultAvatars(): NetworkResult<List<String>> = withContext(Dispatchers.IO) {
+    override suspend fun getDefaultAvatars(): NetworkResult<List<String>> = withContext(Dispatchers.IO) {
         defaultAvatarsCache?.let { if (it.isValid(AVATARS_TTL_MS)) return@withContext NetworkResult.Success(it.data) }
 
         try {
@@ -334,7 +333,7 @@ class AuthRepository @Inject constructor(
         }
     }
 
-    suspend fun getLeaderboard(): NetworkResult<List<LeaderboardUserResponse>> = withContext(Dispatchers.IO) {
+    override suspend fun getLeaderboard(): NetworkResult<List<LeaderboardUserResponse>> = withContext(Dispatchers.IO) {
         leaderboardCache?.let { if (it.isValid(LEADERBOARD_TTL_MS)) return@withContext NetworkResult.Success(it.data) }
 
         try {

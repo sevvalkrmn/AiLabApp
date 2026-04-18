@@ -4,10 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ktun.ailabapp.data.model.User
 import com.ktun.ailabapp.data.model.UserProject
-import com.ktun.ailabapp.data.remote.api.ProjectApi
-import com.ktun.ailabapp.data.remote.dto.request.TransferOwnershipRequest
 import com.ktun.ailabapp.data.remote.dto.response.ProjectMember
-import com.ktun.ailabapp.data.repository.UserRepository
+import com.ktun.ailabapp.domain.usecase.project.GetProjectMembersUseCase
+import com.ktun.ailabapp.domain.usecase.project.GetUserProjectsUseCase
+import com.ktun.ailabapp.domain.usecase.project.TransferOwnershipUseCase
+import com.ktun.ailabapp.domain.usecase.user.GetUserByIdUseCase
 import com.ktun.ailabapp.util.Logger
 import com.ktun.ailabapp.util.NetworkResult
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -35,8 +36,10 @@ data class ManageRolesUiState(
 
 @HiltViewModel
 class ManageRolesViewModel @Inject constructor(
-    private val projectApi: ProjectApi,
-    private val userRepository: UserRepository
+    private val getUserByIdUseCase: GetUserByIdUseCase,
+    private val getUserProjectsUseCase: GetUserProjectsUseCase,
+    private val getProjectMembersUseCase: GetProjectMembersUseCase,
+    private val transferOwnershipUseCase: TransferOwnershipUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ManageRolesUiState())
@@ -46,52 +49,29 @@ class ManageRolesViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoadingUser = true) }
 
-            // Önce kullanıcı bilgisini al
-            when (val result = userRepository.getUserById(userId)) {
+            when (val result = getUserByIdUseCase(userId)) {
                 is NetworkResult.Success -> {
                     _uiState.update { it.copy(user = result.data) }
                 }
                 is NetworkResult.Error -> {
-                    _uiState.update {
-                        it.copy(isLoadingUser = false, errorMessage = result.message)
-                    }
+                    _uiState.update { it.copy(isLoadingUser = false, errorMessage = result.message) }
                     return@launch
                 }
                 is NetworkResult.Loading -> {}
             }
 
-            // Sonra projeleri doğrudan API'den çek ve captainNames listesinden kontrol et
-            try {
-                val userFullName = _uiState.value.user?.fullName
-                val response = projectApi.getUserProjects(userId)
-                if (response.isSuccessful && response.body() != null) {
-                    val allProjects = response.body()!!
-                    // API captainNames (isim listesi) dönüyor, captains (member listesi) değil
-                    val captainProjects = allProjects.filter { project ->
-                        project.captainNames.any { name ->
-                            name.equals(userFullName, ignoreCase = true)
-                        }
-                    }.map { UserProject(id = it.id, name = it.name, role = "Captain") }
-
-                    Logger.d("Kullanıcı projeleri: ${allProjects.size}, Kaptan olduğu: ${captainProjects.size}, fullName: $userFullName")
-
-                    _uiState.update {
-                        it.copy(
-                            captainProjects = captainProjects,
-                            isLoadingUser = false
-                        )
-                    }
-                } else {
-                    Logger.e("Projeler yüklenemedi: ${response.code()}")
-                    _uiState.update {
-                        it.copy(captainProjects = emptyList(), isLoadingUser = false)
-                    }
+            when (val result = getUserProjectsUseCase(userId)) {
+                is NetworkResult.Success -> {
+                    val userFullName = _uiState.value.user?.fullName
+                    val captainProjects = (result.data ?: emptyList()).filter { it.role == "Captain" }
+                    Logger.d("Kullanıcı projeleri: ${result.data?.size}, Kaptan olduğu: ${captainProjects.size}, fullName: $userFullName")
+                    _uiState.update { it.copy(captainProjects = captainProjects, isLoadingUser = false) }
                 }
-            } catch (e: Exception) {
-                Logger.e("Proje yükleme hatası: ${e.message}")
-                _uiState.update {
-                    it.copy(captainProjects = emptyList(), isLoadingUser = false)
+                is NetworkResult.Error -> {
+                    Logger.e("Projeler yüklenemedi: ${result.message}")
+                    _uiState.update { it.copy(captainProjects = emptyList(), isLoadingUser = false) }
                 }
+                is NetworkResult.Loading -> {}
             }
         }
     }
@@ -111,27 +91,16 @@ class ManageRolesViewModel @Inject constructor(
 
     private fun loadProjectMembers(projectId: String) {
         viewModelScope.launch {
-            try {
-                val response = projectApi.getProjectMembers(projectId)
-                if (response.isSuccessful && response.body() != null) {
+            when (val result = getProjectMembersUseCase(projectId)) {
+                is NetworkResult.Success -> {
                     val currentUserId = _uiState.value.user?.id
-                    // Kaptan hariç üyeleri göster (yeni kaptan olacak kişiler)
-                    val members = response.body()!!.filter { it.userId != currentUserId }
-                    _uiState.update {
-                        it.copy(projectMembers = members, isLoadingMembers = false)
-                    }
-                } else {
-                    _uiState.update {
-                        it.copy(
-                            isLoadingMembers = false,
-                            errorMessage = "Proje üyeleri yüklenemedi: ${response.code()}"
-                        )
-                    }
+                    val members = (result.data ?: emptyList()).filter { it.userId != currentUserId }
+                    _uiState.update { it.copy(projectMembers = members, isLoadingMembers = false) }
                 }
-            } catch (e: Exception) {
-                _uiState.update {
-                    it.copy(isLoadingMembers = false, errorMessage = "Hata: ${e.message}")
+                is NetworkResult.Error -> {
+                    _uiState.update { it.copy(isLoadingMembers = false, errorMessage = result.message) }
                 }
+                is NetworkResult.Loading -> {}
             }
         }
     }
@@ -156,31 +125,16 @@ class ManageRolesViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null, showConfirmDialog = false) }
 
-            try {
-                val request = TransferOwnershipRequest(
-                    currentCaptainId = currentCaptainId,
-                    newCaptainId = newCaptainId
-                )
-                val response = projectApi.transferOwnership(projectId, request)
-
-                if (response.isSuccessful) {
+            when (val result = transferOwnershipUseCase(projectId, currentCaptainId, newCaptainId)) {
+                is NetworkResult.Success -> {
                     Logger.d("Kaptan değişimi başarılı: $currentCaptainId → $newCaptainId")
                     _uiState.update { it.copy(isLoading = false, isSuccess = true) }
-                } else {
-                    val errorBody = response.errorBody()?.string()
-                    Logger.e("Kaptan değişimi başarısız: ${response.code()} - $errorBody")
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            errorMessage = "Kaptan değişimi başarısız: ${response.code()}"
-                        )
-                    }
                 }
-            } catch (e: Exception) {
-                Logger.e("Kaptan değişimi hatası: ${e.message}")
-                _uiState.update {
-                    it.copy(isLoading = false, errorMessage = "Hata: ${e.message}")
+                is NetworkResult.Error -> {
+                    Logger.e("Kaptan değişimi başarısız: ${result.message}")
+                    _uiState.update { it.copy(isLoading = false, errorMessage = result.message) }
                 }
+                is NetworkResult.Loading -> {}
             }
         }
     }

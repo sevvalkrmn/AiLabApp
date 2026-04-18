@@ -3,8 +3,8 @@ package com.ktun.ailabapp.presentation.ui.screens.projects
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ktun.ailabapp.data.remote.dto.response.MyProjectsResponse
-import com.ktun.ailabapp.data.repository.AuthRepository
-import com.ktun.ailabapp.data.repository.ProjectRepository
+import com.ktun.ailabapp.domain.repository.IAuthRepository
+import com.ktun.ailabapp.domain.repository.IProjectRepository
 import com.ktun.ailabapp.util.Logger
 import com.ktun.ailabapp.util.NetworkResult
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -31,8 +31,8 @@ enum class ProjectFilter {
 
 @HiltViewModel
 class ProjectsViewModel @Inject constructor(
-    private val projectRepository: ProjectRepository,
-    private val authRepository: AuthRepository
+    private val projectRepository: IProjectRepository,
+    private val authRepository: IAuthRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProjectsUiState())

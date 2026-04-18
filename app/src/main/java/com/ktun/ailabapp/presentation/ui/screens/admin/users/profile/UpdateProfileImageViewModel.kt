@@ -4,8 +4,8 @@ import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ktun.ailabapp.data.repository.AuthRepository
-import com.ktun.ailabapp.data.repository.UserRepository
+import com.ktun.ailabapp.domain.usecase.profile.GetDefaultAvatarsUseCase
+import com.ktun.ailabapp.domain.usecase.user.UpdateUserProfileImageUseCase
 import com.ktun.ailabapp.util.FirebaseStorageHelper
 import com.ktun.ailabapp.util.ImageCompressor
 import com.ktun.ailabapp.util.NetworkResult
@@ -19,7 +19,7 @@ import javax.inject.Inject
 
 data class UpdateProfileImageUiState(
     val imageUrl: String = "",
-    val availableAvatars: List<String> = emptyList(), // ✅ Boş liste ile başla
+    val availableAvatars: List<String> = emptyList(),
     val isLoadingAvatars: Boolean = false,
     val isLoading: Boolean = false,
     val isSuccess: Boolean = false,
@@ -29,8 +29,8 @@ data class UpdateProfileImageUiState(
 
 @HiltViewModel
 class UpdateProfileImageViewModel @Inject constructor(
-    private val userRepository: UserRepository,
-    private val authRepository: AuthRepository // ✅ Inject AuthRepository
+    private val updateUserProfileImageUseCase: UpdateUserProfileImageUseCase,
+    private val getDefaultAvatarsUseCase: GetDefaultAvatarsUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(UpdateProfileImageUiState())
@@ -43,25 +43,15 @@ class UpdateProfileImageViewModel @Inject constructor(
     private fun loadDefaultAvatars() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoadingAvatars = true) }
-            
-            when (val result = authRepository.getDefaultAvatars()) {
+
+            when (val result = getDefaultAvatarsUseCase()) {
                 is NetworkResult.Success -> {
                     result.data?.let { avatars ->
-                        _uiState.update { 
-                            it.copy(
-                                availableAvatars = avatars,
-                                isLoadingAvatars = false
-                            ) 
-                        }
+                        _uiState.update { it.copy(availableAvatars = avatars, isLoadingAvatars = false) }
                     }
                 }
                 is NetworkResult.Error -> {
-                    _uiState.update { 
-                        it.copy(
-                            isLoadingAvatars = false,
-                            errorMessage = "Varsayılan avatarlar yüklenemedi: ${result.message}"
-                        ) 
-                    }
+                    _uiState.update { it.copy(isLoadingAvatars = false, errorMessage = "Varsayılan avatarlar yüklenemedi: ${result.message}") }
                 }
                 is NetworkResult.Loading -> {}
             }
@@ -69,12 +59,7 @@ class UpdateProfileImageViewModel @Inject constructor(
     }
 
     fun onImageUrlChange(url: String) {
-        _uiState.update {
-            it.copy(
-                imageUrl = url,
-                inputError = null
-            )
-        }
+        _uiState.update { it.copy(imageUrl = url, inputError = null) }
     }
 
     fun uploadAndUpdateImage(context: Context, userId: String, imageUri: Uri) {
@@ -82,7 +67,6 @@ class UpdateProfileImageViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
             try {
-                // 1. Resmi sıkıştır
                 val compressResult = ImageCompressor.compressToWebP(context, imageUri)
                 if (compressResult.isFailure) {
                     _uiState.update { it.copy(isLoading = false, errorMessage = "Resim işlenemedi") }
@@ -90,24 +74,14 @@ class UpdateProfileImageViewModel @Inject constructor(
                 }
 
                 val optimizedUri = compressResult.getOrNull()!!
-
-                // 2. Firebase'e yükle
                 val uploadResult = FirebaseStorageHelper.uploadProfileImage(userId, optimizedUri)
                 if (uploadResult.isFailure) {
-                    _uiState.update { 
-                        it.copy(
-                            isLoading = false, 
-                            errorMessage = "Firebase yükleme hatası: ${uploadResult.exceptionOrNull()?.message}" 
-                        ) 
-                    }
+                    _uiState.update { it.copy(isLoading = false, errorMessage = "Firebase yükleme hatası: ${uploadResult.exceptionOrNull()?.message}") }
                     return@launch
                 }
 
                 val downloadUrl = uploadResult.getOrNull()!!
-
-                // 3. Backend'i güncelle
                 updateProfileImage(userId, downloadUrl)
-
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false, errorMessage = e.message) }
             }
@@ -125,22 +99,12 @@ class UpdateProfileImageViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
-            when (val result = userRepository.updateUserProfileImage(userId, finalUrl)) {
+            when (val result = updateUserProfileImageUseCase(userId, finalUrl)) {
                 is NetworkResult.Success -> {
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            isSuccess = true
-                        )
-                    }
+                    _uiState.update { it.copy(isLoading = false, isSuccess = true) }
                 }
                 is NetworkResult.Error -> {
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            errorMessage = result.message
-                        )
-                    }
+                    _uiState.update { it.copy(isLoading = false, errorMessage = result.message) }
                 }
                 is NetworkResult.Loading -> {}
             }

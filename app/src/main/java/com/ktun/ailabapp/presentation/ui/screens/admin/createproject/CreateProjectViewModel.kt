@@ -1,13 +1,11 @@
-// presentation/ui/screens/admin/createproject/CreateProjectViewModel.kt
-
 package com.ktun.ailabapp.presentation.ui.screens.admin.createproject
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ktun.ailabapp.data.model.User
 import com.ktun.ailabapp.data.remote.dto.request.CreateProjectRequest
-import com.ktun.ailabapp.data.repository.ProjectRepository
-import com.ktun.ailabapp.data.repository.UserRepository
+import com.ktun.ailabapp.domain.usecase.project.CreateProjectUseCase
+import com.ktun.ailabapp.domain.usecase.user.GetAllUsersUseCase
 import com.ktun.ailabapp.util.NetworkResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -16,8 +14,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CreateProjectViewModel @Inject constructor(
-    private val projectRepository: ProjectRepository,
-    private val userRepository: UserRepository
+    private val createProjectUseCase: CreateProjectUseCase,
+    private val getAllUsersUseCase: GetAllUsersUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(CreateProjectState())
@@ -29,26 +27,21 @@ class CreateProjectViewModel @Inject constructor(
 
     private fun loadUsers() {
         viewModelScope.launch {
-            when (val result = userRepository.getAllUsers()) {
+            when (val result = getAllUsersUseCase()) {
                 is NetworkResult.Success -> {
-                    _state.update { it.copy(availableUsers = result.data ?: emptyList()) }  // ✅
+                    _state.update { it.copy(availableUsers = result.data ?: emptyList()) }
                 }
                 is NetworkResult.Error -> {
                     _state.update { it.copy(error = "Kullanıcılar yüklenemedi: ${result.message}") }
                 }
-                is NetworkResult.Loading -> { /* Ignore */ }
+                is NetworkResult.Loading -> {}
             }
         }
     }
 
     fun onProjectNameChange(name: String) {
         if (name.length <= 200) {
-            _state.update {
-                it.copy(
-                    projectName = name,
-                    nameError = null
-                )
-            }
+            _state.update { it.copy(projectName = name, nameError = null) }
         }
     }
 
@@ -59,12 +52,7 @@ class CreateProjectViewModel @Inject constructor(
     }
 
     fun selectCaptain(user: User) {
-        _state.update {
-            it.copy(
-                selectedCaptain = user,
-                captainError = null
-            )
-        }
+        _state.update { it.copy(selectedCaptain = user, captainError = null) }
     }
 
     fun toggleDropdown() {
@@ -74,12 +62,10 @@ class CreateProjectViewModel @Inject constructor(
     fun createProject() {
         val currentState = _state.value
 
-        // Validation
         if (currentState.projectName.isBlank()) {
             _state.update { it.copy(nameError = "Proje adı zorunludur") }
             return
         }
-
         if (currentState.selectedCaptain == null) {
             _state.update { it.copy(captainError = "Kaptan seçimi zorunludur") }
             return
@@ -94,24 +80,14 @@ class CreateProjectViewModel @Inject constructor(
                 captainUserId = currentState.selectedCaptain.id
             )
 
-            when (val result = projectRepository.createProject(request)) {
+            when (val result = createProjectUseCase(request)) {
                 is NetworkResult.Success -> {
-                    _state.update {
-                        it.copy(
-                            isLoading = false,
-                            isSuccess = true
-                        )
-                    }
+                    _state.update { it.copy(isLoading = false, isSuccess = true) }
                 }
                 is NetworkResult.Error -> {
-                    _state.update {
-                        it.copy(
-                            isLoading = false,
-                            error = result.message
-                        )
-                    }
+                    _state.update { it.copy(isLoading = false, error = result.message) }
                 }
-                is NetworkResult.Loading -> { /* Ignore */ }
+                is NetworkResult.Loading -> {}
             }
         }
     }

@@ -1,8 +1,12 @@
 package com.ktun.ailabapp.data.repository
 
 import com.ktun.ailabapp.data.remote.api.TaskApi
+import com.ktun.ailabapp.data.remote.dto.request.CreateTaskRequest
 import com.ktun.ailabapp.data.remote.dto.request.UpdateTaskStatusRequest
+import com.ktun.ailabapp.data.remote.dto.response.TaskHistory
 import com.ktun.ailabapp.data.remote.dto.response.TaskResponse
+import com.ktun.ailabapp.data.remote.dto.response.toTaskHistory
+import com.ktun.ailabapp.domain.repository.ITaskRepository
 import com.ktun.ailabapp.util.CacheEntry
 import com.ktun.ailabapp.util.Logger
 import com.ktun.ailabapp.util.NetworkResult
@@ -12,12 +16,10 @@ import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
 
-import com.ktun.ailabapp.data.remote.dto.request.CreateTaskRequest
-
 @Singleton
 class TaskRepository @Inject constructor(
     private val taskApi: TaskApi
-) {
+) : ITaskRepository {
 
     private companion object {
         const val MY_TASKS_TTL_MS = 2 * 60 * 1000L
@@ -32,7 +34,7 @@ class TaskRepository @Inject constructor(
     /**
      * Projenin tüm görevlerini getir
      */
-    suspend fun getProjectTasks(projectId: String): NetworkResult<List<TaskResponse>> =
+    override suspend fun getProjectTasks(projectId: String): NetworkResult<List<TaskResponse>> =
         withContext(Dispatchers.IO) {
             try {
                 Logger.d( "Proje görevleri çekiliyor: $projectId")
@@ -72,7 +74,7 @@ class TaskRepository @Inject constructor(
     /**
      * Kullanıcının görevlerini getir
      */
-    suspend fun getMyTasks(status: Int? = null): NetworkResult<List<TaskResponse>> =
+    override suspend fun getMyTasks(status: Int?): NetworkResult<List<TaskResponse>> =
         withContext(Dispatchers.IO) {
             val cacheKey = status?.toString() ?: "all"
             myTasksCache[cacheKey]?.let { if (it.isValid(MY_TASKS_TTL_MS)) return@withContext NetworkResult.Success(it.data) }
@@ -106,7 +108,7 @@ class TaskRepository @Inject constructor(
             }
         }
 
-    suspend fun getTaskDetail(taskId: String): NetworkResult<TaskResponse> = withContext(Dispatchers.IO) {
+    override suspend fun getTaskDetail(taskId: String): NetworkResult<TaskResponse> = withContext(Dispatchers.IO) {
         try {
             val response = taskApi.getTaskDetail(taskId)
             if (response.isSuccessful && response.body() != null) {
@@ -119,7 +121,7 @@ class TaskRepository @Inject constructor(
         }
     }
 
-    suspend fun createTask(
+    override suspend fun createTask(
         title: String,
         description: String?,
         projectId: String,
@@ -149,7 +151,7 @@ class TaskRepository @Inject constructor(
         }
     }
 
-    suspend fun deleteTask(taskId: String): NetworkResult<Unit> = withContext(Dispatchers.IO) {
+    override suspend fun deleteTask(taskId: String): NetworkResult<Unit> = withContext(Dispatchers.IO) {
         try {
             val response = taskApi.deleteTask(taskId)
 
@@ -168,7 +170,7 @@ class TaskRepository @Inject constructor(
     /**
      * Görev durumunu güncelle
      */
-    suspend fun updateTaskStatus(
+    override suspend fun updateTaskStatus(
         taskId: String,
         status: String
     ): NetworkResult<TaskResponse> = withContext(Dispatchers.IO) {
@@ -214,4 +216,19 @@ class TaskRepository @Inject constructor(
             NetworkResult.Error(e.message ?: "Bilinmeyen hata")
         }
     }
+
+    override suspend fun getUserTaskHistory(userId: String): NetworkResult<List<TaskHistory>> =
+        withContext(Dispatchers.IO) {
+            try {
+                val response = taskApi.getUserTaskHistory(userId)
+                if (response.isSuccessful) {
+                    val tasks = response.body()?.map { it.toTaskHistory() } ?: emptyList()
+                    NetworkResult.Success(tasks)
+                } else {
+                    NetworkResult.Error("Görev geçmişi yüklenemedi: ${response.code()}")
+                }
+            } catch (e: Exception) {
+                NetworkResult.Error(e.message ?: "Bilinmeyen hata")
+            }
+        }
 }

@@ -3,7 +3,8 @@ package com.ktun.ailabapp.presentation.ui.screens.admin.pendingtasks
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ktun.ailabapp.data.remote.dto.response.PendingTaskResponse
-import com.ktun.ailabapp.data.repository.AdminScoreRepository
+import com.ktun.ailabapp.domain.usecase.admin.score.AssignScoreUseCase
+import com.ktun.ailabapp.domain.usecase.admin.score.GetPendingTasksUseCase
 import com.ktun.ailabapp.util.NetworkResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,7 +23,8 @@ data class PendingTasksUiState(
 
 @HiltViewModel
 class PendingTasksViewModel @Inject constructor(
-    private val adminScoreRepository: AdminScoreRepository
+    private val getPendingTasksUseCase: GetPendingTasksUseCase,
+    private val assignScoreUseCase: AssignScoreUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PendingTasksUiState())
@@ -36,22 +38,12 @@ class PendingTasksViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
-            when (val result = adminScoreRepository.getPendingTasks()) {
+            when (val result = getPendingTasksUseCase()) {
                 is NetworkResult.Success -> {
-                    _uiState.update {
-                        it.copy(
-                            tasks = result.data ?: emptyList(),
-                            isLoading = false
-                        )
-                    }
+                    _uiState.update { it.copy(tasks = result.data ?: emptyList(), isLoading = false) }
                 }
                 is NetworkResult.Error -> {
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            errorMessage = result.message
-                        )
-                    }
+                    _uiState.update { it.copy(isLoading = false, errorMessage = result.message) }
                 }
                 is NetworkResult.Loading -> {}
             }
@@ -62,23 +54,13 @@ class PendingTasksViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null, successMessage = null) }
 
-            when (val result = adminScoreRepository.assignScore(taskId, scoreCategory)) {
+            when (val result = assignScoreUseCase(taskId, scoreCategory)) {
                 is NetworkResult.Success -> {
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            successMessage = "Puan başarıyla atandı"
-                        )
-                    }
-                    loadPendingTasks() // Refresh list
+                    _uiState.update { it.copy(isLoading = false, successMessage = "Puan başarıyla atandı") }
+                    loadPendingTasks()
                 }
                 is NetworkResult.Error -> {
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            errorMessage = result.message
-                        )
-                    }
+                    _uiState.update { it.copy(isLoading = false, errorMessage = result.message) }
                 }
                 is NetworkResult.Loading -> {}
             }

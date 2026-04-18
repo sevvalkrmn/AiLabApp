@@ -8,18 +8,18 @@ import com.ktun.ailabapp.data.remote.dto.request.AddMemberRequest
 import com.ktun.ailabapp.data.remote.dto.response.ProjectDetailResponse
 import com.ktun.ailabapp.data.remote.dto.response.TaskResponse
 import com.ktun.ailabapp.data.remote.dto.response.TaskStatistics
-import com.ktun.ailabapp.data.repository.AnnouncementRepository
-import com.ktun.ailabapp.data.repository.AuthRepository
-import com.ktun.ailabapp.data.repository.ProjectRepository
-import com.ktun.ailabapp.data.repository.TaskRepository
-import com.ktun.ailabapp.data.repository.UserRepository
+import com.ktun.ailabapp.domain.repository.IAnnouncementRepository
+import com.ktun.ailabapp.domain.repository.IAuthRepository
+import com.ktun.ailabapp.domain.repository.IProjectRepository
+import com.ktun.ailabapp.domain.repository.ITaskRepository
+import com.ktun.ailabapp.domain.repository.IUserRepository
 import com.ktun.ailabapp.util.Logger
 import com.ktun.ailabapp.util.NetworkResult
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -29,12 +29,9 @@ data class ProjectDetailUiState(
     val tasks: List<TaskResponse> = emptyList(),
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
-
-    // ✅ YENİ - Admin ve Kaptan işlemleri
     val isAdmin: Boolean = false,
-    val isCaptain: Boolean = false, 
-    val canEdit: Boolean = false,   
-    
+    val isCaptain: Boolean = false,
+    val canEdit: Boolean = false,
     val showAddMemberDialog: Boolean = false,
     val showRemoveMemberDialog: Boolean = false,
     val showDeleteProjectDialog: Boolean = false,
@@ -43,19 +40,17 @@ data class ProjectDetailUiState(
     val availableUsers: List<User> = emptyList(),
     val announcementMessage: String? = null,
     val isAnnouncementSending: Boolean = false,
-
-    // ✅ YENİ - Seçili Görev Detayı
     val selectedTask: TaskResponse? = null,
     val isTaskDetailLoading: Boolean = false
 )
 
 @HiltViewModel
 class ProjectDetailViewModel @Inject constructor(
-    private val projectRepository: ProjectRepository,
-    private val taskRepository: TaskRepository,
-    private val userRepository: UserRepository,
-    private val announcementRepository: AnnouncementRepository,
-    private val authRepository: AuthRepository,
+    private val projectRepository: IProjectRepository,
+    private val taskRepository: ITaskRepository,
+    private val userRepository: IUserRepository,
+    private val announcementRepository: IAnnouncementRepository,
+    private val authRepository: IAuthRepository,
     private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
@@ -68,26 +63,20 @@ class ProjectDetailViewModel @Inject constructor(
 
             val currentUserId = preferencesManager.getUserId()
 
-            // Profil ve proje detayini paralel olarak cek
             val profileDeferred = async { authRepository.getProfile() }
             val projectDeferred = async { projectRepository.getProjectDetail(projectId) }
 
             val profileResult = profileDeferred.await()
             val projectResult = projectDeferred.await()
 
-            // Admin kontrolu — mevcut değeri koru, sadece başarılı yanıtta güncelle
             var isAdmin = _uiState.value.isAdmin
             when (profileResult) {
                 is NetworkResult.Success -> {
-                    isAdmin = profileResult.data?.roles?.any {
-                        it.equals("Admin", ignoreCase = true)
-                    } ?: false
+                    isAdmin = profileResult.data?.roles?.any { it.equals("Admin", ignoreCase = true) } ?: false
                 }
-                is NetworkResult.Error -> {}
-                is NetworkResult.Loading -> {}
+                else -> {}
             }
 
-            // Proje detayi
             when (projectResult) {
                 is NetworkResult.Success -> {
                     projectResult.data?.let { project ->
@@ -103,32 +92,25 @@ class ProjectDetailViewModel @Inject constructor(
                         )
 
                         loadProjectTasks(projectId)
-                    } ?: run {
-                        // Error handling
                     }
                 }
                 is NetworkResult.Error -> {
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        errorMessage = projectResult.message
-                    )
+                    _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = projectResult.message)
                 }
-                is NetworkResult.Loading -> {}
+                else -> {}
             }
         }
     }
 
     private fun loadProjectTasks(projectId: String) {
         viewModelScope.launch {
-            when (val result = taskRepository.getMyTasks(status = null)) {
+            when (val result = taskRepository.getMyTasks(null)) {
                 is NetworkResult.Success -> {
                     result.data?.let { allMyTasks ->
                         val currentProjectName = _uiState.value.project?.name
 
                         val projectTasks = if (currentProjectName != null) {
-                            allMyTasks.filter { task ->
-                                task.projectName == currentProjectName
-                            }
+                            allMyTasks.filter { task -> task.projectName == currentProjectName }
                         } else {
                             emptyList()
                         }
@@ -138,51 +120,31 @@ class ProjectDetailViewModel @Inject constructor(
                         val inProgress = projectTasks.count { it.status == "InProgress" }
                         val done = projectTasks.count { it.status == "Done" }
 
-                        val calculatedStats = TaskStatistics(
-                            total = total,
-                            todo = todo,
-                            inProgress = inProgress,
-                            done = done
-                        )
+                        val calculatedStats = TaskStatistics(total = total, todo = todo, inProgress = inProgress, done = done)
 
                         _uiState.value.project?.let { project ->
                             val updatedProject = project.copy(taskStatistics = calculatedStats)
-                            _uiState.value = _uiState.value.copy(
-                                project = updatedProject,
-                                tasks = projectTasks
-                            )
+                            _uiState.value = _uiState.value.copy(project = updatedProject, tasks = projectTasks)
                         }
                     }
                 }
-                is NetworkResult.Error -> {}
-                is NetworkResult.Loading -> {}
+                else -> {}
             }
         }
     }
 
-    // ✅ YENİ: Görev Detayını Çek
     fun loadTaskDetail(taskId: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isTaskDetailLoading = true) }
 
             when (val result = taskRepository.getTaskDetail(taskId)) {
                 is NetworkResult.Success -> {
-                    _uiState.update { 
-                        it.copy(
-                            isTaskDetailLoading = false,
-                            selectedTask = result.data
-                        ) 
-                    }
+                    _uiState.update { it.copy(isTaskDetailLoading = false, selectedTask = result.data) }
                 }
                 is NetworkResult.Error -> {
-                    _uiState.update { 
-                        it.copy(
-                            isTaskDetailLoading = false,
-                            errorMessage = "Görev detayı alınamadı: ${result.message}"
-                        ) 
-                    }
+                    _uiState.update { it.copy(isTaskDetailLoading = false, errorMessage = "Görev detayı alınamadı: ${result.message}") }
                 }
-                is NetworkResult.Loading -> {}
+                else -> {}
             }
         }
     }
@@ -201,11 +163,9 @@ class ProjectDetailViewModel @Inject constructor(
                     }
                 }
                 is NetworkResult.Error -> {
-                    _uiState.value = _uiState.value.copy(
-                        errorMessage = result.message
-                    )
+                    _uiState.value = _uiState.value.copy(errorMessage = result.message)
                 }
-                is NetworkResult.Loading -> {}
+                else -> {}
             }
         }
     }
@@ -226,29 +186,12 @@ class ProjectDetailViewModel @Inject constructor(
         _uiState.update { it.copy(showAddMemberDialog = false) }
     }
 
-    fun showRemoveMemberDialog() {
-        _uiState.update { it.copy(showRemoveMemberDialog = true) }
-    }
-
-    fun hideRemoveMemberDialog() {
-        _uiState.update { it.copy(showRemoveMemberDialog = false) }
-    }
-
-    fun showDeleteProjectDialog() {
-        _uiState.update { it.copy(showDeleteProjectDialog = true) }
-    }
-
-    fun hideDeleteProjectDialog() {
-        _uiState.update { it.copy(showDeleteProjectDialog = false) }
-    }
-
-    fun showCreateTaskDialog() {
-        _uiState.update { it.copy(showCreateTaskDialog = true) }
-    }
-
-    fun hideCreateTaskDialog() {
-        _uiState.update { it.copy(showCreateTaskDialog = false) }
-    }
+    fun showRemoveMemberDialog() { _uiState.update { it.copy(showRemoveMemberDialog = true) } }
+    fun hideRemoveMemberDialog() { _uiState.update { it.copy(showRemoveMemberDialog = false) } }
+    fun showDeleteProjectDialog() { _uiState.update { it.copy(showDeleteProjectDialog = true) } }
+    fun hideDeleteProjectDialog() { _uiState.update { it.copy(showDeleteProjectDialog = false) } }
+    fun showCreateTaskDialog() { _uiState.update { it.copy(showCreateTaskDialog = true) } }
+    fun hideCreateTaskDialog() { _uiState.update { it.copy(showCreateTaskDialog = false) } }
 
     fun createTask(title: String, description: String?, assigneeId: String?, dueDate: String?) {
         viewModelScope.launch {
@@ -264,21 +207,21 @@ class ProjectDetailViewModel @Inject constructor(
                 is NetworkResult.Error -> {
                     _uiState.update { it.copy(errorMessage = result.message) }
                 }
-                is NetworkResult.Loading -> {}
+                else -> {}
             }
         }
     }
 
     private fun loadAvailableUsers() {
         viewModelScope.launch {
-            when (val result = userRepository.getAllUsers()) {
+            when (val result = userRepository.getAllUsers(1, 50)) {
                 is NetworkResult.Success -> {
                     _uiState.update { it.copy(availableUsers = result.data ?: emptyList()) }
                 }
                 is NetworkResult.Error -> {
                     Logger.e("Failed to load users: ${result.message}", tag = "ProjectDetailVM")
                 }
-                is NetworkResult.Loading -> {}
+                else -> {}
             }
         }
     }
@@ -297,7 +240,7 @@ class ProjectDetailViewModel @Inject constructor(
                 is NetworkResult.Error -> {
                     _uiState.update { it.copy(errorMessage = result.message) }
                 }
-                is NetworkResult.Loading -> {}
+                else -> {}
             }
         }
     }
@@ -315,14 +258,12 @@ class ProjectDetailViewModel @Inject constructor(
                 is NetworkResult.Error -> {
                     _uiState.update { it.copy(errorMessage = result.message) }
                 }
-                is NetworkResult.Loading -> {}
+                else -> {}
             }
         }
     }
 
-    fun showSendAnnouncementDialog() {
-        _uiState.update { it.copy(showSendAnnouncementDialog = true) }
-    }
+    fun showSendAnnouncementDialog() { _uiState.update { it.copy(showSendAnnouncementDialog = true) } }
 
     fun hideSendAnnouncementDialog() {
         _uiState.update { it.copy(showSendAnnouncementDialog = false, announcementMessage = null) }
@@ -336,12 +277,7 @@ class ProjectDetailViewModel @Inject constructor(
         val projectId = _uiState.value.project?.id ?: return
         viewModelScope.launch {
             _uiState.update { it.copy(isAnnouncementSending = true) }
-            val result = announcementRepository.createAnnouncement(
-                title = title,
-                content = content,
-                scope = 1,
-                projectId = projectId
-            )
+            val result = announcementRepository.createAnnouncement(title, content, 1, null, projectId)
             _uiState.update {
                 it.copy(
                     isAnnouncementSending = false,
@@ -355,12 +291,7 @@ class ProjectDetailViewModel @Inject constructor(
     fun sendPersonalAnnouncement(title: String, content: String, targetUserId: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isAnnouncementSending = true) }
-            val result = announcementRepository.createAnnouncement(
-                title = title,
-                content = content,
-                scope = 2,
-                userId = targetUserId
-            )
+            val result = announcementRepository.createAnnouncement(title, content, 2, targetUserId, null)
             _uiState.update {
                 it.copy(
                     isAnnouncementSending = false,
@@ -376,13 +307,12 @@ class ProjectDetailViewModel @Inject constructor(
             val projectId = _uiState.value.project?.id ?: return@launch
 
             val hasIncompleteTasks = _uiState.value.tasks.any { it.status != "Done" }
-            
             if (hasIncompleteTasks) {
-                _uiState.update { 
+                _uiState.update {
                     it.copy(
                         showDeleteProjectDialog = false,
                         errorMessage = "Projeyi silemezsiniz: Tamamlanmamış (Aktif) görevler var. Önce görevleri tamamlayın veya iptal edin."
-                    ) 
+                    )
                 }
                 return@launch
             }
@@ -395,7 +325,7 @@ class ProjectDetailViewModel @Inject constructor(
                 is NetworkResult.Error -> {
                     _uiState.update { it.copy(errorMessage = result.message) }
                 }
-                is NetworkResult.Loading -> {}
+                else -> {}
             }
         }
     }
