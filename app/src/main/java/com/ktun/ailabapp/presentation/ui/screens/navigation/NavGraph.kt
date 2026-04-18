@@ -21,7 +21,7 @@ import com.ktun.ailabapp.presentation.ui.screens.profile.ProfileViewModel
 import com.ktun.ailabapp.presentation.ui.screens.projects.ProjectDetailScreen
 import com.ktun.ailabapp.presentation.ui.screens.projects.ProjectsScreen
 import com.ktun.ailabapp.presentation.ui.screens.projects.ProjectsViewModel
-import com.ktun.ailabapp.screens.RegisterScreen
+import com.ktun.ailabapp.presentation.ui.screens.register.RegisterScreen
 import com.ktun.ailabapp.presentation.ui.screens.admin.users.UsersListScreen
 import com.ktun.ailabapp.presentation.ui.screens.admin.users.personalAnnouncement.SendAnnouncementScreen
 import com.ktun.ailabapp.presentation.ui.screens.admin.users.roles.ManageRolesScreen

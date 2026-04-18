@@ -62,33 +62,10 @@ object RepositoryModule {
 
     @Provides
     @Singleton
-    fun provideLabStatsRepository(
-        roomsApi: RoomsApi
-    ): LabStatsRepository {
-        return LabStatsRepositoryImpl(roomsApi)
-    }
-
-    @Provides
-    @Singleton
     fun provideAdminScoreRepository(
         adminScoreApi: AdminScoreApi
     ): AdminScoreRepository {
         return AdminScoreRepository(adminScoreApi)
     }
 
-    @Provides
-    @Singleton
-    fun provideBugReportRepository(
-        bugReportApi: BugReportApi
-    ): BugReportRepository {
-        return BugReportRepository(bugReportApi)
-    }
-
-    @Provides
-    @Singleton
-    fun provideElectricityRepository(
-        electricityApi: ElectricityApi
-    ): ElectricityRepository {
-        return ElectricityRepository(electricityApi)
-    }
 }

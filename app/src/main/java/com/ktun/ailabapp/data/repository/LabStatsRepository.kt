@@ -7,26 +7,15 @@ import com.ktun.ailabapp.data.remote.dto.response.GlobalLabStatsResponse
 import com.ktun.ailabapp.data.remote.dto.response.PersonalLabStatsResponse
 import com.ktun.ailabapp.data.remote.dto.response.RoomResponse
 import com.ktun.ailabapp.data.remote.dto.response.TeammatesStatsResponse
+import com.ktun.ailabapp.domain.repository.ILabStatsRepository
 import com.ktun.ailabapp.util.NetworkResult
 import javax.inject.Inject
+import javax.inject.Singleton
 
-interface LabStatsRepository {
-    suspend fun getGlobalLabStats(): NetworkResult<GlobalLabStatsResponse>
-    suspend fun getTeammatesStats(): NetworkResult<TeammatesStatsResponse>
-    suspend fun getPersonalLabStats(): NetworkResult<PersonalLabStatsResponse>
-    
-    // Oda Erişimi
-    suspend fun getRooms(): NetworkResult<List<RoomResponse>>
-    suspend fun getAccessMode(roomId: String): NetworkResult<Int>
-    suspend fun updateAccessMode(roomId: String, mode: Int): NetworkResult<Unit>
-    
-    // Zorla Çıkış
-    suspend fun forceCheckout(userId: String? = null, roomId: String? = null): NetworkResult<Unit>
-}
-
+@Singleton
 class LabStatsRepositoryImpl @Inject constructor(
     private val roomsApi: RoomsApi
-) : LabStatsRepository {
+) : ILabStatsRepository {
 
     override suspend fun getGlobalLabStats(): NetworkResult<GlobalLabStatsResponse> {
         return try {
@@ -34,10 +23,10 @@ class LabStatsRepositoryImpl @Inject constructor(
             if (response.isSuccessful && response.body() != null) {
                 NetworkResult.Success(response.body()!!)
             } else {
-                NetworkResult.Error(message = response.message() ?: "Bilinmeyen hata")
+                NetworkResult.Error(response.message() ?: "Bilinmeyen hata")
             }
         } catch (e: Exception) {
-            NetworkResult.Error(message = e.localizedMessage ?: "Bağlantı hatası")
+            NetworkResult.Error(e.localizedMessage ?: "Bağlantı hatası")
         }
     }
 
@@ -47,10 +36,10 @@ class LabStatsRepositoryImpl @Inject constructor(
             if (response.isSuccessful && response.body() != null) {
                 NetworkResult.Success(response.body()!!)
             } else {
-                NetworkResult.Error(message = response.message() ?: "Bilinmeyen hata")
+                NetworkResult.Error(response.message() ?: "Bilinmeyen hata")
             }
         } catch (e: Exception) {
-            NetworkResult.Error(message = e.localizedMessage ?: "Bağlantı hatası")
+            NetworkResult.Error(e.localizedMessage ?: "Bağlantı hatası")
         }
     }
 
@@ -60,10 +49,10 @@ class LabStatsRepositoryImpl @Inject constructor(
             if (response.isSuccessful && response.body() != null) {
                 NetworkResult.Success(response.body()!!)
             } else {
-                NetworkResult.Error(message = response.message() ?: "Bilinmeyen hata")
+                NetworkResult.Error(response.message() ?: "Bilinmeyen hata")
             }
         } catch (e: Exception) {
-            NetworkResult.Error(message = e.localizedMessage ?: "Bağlantı hatası")
+            NetworkResult.Error(e.localizedMessage ?: "Bağlantı hatası")
         }
     }
 

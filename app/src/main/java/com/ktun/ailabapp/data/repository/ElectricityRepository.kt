@@ -3,15 +3,18 @@ package com.ktun.ailabapp.data.repository
 import com.ktun.ailabapp.data.remote.api.ElectricityApi
 import com.ktun.ailabapp.data.remote.dto.request.ElectricityControlRequest
 import com.ktun.ailabapp.data.remote.dto.response.ElectricityControlResponse
+import com.ktun.ailabapp.domain.repository.IElectricityRepository
 import com.ktun.ailabapp.util.NetworkResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class ElectricityRepository @Inject constructor(
     private val electricityApi: ElectricityApi
-) {
-    suspend fun controlDevice(deviceId: String, turnOn: Boolean): NetworkResult<ElectricityControlResponse> =
+) : IElectricityRepository {
+    override suspend fun controlDevice(deviceId: String, turnOn: Boolean): NetworkResult<ElectricityControlResponse> =
         withContext(Dispatchers.IO) {
             try {
                 val request = ElectricityControlRequest(deviceId = deviceId, turnOn = turnOn)

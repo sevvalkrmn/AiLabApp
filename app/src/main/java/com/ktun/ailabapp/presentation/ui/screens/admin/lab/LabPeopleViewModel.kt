@@ -2,7 +2,7 @@ package com.ktun.ailabapp.presentation.ui.screens.admin.lab
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ktun.ailabapp.data.repository.LabStatsRepository
+import com.ktun.ailabapp.domain.repository.ILabStatsRepository
 import com.ktun.ailabapp.util.NetworkResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,7 +30,7 @@ data class LabPerson(
 
 @HiltViewModel
 class LabPeopleViewModel @Inject constructor(
-    private val labStatsRepository: LabStatsRepository,
+    private val labStatsRepository: ILabStatsRepository,
     private val userRepository: IUserRepository
 ) : ViewModel() {
 

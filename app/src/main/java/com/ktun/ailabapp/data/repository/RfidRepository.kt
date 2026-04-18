@@ -2,6 +2,7 @@ package com.ktun.ailabapp.data.repository
 
 import com.ktun.ailabapp.data.remote.api.RfidApi
 import com.ktun.ailabapp.data.remote.dto.request.RfidRegisterRequest
+import com.ktun.ailabapp.domain.repository.IRfidRepository
 import com.ktun.ailabapp.util.FirebaseAuthManager
 import com.ktun.ailabapp.util.Logger
 import com.ktun.ailabapp.util.NetworkResult
@@ -14,8 +15,8 @@ import javax.inject.Singleton
 class RfidRepository @Inject constructor(
     private val rfidApi: RfidApi,
     private val authManager: FirebaseAuthManager
-) {
-    suspend fun startRegistration(userId: String): NetworkResult<Any> = withContext(Dispatchers.IO) {
+) : IRfidRepository {
+    override suspend fun startRegistration(userId: String): NetworkResult<Any> = withContext(Dispatchers.IO) {
         if (userId.isBlank()) {
             return@withContext NetworkResult.Error("Kullanıcı ID boş, RFID kayıt başlatılamaz")
         }
@@ -40,7 +41,7 @@ class RfidRepository @Inject constructor(
         }
     }
 
-    suspend fun checkStatus(): NetworkResult<String> = withContext(Dispatchers.IO) {
+    override suspend fun checkStatus(): NetworkResult<String> = withContext(Dispatchers.IO) {
         try {
             val response = rfidApi.getStatus()
             if (response.isSuccessful) {

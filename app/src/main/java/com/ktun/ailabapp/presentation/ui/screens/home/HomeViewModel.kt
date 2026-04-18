@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ktun.ailabapp.data.remote.dto.response.ProfileResponse
 import com.ktun.ailabapp.data.remote.dto.response.TaskResponse
-import com.ktun.ailabapp.data.repository.LabStatsRepository
+import com.ktun.ailabapp.domain.repository.ILabStatsRepository
 import com.ktun.ailabapp.domain.repository.IAuthRepository
 import com.ktun.ailabapp.domain.repository.ITaskRepository
 import com.ktun.ailabapp.util.Logger
@@ -50,7 +50,7 @@ data class TopUserItem(
 class HomeViewModel @Inject constructor(
     private val authRepository: IAuthRepository,
     private val taskRepository: ITaskRepository,
-    private val labStatsRepository: LabStatsRepository
+    private val labStatsRepository: ILabStatsRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())

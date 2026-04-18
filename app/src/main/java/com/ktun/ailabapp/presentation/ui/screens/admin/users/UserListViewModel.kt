@@ -3,7 +3,7 @@ package com.ktun.ailabapp.presentation.ui.screens.admin.users
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ktun.ailabapp.data.model.User
-import com.ktun.ailabapp.data.repository.RfidRepository
+import com.ktun.ailabapp.domain.repository.IRfidRepository
 import com.ktun.ailabapp.domain.usecase.user.DeleteUserUseCase
 import com.ktun.ailabapp.domain.usecase.user.GetAllUsersUseCase
 import com.ktun.ailabapp.domain.usecase.user.GetUserByIdUseCase
@@ -47,7 +47,7 @@ class UsersListViewModel @Inject constructor(
     private val getAllUsersUseCase: GetAllUsersUseCase,
     private val getUserByIdUseCase: GetUserByIdUseCase,
     private val deleteUserUseCase: DeleteUserUseCase,
-    private val rfidRepository: RfidRepository
+    private val rfidRepository: IRfidRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(UsersListUiState())

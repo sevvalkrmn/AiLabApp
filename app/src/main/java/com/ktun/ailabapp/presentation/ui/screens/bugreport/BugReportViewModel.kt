@@ -2,7 +2,7 @@ package com.ktun.ailabapp.presentation.ui.screens.bugreport
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ktun.ailabapp.data.repository.BugReportRepository
+import com.ktun.ailabapp.domain.repository.IBugReportRepository
 import com.ktun.ailabapp.util.NetworkResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,7 +20,7 @@ data class BugReportUiState(
 
 @HiltViewModel
 class BugReportViewModel @Inject constructor(
-    private val bugReportRepository: BugReportRepository
+    private val bugReportRepository: IBugReportRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(BugReportUiState())

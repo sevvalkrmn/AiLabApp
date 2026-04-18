@@ -1,4 +1,4 @@
-package com.ktun.ailabapp.screens
+package com.ktun.ailabapp.presentation.ui.screens.register
 
 import android.widget.Toast
 import androidx.activity.compose.BackHandler

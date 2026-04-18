@@ -3,13 +3,21 @@ package com.ktun.ailabapp.di
 import com.ktun.ailabapp.data.repository.AdminScoreRepository
 import com.ktun.ailabapp.data.repository.AnnouncementRepository
 import com.ktun.ailabapp.data.repository.AuthRepository
+import com.ktun.ailabapp.data.repository.BugReportRepository
+import com.ktun.ailabapp.data.repository.ElectricityRepository
+import com.ktun.ailabapp.data.repository.LabStatsRepositoryImpl
 import com.ktun.ailabapp.data.repository.ProjectRepository
+import com.ktun.ailabapp.data.repository.RfidRepository
 import com.ktun.ailabapp.data.repository.TaskRepository
 import com.ktun.ailabapp.data.repository.UserRepository
 import com.ktun.ailabapp.domain.repository.IAdminScoreRepository
 import com.ktun.ailabapp.domain.repository.IAnnouncementRepository
 import com.ktun.ailabapp.domain.repository.IAuthRepository
+import com.ktun.ailabapp.domain.repository.IBugReportRepository
+import com.ktun.ailabapp.domain.repository.IElectricityRepository
+import com.ktun.ailabapp.domain.repository.ILabStatsRepository
 import com.ktun.ailabapp.domain.repository.IProjectRepository
+import com.ktun.ailabapp.domain.repository.IRfidRepository
 import com.ktun.ailabapp.domain.repository.ITaskRepository
 import com.ktun.ailabapp.domain.repository.IUserRepository
 import dagger.Binds
@@ -22,27 +30,33 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 abstract class DomainModule {
 
-    @Binds
-    @Singleton
+    @Binds @Singleton
     abstract fun bindAuthRepository(impl: AuthRepository): IAuthRepository
 
-    @Binds
-    @Singleton
+    @Binds @Singleton
     abstract fun bindTaskRepository(impl: TaskRepository): ITaskRepository
 
-    @Binds
-    @Singleton
+    @Binds @Singleton
     abstract fun bindUserRepository(impl: UserRepository): IUserRepository
 
-    @Binds
-    @Singleton
+    @Binds @Singleton
     abstract fun bindProjectRepository(impl: ProjectRepository): IProjectRepository
 
-    @Binds
-    @Singleton
+    @Binds @Singleton
     abstract fun bindAnnouncementRepository(impl: AnnouncementRepository): IAnnouncementRepository
 
-    @Binds
-    @Singleton
+    @Binds @Singleton
     abstract fun bindAdminScoreRepository(impl: AdminScoreRepository): IAdminScoreRepository
+
+    @Binds @Singleton
+    abstract fun bindLabStatsRepository(impl: LabStatsRepositoryImpl): ILabStatsRepository
+
+    @Binds @Singleton
+    abstract fun bindElectricityRepository(impl: ElectricityRepository): IElectricityRepository
+
+    @Binds @Singleton
+    abstract fun bindRfidRepository(impl: RfidRepository): IRfidRepository
+
+    @Binds @Singleton
+    abstract fun bindBugReportRepository(impl: BugReportRepository): IBugReportRepository
 }

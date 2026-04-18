@@ -2,8 +2,8 @@ package com.ktun.ailabapp.presentation.ui.screens.admin
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ktun.ailabapp.data.repository.ElectricityRepository
-import com.ktun.ailabapp.data.repository.LabStatsRepository
+import com.ktun.ailabapp.domain.repository.IElectricityRepository
+import com.ktun.ailabapp.domain.repository.ILabStatsRepository
 import com.ktun.ailabapp.util.NetworkResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,8 +25,8 @@ data class AdminPanelUiState(
 
 @HiltViewModel
 class AdminPanelViewModel @Inject constructor(
-    private val labStatsRepository: LabStatsRepository,
-    private val electricityRepository: ElectricityRepository
+    private val labStatsRepository: ILabStatsRepository,
+    private val electricityRepository: IElectricityRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AdminPanelUiState())

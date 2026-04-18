@@ -2,6 +2,7 @@ package com.ktun.ailabapp.data.repository
 
 import com.ktun.ailabapp.data.remote.api.BugReportApi
 import com.ktun.ailabapp.data.remote.dto.request.CreateBugReportRequest
+import com.ktun.ailabapp.domain.repository.IBugReportRepository
 import com.ktun.ailabapp.util.NetworkResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -11,9 +12,9 @@ import javax.inject.Singleton
 @Singleton
 class BugReportRepository @Inject constructor(
     private val bugReportApi: BugReportApi
-) {
+) : IBugReportRepository {
 
-    suspend fun createBugReport(
+    override suspend fun createBugReport(
         bugType: Int,
         pageInfo: String,
         description: String
