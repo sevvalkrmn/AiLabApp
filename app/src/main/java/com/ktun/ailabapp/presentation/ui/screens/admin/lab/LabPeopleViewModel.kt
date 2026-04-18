@@ -14,10 +14,9 @@ import javax.inject.Inject
 
 import com.ktun.ailabapp.domain.repository.IUserRepository
 import com.ktun.ailabapp.data.model.User
-import com.ktun.ailabapp.util.Logger
 
 data class LabPeopleUiState(
-    val peopleInside: List<LabPerson> = emptyList(), // ✅ String -> LabPerson
+    val peopleInside: List<LabPerson> = emptyList(),
     val currentOccupancy: Int = 0,
     val totalCapacity: Int = 0,
     val isLoading: Boolean = false,
@@ -26,7 +25,7 @@ data class LabPeopleUiState(
 
 data class LabPerson(
     val name: String,
-    val id: String? = null // ID bulunamayabilir
+    val id: String? = null
 )
 
 @HiltViewModel
@@ -39,6 +38,7 @@ class LabPeopleViewModel @Inject constructor(
     val uiState: StateFlow<LabPeopleUiState> = _uiState.asStateFlow()
 
     private var allUsers: List<User> = emptyList()
+    private var roomId: String? = null
 
     init {
         loadData()
@@ -47,41 +47,31 @@ class LabPeopleViewModel @Inject constructor(
     fun loadData() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            
-            // 1. Önce tüm kullanıcıları çek (ID eşleşmesi için)
+
             when (val userResult = userRepository.getAllUsers(1, 1000)) {
-                is NetworkResult.Success -> {
-                    allUsers = userResult.data ?: emptyList()
-                }
-                is NetworkResult.Error -> {
-                    // Kullanıcılar çekilemezse sadece isimlerle devam et
-                }
+                is NetworkResult.Success -> allUsers = userResult.data ?: emptyList()
+                is NetworkResult.Error -> {}
                 is NetworkResult.Loading -> {}
             }
 
-            // 2. Lab istatistiklerini çek
             loadLabPeople()
         }
     }
 
     fun loadLabPeople() {
         viewModelScope.launch {
-            // _uiState.update { it.copy(isLoading = true) } // Zaten loadData yapıyor
-
             when (val result = labStatsRepository.getGlobalLabStats()) {
                 is NetworkResult.Success -> {
                     result.data?.let { stats ->
-                        Logger.d("peopleInside: ${stats.peopleInside}", tag = "LabPeopleVM")
-                        Logger.d("allUsers names: ${allUsers.map { it.fullName }}", tag = "LabPeopleVM")
+                        if (stats.roomId != null) roomId = stats.roomId
+
                         val mappedPeople = stats.peopleInside.map { name ->
                             val normalizedName = name.trim().lowercase()
-                            val user = allUsers.find { user ->
-                                val full = user.fullName.trim().lowercase()
-                                full == normalizedName ||
-                                full.startsWith(normalizedName) ||
-                                normalizedName.startsWith(full)
-                            }
-                            Logger.d("'$name' -> userId=${user?.id}", tag = "LabPeopleVM")
+                            val user = allUsers.find { it.fullName.trim().lowercase() == normalizedName }
+                                ?: allUsers.filter { user ->
+                                    val full = user.fullName.trim().lowercase()
+                                    full.startsWith("$normalizedName ") || normalizedName.startsWith("$full ")
+                                }.minByOrNull { it.fullName.length }
                             LabPerson(name = name, id = user?.id)
                         }
 
@@ -96,12 +86,7 @@ class LabPeopleViewModel @Inject constructor(
                     }
                 }
                 is NetworkResult.Error -> {
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            errorMessage = result.message
-                        )
-                    }
+                    _uiState.update { it.copy(isLoading = false, errorMessage = result.message) }
                 }
                 is NetworkResult.Loading -> {}
             }
@@ -113,24 +98,15 @@ class LabPeopleViewModel @Inject constructor(
 
     fun markAnimated() { hasAnimated = true }
 
-    // ✅ YENİ: Zorla Çıkış
     fun forceCheckout(userId: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
 
-            Logger.d("forceCheckout başlatıldı: userId=$userId", tag = "LabPeopleVM")
-            when (val result = labStatsRepository.forceCheckout(userId = userId)) {
-                is NetworkResult.Success -> {
-                    Logger.d("forceCheckout başarılı, liste yenileniyor", tag = "LabPeopleVM")
-                    loadLabPeople()
-                }
+            when (val result = labStatsRepository.forceCheckout(userId = userId, roomId = roomId)) {
+                is NetworkResult.Success -> loadLabPeople()
                 is NetworkResult.Error -> {
-                    Logger.e("forceCheckout HATA: ${result.message}", tag = "LabPeopleVM")
                     _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            errorMessage = result.message
-                        )
+                        it.copy(isLoading = false, errorMessage = result.message)
                     }
                 }
                 is NetworkResult.Loading -> {}

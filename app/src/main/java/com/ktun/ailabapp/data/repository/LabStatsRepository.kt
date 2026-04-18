@@ -111,14 +111,12 @@ class LabStatsRepositoryImpl @Inject constructor(
         return try {
             val request = ForceCheckoutRequest(userId = userId, roomId = roomId)
             val response = roomsApi.forceCheckout(request)
-            android.util.Log.d("LabStatsRepo", "forceCheckout response: code=${response.code()} body=${response.body()} error=${response.errorBody()?.string()}")
             if (response.isSuccessful) {
                 NetworkResult.Success(Unit)
             } else {
                 NetworkResult.Error("Çıkış işlemi başarısız: ${response.code()}")
             }
         } catch (e: Exception) {
-            android.util.Log.e("LabStatsRepo", "forceCheckout exception: ${e.message}")
             NetworkResult.Error("Hata: ${e.message}")
         }
     }
