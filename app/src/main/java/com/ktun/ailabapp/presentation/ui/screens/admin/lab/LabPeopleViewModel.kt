@@ -13,7 +13,8 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 import com.ktun.ailabapp.domain.repository.IUserRepository
-import com.ktun.ailabapp.data.model.User // ✅ Import
+import com.ktun.ailabapp.data.model.User
+import com.ktun.ailabapp.util.Logger
 
 data class LabPeopleUiState(
     val peopleInside: List<LabPerson> = emptyList(), // ✅ String -> LabPerson
@@ -70,8 +71,17 @@ class LabPeopleViewModel @Inject constructor(
             when (val result = labStatsRepository.getGlobalLabStats()) {
                 is NetworkResult.Success -> {
                     result.data?.let { stats ->
+                        Logger.d("peopleInside: ${stats.peopleInside}", tag = "LabPeopleVM")
+                        Logger.d("allUsers names: ${allUsers.map { it.fullName }}", tag = "LabPeopleVM")
                         val mappedPeople = stats.peopleInside.map { name ->
-                            val user = allUsers.find { it.fullName.equals(name, ignoreCase = true) }
+                            val normalizedName = name.trim().lowercase()
+                            val user = allUsers.find { user ->
+                                val full = user.fullName.trim().lowercase()
+                                full == normalizedName ||
+                                full.startsWith(normalizedName) ||
+                                normalizedName.startsWith(full)
+                            }
+                            Logger.d("'$name' -> userId=${user?.id}", tag = "LabPeopleVM")
                             LabPerson(name = name, id = user?.id)
                         }
 
@@ -108,16 +118,19 @@ class LabPeopleViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
 
+            Logger.d("forceCheckout başlatıldı: userId=$userId", tag = "LabPeopleVM")
             when (val result = labStatsRepository.forceCheckout(userId = userId)) {
                 is NetworkResult.Success -> {
-                    loadLabPeople() // Listeyi yenile
+                    Logger.d("forceCheckout başarılı, liste yenileniyor", tag = "LabPeopleVM")
+                    loadLabPeople()
                 }
                 is NetworkResult.Error -> {
-                    _uiState.update { 
+                    Logger.e("forceCheckout HATA: ${result.message}", tag = "LabPeopleVM")
+                    _uiState.update {
                         it.copy(
                             isLoading = false,
-                            errorMessage = result.message 
-                        ) 
+                            errorMessage = result.message
+                        )
                     }
                 }
                 is NetworkResult.Loading -> {}
