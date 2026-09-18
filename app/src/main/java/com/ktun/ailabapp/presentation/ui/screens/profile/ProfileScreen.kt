@@ -31,6 +31,8 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.ktun.ailabapp.presentation.ui.components.*
+import com.ktun.ailabapp.presentation.ui.components.buttons.AiLabButton
+import com.ktun.ailabapp.presentation.ui.components.buttons.AiLabButtonVariant
 import com.ktun.ailabapp.presentation.ui.components.navigation.AiLabTopBar
 import com.ktun.ailabapp.presentation.ui.screens.announcement.AnnouncementViewModel
 import com.ktun.ailabapp.ui.theme.*
@@ -205,7 +207,7 @@ fun ProfileScreen(
                 unreadAnnouncementCount = unreadCount
             )
         },
-        containerColor = BackgroundLight, // ✅ Arka plan
+        containerColor = MaterialTheme.colorScheme.background,
         contentWindowInsets = WindowInsets.systemBars
     ) { paddingValues ->
         Column(
@@ -260,7 +262,7 @@ fun ProfileScreen(
                                             modifier = Modifier
                                                 .size(screenWidth * 0.35f)
                                                 .clip(CircleShape)
-                                                .border(screenWidth * 0.01f, White, CircleShape),
+                                                .border(screenWidth * 0.01f, MaterialTheme.colorScheme.surface, CircleShape),
                                             contentScale = ContentScale.Crop
                                         )
                                     } else {
@@ -268,15 +270,15 @@ fun ProfileScreen(
                                             modifier = Modifier
                                                 .size(screenWidth * 0.35f)
                                                 .clip(CircleShape)
-                                                .border(screenWidth * 0.01f, White, CircleShape)
-                                                .background(PrimaryBlue.copy(alpha = 0.2f)),
+                                                .border(screenWidth * 0.01f, MaterialTheme.colorScheme.surface, CircleShape)
+                                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
                                             contentAlignment = Alignment.Center
                                         ) {
                                             Icon(
                                                 imageVector = Icons.Default.Person,
                                                 contentDescription = "Varsayılan Avatar",
                                                 modifier = Modifier.size(screenWidth * 0.2f),
-                                                tint = PrimaryBlue
+                                                tint = AiLabTheme.headlineColor
                                             )
                                         }
                                     }
@@ -286,11 +288,11 @@ fun ProfileScreen(
                                             modifier = Modifier
                                                 .size(screenWidth * 0.35f)
                                                 .clip(CircleShape)
-                                                .background(PrimaryBlue.copy(alpha = 0.7f)),
+                                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)),
                                             contentAlignment = Alignment.Center
                                         ) {
                                             CircularProgressIndicator(
-                                                color = White,
+                                                color = MaterialTheme.colorScheme.onPrimary,
                                                 modifier = Modifier.size(screenWidth * 0.1f)
                                             )
                                         }
@@ -303,7 +305,7 @@ fun ProfileScreen(
                                     text = "${uiState.fullName} ${uiState.surname}".trim(),
                                     fontSize = (screenWidth.value * 0.06f).sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = PrimaryBlue
+                                    color = AiLabTheme.headlineColor
                                 )
 
                                 Spacer(modifier = Modifier.height(screenHeight * 0.005f))
@@ -311,7 +313,7 @@ fun ProfileScreen(
                                 Text(
                                     text = uiState.email,
                                     fontSize = (screenWidth.value * 0.035f).sp,
-                                    color = PrimaryBlue.copy(alpha = 0.7f)
+                                    color = AiLabTheme.headlineColor.copy(alpha = 0.7f)
                                 )
                             }
                         }
@@ -330,7 +332,7 @@ fun ProfileScreen(
                         ) {
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
-                                colors = CardDefaults.cardColors(containerColor = White),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                                 shape = RoundedCornerShape(screenWidth * 0.04f),
                                 elevation = CardDefaults.cardElevation(screenWidth * 0.005f)
                             ) {
@@ -344,12 +346,12 @@ fun ProfileScreen(
                                         text = uiState.totalScore.toInt().toString(),
                                         fontSize = (screenWidth.value * 0.12f).sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = PrimaryBlue
+                                        color = AiLabTheme.headlineColor
                                     )
                                     Text(
                                         text = "Puan",
                                         fontSize = (screenWidth.value * 0.04f).sp,
-                                        color = PrimaryBlue.copy(alpha = 0.7f)
+                                        color = AiLabTheme.headlineColor.copy(alpha = 0.7f)
                                     )
                                 }
                             }
@@ -402,28 +404,19 @@ fun ProfileScreen(
                                 animationSpec = tween(400, easing = FastOutSlowInEasing)
                             ) + fadeIn(tween(400))
                         ) {
-                            Button(
+                            AiLabButton(
+                                text = "Çıkış Yap",
                                 onClick = { showLogoutDialog = true },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(screenHeight * 0.07f),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.error
-                                ),
-                                shape = RoundedCornerShape(screenWidth * 0.03f)
-                            ) {
-                                Icon(
-                                    Icons.Default.ExitToApp,
-                                    contentDescription = "Çıkış Yap",
-                                    modifier = Modifier.size(screenWidth * 0.05f)
-                                )
-                                Spacer(modifier = Modifier.width(screenWidth * 0.02f))
-                                Text(
-                                    "Çıkış Yap",
-                                    fontSize = (screenWidth.value * 0.04f).sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
+                                modifier = Modifier.height(screenHeight * 0.07f),
+                                variant = AiLabButtonVariant.Danger,
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Default.ExitToApp,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(screenWidth * 0.05f)
+                                    )
+                                }
+                            )
                         }
 
                         Spacer(modifier = Modifier.height(screenHeight * 0.03f))
@@ -477,7 +470,7 @@ fun ProfileMenuItem(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() },
-        colors = CardDefaults.cardColors(containerColor = White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         shape = RoundedCornerShape(screenWidth * 0.03f),
         elevation = CardDefaults.cardElevation(AppDimensions.cardElevation)
     ) {
@@ -495,7 +488,7 @@ fun ProfileMenuItem(
                 Icon(
                     imageVector = icon,
                     contentDescription = text,
-                    tint = if (isDestructive) ErrorRed else PrimaryBlue,
+                    tint = if (isDestructive) MaterialTheme.colorScheme.error else AiLabTheme.headlineColor,
                     modifier = Modifier.size(screenWidth * 0.06f)
                 )
                 Spacer(modifier = Modifier.width(screenWidth * 0.04f))
@@ -503,14 +496,14 @@ fun ProfileMenuItem(
                     text = text,
                     fontSize = (screenWidth.value * 0.035f).sp,
                     fontWeight = FontWeight.Medium,
-                    color = if (isDestructive) ErrorRed else PrimaryBlue
+                    color = if (isDestructive) MaterialTheme.colorScheme.error else AiLabTheme.headlineColor
                 )
             }
 
             Icon(
                 imageVector = Icons.Default.KeyboardArrowRight,
                 contentDescription = "Git",
-                tint = PrimaryBlue.copy(alpha = 0.3f),
+                tint = AiLabTheme.headlineColor.copy(alpha = 0.3f),
                 modifier = Modifier.size(screenWidth * 0.05f)
             )
         }

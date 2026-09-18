@@ -35,6 +35,8 @@ import com.ktun.ailabapp.presentation.ui.components.DebugButton
 import com.ktun.ailabapp.presentation.ui.components.FeedbackDialog
 import com.ktun.ailabapp.presentation.ui.components.ShimmerBox
 import com.ktun.ailabapp.presentation.ui.components.StaggeredAnimatedItem
+import com.ktun.ailabapp.presentation.ui.components.buttons.AiLabButton
+import com.ktun.ailabapp.presentation.ui.components.buttons.AiLabButtonVariant
 import com.ktun.ailabapp.presentation.ui.components.navigation.AiLabTopBar
 import com.ktun.ailabapp.ui.theme.*
 
@@ -112,7 +114,7 @@ fun AnnouncementScreen(
                 unreadAnnouncementCount = unreadCount
             )
         },
-        containerColor = TaskHistoryBg, // ✅ Arka plan
+        containerColor = MaterialTheme.colorScheme.background,
         contentWindowInsets = WindowInsets.systemBars
     ) { paddingValues ->
         Column(
@@ -200,14 +202,14 @@ fun AnnouncementScreen(
                                         Icon(
                                             imageVector = Icons.Default.Info,
                                             contentDescription = null,
-                                            tint = PrimaryBlue.copy(alpha = 0.3f),
+                                            tint = AiLabTheme.headlineColor.copy(alpha = 0.3f),
                                             modifier = Modifier.size(screenWidth * 0.18f)
                                         )
                                         Text(
                                             text = "Henüz duyuru yok",
                                             fontSize = (screenWidth.value * 0.045f).sp,
                                             fontWeight = FontWeight.Medium,
-                                            color = PrimaryBlue.copy(alpha = 0.5f)
+                                            color = AiLabTheme.headlineColor.copy(alpha = 0.5f)
                                         )
                                     }
                                 }
@@ -268,21 +270,18 @@ fun AnnouncementFilterChip(
     screenWidth: androidx.compose.ui.unit.Dp,
     screenHeight: androidx.compose.ui.unit.Dp
 ) {
-    Button(
+    FilterChip(
+        selected = isSelected,
         onClick = onClick,
-        modifier = modifier.height(screenHeight * 0.05f),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = if (isSelected) PrimaryBlue else FilterChipUnselected,
-            contentColor = White
-        ),
-        shape = RoundedCornerShape(screenWidth * 0.05f)
-    ) {
-        Text(
-            text = text,
-            fontSize = (screenWidth.value * 0.03f).sp,
-            fontWeight = FontWeight.Black
-        )
-    }
+        label = {
+            Text(
+                text = text,
+                fontSize = (screenWidth.value * 0.03f).sp,
+                fontWeight = FontWeight.Black
+            )
+        },
+        modifier = modifier.height(screenHeight * 0.05f)
+    )
 }
 
 @Composable
@@ -298,13 +297,13 @@ fun AnnouncementCard(
             .clickable { onClick() },
         colors = CardDefaults.cardColors(
             containerColor = if (announcement.isRead)
-                White.copy(alpha = 0.7f)
+                MaterialTheme.colorScheme.surfaceVariant
             else
-                White
+                MaterialTheme.colorScheme.surface
         ),
         shape = RoundedCornerShape(screenWidth * 0.04f),
         border = if (!announcement.isRead)
-            BorderStroke(screenWidth * 0.00125f, PrimaryBlue)
+            BorderStroke(screenWidth * 0.00125f, MaterialTheme.colorScheme.primary)
         else
             null
     ) {
@@ -321,14 +320,14 @@ fun AnnouncementCard(
                     modifier = Modifier
                         .size(screenWidth * 0.12f)
                         .clip(CircleShape)
-                        .border(screenWidth * 0.005f, PrimaryBlue.copy(alpha = 0.1f), CircleShape)
+                        .border(screenWidth * 0.005f, MaterialTheme.colorScheme.outlineVariant, CircleShape)
                 )
             } else {
                 Box(
                     modifier = Modifier
                         .size(screenWidth * 0.12f)
                         .background(
-                            PrimaryBlue,
+                            MaterialTheme.colorScheme.primary,
                             RoundedCornerShape(screenWidth * 0.03f)
                         ),
                     contentAlignment = Alignment.Center
@@ -350,7 +349,7 @@ fun AnnouncementCard(
                     text = announcement.title,
                     fontSize = (screenWidth.value * 0.04f).sp,
                     fontWeight = FontWeight.Bold,
-                    color = PrimaryBlue
+                    color = AiLabTheme.headlineColor
                 )
 
                 Spacer(modifier = Modifier.height(screenHeight * 0.0075f))
@@ -358,7 +357,7 @@ fun AnnouncementCard(
                 Text(
                     text = announcement.content,
                     fontSize = (screenWidth.value * 0.032f).sp,
-                    color = PrimaryBlue.copy(alpha = 0.7f),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 2,
                     lineHeight = (screenWidth.value * 0.045f).sp
                 )
@@ -388,14 +387,14 @@ fun AnnouncementDetailDialog(
                         modifier = Modifier
                             .size(screenWidth * 0.12f)
                             .clip(CircleShape)
-                            .border(screenWidth * 0.005f, PrimaryBlue.copy(alpha = 0.1f), CircleShape)
+                            .border(screenWidth * 0.005f, MaterialTheme.colorScheme.outlineVariant, CircleShape)
                     )
                 } else {
                     Box(
                         modifier = Modifier
                             .size(screenWidth * 0.12f)
                             .background(
-                                PrimaryBlue,
+                                MaterialTheme.colorScheme.primary,
                                 RoundedCornerShape(screenWidth * 0.03f)
                             ),
                         contentAlignment = Alignment.Center
@@ -413,13 +412,13 @@ fun AnnouncementDetailDialog(
                         text = announcement.title,
                         fontSize = (screenWidth.value * 0.045f).sp,
                         fontWeight = FontWeight.Bold,
-                        color = PrimaryBlue
+                        color = AiLabTheme.headlineColor
                     )
                     Spacer(modifier = Modifier.height(screenHeight * 0.0025f))
                     Text(
                         text = announcement.timestamp,
                         fontSize = (screenWidth.value * 0.03f).sp,
-                        color = PrimaryBlue.copy(alpha = 0.5f)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -430,9 +429,9 @@ fun AnnouncementDetailDialog(
             ) {
                 Surface(
                     color = when (announcement.type) {
-                        AnnouncementType.ALL -> AnnouncementBadgeBg.copy(alpha = 0.2f)
-                        AnnouncementType.TEAM -> WarningOrange.copy(alpha = 0.2f)
-                        AnnouncementType.PERSONAL -> SuccessGreen.copy(alpha = 0.2f)
+                        AnnouncementType.ALL -> MaterialTheme.colorScheme.secondaryContainer
+                        AnnouncementType.TEAM -> AiLabTheme.extendedColors.warningContainer
+                        AnnouncementType.PERSONAL -> AiLabTheme.extendedColors.successContainer
                     },
                     shape = RoundedCornerShape(screenWidth * 0.03f)
                 ) {
@@ -445,9 +444,9 @@ fun AnnouncementDetailDialog(
                         fontSize = (screenWidth.value * 0.027f).sp,
                         fontWeight = FontWeight.Medium,
                         color = when (announcement.type) {
-                            AnnouncementType.ALL -> AnnouncementBadgeText
-                            AnnouncementType.TEAM -> WarningOrange
-                            AnnouncementType.PERSONAL -> SuccessGreen
+                            AnnouncementType.ALL -> MaterialTheme.colorScheme.onSecondaryContainer
+                            AnnouncementType.TEAM -> AiLabTheme.extendedColors.onWarningContainer
+                            AnnouncementType.PERSONAL -> AiLabTheme.extendedColors.onSuccessContainer
                         },
                         modifier = Modifier.padding(
                             horizontal = screenWidth * 0.03f,
@@ -461,22 +460,20 @@ fun AnnouncementDetailDialog(
                 Text(
                     text = announcement.content,
                     fontSize = (screenWidth.value * 0.035f).sp,
-                    color = PrimaryBlue.copy(alpha = 0.8f),
+                    color = MaterialTheme.colorScheme.onSurface,
                     lineHeight = (screenWidth.value * 0.05f).sp
                 )
             }
         },
         confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text(
-                    "Kapat",
-                    color = PrimaryBlue,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = (screenWidth.value * 0.035f).sp
-                )
-            }
+            AiLabButton(
+                text = "Kapat",
+                onClick = onDismiss,
+                variant = AiLabButtonVariant.Ghost,
+                fillWidth = false
+            )
         },
-        containerColor = White,
+        containerColor = MaterialTheme.colorScheme.surface,
         shape = RoundedCornerShape(screenWidth * 0.05f)
     )
 }

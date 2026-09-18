@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
 import com.ktun.ailabapp.R  // ✅ DOĞRU R IMPORT'U
-import com.ktun.ailabapp.ui.theme.PrimaryBlue
+import com.ktun.ailabapp.ui.theme.AiLabTheme
 
 @Composable
 fun AvatarPickerDialog(
@@ -46,7 +46,7 @@ fun AvatarPickerDialog(
                 .fillMaxWidth()
                 .heightIn(max = screenHeight * 0.75f),
             shape = RoundedCornerShape(screenWidth * 0.04f),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
         ) {
             Column(
                 modifier = Modifier
@@ -63,14 +63,14 @@ fun AvatarPickerDialog(
                         text = "Avatar Seç",
                         fontSize = (screenWidth.value * 0.05f).sp,
                         fontWeight = FontWeight.Bold,
-                        color = PrimaryBlue
+                        color = AiLabTheme.headlineColor
                     )
 
                     IconButton(onClick = onDismiss) {
                         Icon(
                             Icons.Default.Close,
                             contentDescription = "Kapat",
-                            tint = PrimaryBlue
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -85,7 +85,7 @@ fun AvatarPickerDialog(
                             .height(screenHeight * 0.3f),
                         contentAlignment = Alignment.Center
                     ) {
-                        CircularProgressIndicator(color = PrimaryBlue)
+                        CircularProgressIndicator(color = AiLabTheme.headlineColor)
                     }
                 } else if (availableAvatars.isEmpty()) {
                     // Avatar listesi boşsa
@@ -97,7 +97,7 @@ fun AvatarPickerDialog(
                     ) {
                         Text(
                             text = "Avatar bulunamadı",
-                            color = Color.Gray,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 16.sp
                         )
                     }
@@ -132,7 +132,7 @@ fun AvatarPickerDialog(
                 ) {
                     Text(
                         text = "İptal",
-                        color = PrimaryBlue,
+                        color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Medium
                     )
                 }
@@ -152,10 +152,10 @@ fun AvatarOptionItem(
         modifier = Modifier
             .size(screenWidth * 0.22f)
             .clip(CircleShape)
-            .background(if (isSelected) PrimaryBlue.copy(alpha = 0.15f) else Color.Transparent)
+            .background(if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f) else Color.Transparent)
             .border(
                 width = if (isSelected) 3.dp else 1.dp,
-                color = if (isSelected) PrimaryBlue else Color.Gray.copy(alpha = 0.3f),
+                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
                 shape = CircleShape
             )
             .clickable { onClick() }

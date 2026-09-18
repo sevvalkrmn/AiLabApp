@@ -39,6 +39,9 @@ import java.util.Calendar
 
 import com.ktun.ailabapp.presentation.ui.components.StaggeredAnimatedItem
 import com.ktun.ailabapp.presentation.ui.components.TaskDetailDialog
+import com.ktun.ailabapp.presentation.ui.components.buttons.AiLabButton
+import com.ktun.ailabapp.presentation.ui.components.buttons.AiLabButtonSize
+import com.ktun.ailabapp.presentation.ui.components.buttons.AiLabButtonVariant
 import com.ktun.ailabapp.presentation.ui.components.navigation.AiLabTopBar
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -68,7 +71,7 @@ fun ProjectDetailScreen(
     }
 
     Scaffold(
-        containerColor = BackgroundLight
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -80,7 +83,7 @@ fun ProjectDetailScreen(
                 onBackClick = onNavigateBack,
                 actions = {
                     IconButton(onClick = { viewModel.refreshProject() }) {
-                        Icon(Icons.Default.Refresh, contentDescription = "Yenile", tint = White)
+                        Icon(Icons.Default.Refresh, contentDescription = "Yenile", tint = MaterialTheme.colorScheme.onPrimary)
                     }
                 }
             )
@@ -90,7 +93,7 @@ fun ProjectDetailScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = PrimaryBlue)
+                    CircularProgressIndicator(color = AiLabTheme.headlineColor)
                 }
             }
 
@@ -103,18 +106,20 @@ fun ProjectDetailScreen(
                         Icon(
                             Icons.Default.Warning,
                             contentDescription = null,
-                            tint = ErrorRed,
+                            tint = MaterialTheme.colorScheme.error,
                             modifier = Modifier.size(screenWidth * 0.15f)
                         )
                         Spacer(modifier = Modifier.height(screenHeight * 0.02f))
                         Text(
                             text = uiState.errorMessage ?: "Hata oluştu",
-                            color = ErrorRed
+                            color = MaterialTheme.colorScheme.error
                         )
                         Spacer(modifier = Modifier.height(screenHeight * 0.02f))
-                        Button(onClick = { viewModel.refreshProject() }) {
-                            Text("Tekrar Dene")
-                        }
+                        AiLabButton(
+                            text = "Tekrar Dene",
+                            onClick = { viewModel.refreshProject() },
+                            fillWidth = false
+                        )
                     }
                 }
             }
@@ -171,7 +176,7 @@ fun ProjectDetailScreen(
                                         text = "Görevler",
                                         fontSize = (screenWidth.value * 0.045f).sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = PrimaryBlue
+                                        color = AiLabTheme.headlineColor
                                     )
 
                                     if (uiState.isCaptain) {
@@ -179,7 +184,7 @@ fun ProjectDetailScreen(
                                             Icon(
                                                 imageVector = Icons.Default.Add,
                                                 contentDescription = "Görev Ekle",
-                                                tint = PrimaryBlue
+                                                tint = AiLabTheme.headlineColor
                                             )
                                         }
                                     }
@@ -192,7 +197,7 @@ fun ProjectDetailScreen(
                                 StaggeredAnimatedItem(index = 3, shouldAnimate = shouldAnimate) {
                                     Card(
                                         modifier = Modifier.fillMaxWidth(),
-                                        colors = CardDefaults.cardColors(containerColor = White)
+                                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                                     ) {
                                         Box(
                                             modifier = Modifier
@@ -204,13 +209,13 @@ fun ProjectDetailScreen(
                                                 Icon(
                                                     Icons.Default.CheckCircle,
                                                     contentDescription = null,
-                                                    tint = PrimaryBlue.copy(alpha = 0.3f),
+                                                    tint = AiLabTheme.headlineColor.copy(alpha = 0.3f),
                                                     modifier = Modifier.size(screenWidth * 0.15f)
                                                 )
                                                 Spacer(modifier = Modifier.height(screenHeight * 0.01f))
                                                 Text(
                                                     text = "Henüz görev yok",
-                                                    color = PrimaryBlue.copy(alpha = 0.5f)
+                                                    color = AiLabTheme.headlineColor.copy(alpha = 0.5f)
                                                 )
                                             }
                                         }
@@ -243,7 +248,7 @@ fun ProjectDetailScreen(
                                         text = "Proje Üyeleri",
                                         fontSize = (screenWidth.value * 0.045f).sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = PrimaryBlue
+                                        color = AiLabTheme.headlineColor
                                     )
                                 }
                             }
@@ -296,10 +301,10 @@ fun ProjectDetailScreen(
     // ✅ YENİ: Görev Detay Dialog (API'den gelen veriye göre)
     if (uiState.isTaskDetailLoading) {
         Box(
-            modifier = Modifier.fillMaxSize().background(Black.copy(alpha = 0.3f)),
+            modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.32f)),
             contentAlignment = Alignment.Center
         ) {
-            CircularProgressIndicator(color = White)
+            CircularProgressIndicator(color = Color.White)
         }
     } else if (uiState.selectedTask != null) {
         TaskDetailDialog(
@@ -450,32 +455,36 @@ fun CreateTaskDialog(
                     }
                 }
 
-                OutlinedButton(
+                AiLabButton(
+                    text = if (dueDate.isNotEmpty()) dueDate.take(10) else "Bitiş Tarihi Seç",
                     onClick = { datePickerDialog.show() },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(Icons.Default.DateRange, contentDescription = null)
-                    Spacer(Modifier.width(8.dp))
-                    Text(text = if (dueDate.isNotEmpty()) dueDate.take(10) else "Bitiş Tarihi Seç")
-                }
+                    variant = AiLabButtonVariant.Secondary,
+                    size = AiLabButtonSize.Medium,
+                    leadingIcon = { Icon(Icons.Default.DateRange, contentDescription = null) }
+                )
             }
         },
         confirmButton = {
-            Button(
+            AiLabButton(
+                text = "Oluştur",
                 onClick = {
                     if (title.isNotBlank()) {
                         onConfirm(title, description.ifBlank { null }, selectedAssignee?.userId, dueDate.ifBlank { null })
                     }
                 },
-                enabled = title.isNotBlank()
-            ) {
-                Text("Oluştur")
-            }
+                enabled = title.isNotBlank(),
+                size = AiLabButtonSize.Medium,
+                fillWidth = false
+            )
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("İptal")
-            }
+            AiLabButton(
+                text = "İptal",
+                onClick = onDismiss,
+                variant = AiLabButtonVariant.Ghost,
+                size = AiLabButtonSize.Medium,
+                fillWidth = false
+            )
         }
     )
 }
@@ -494,7 +503,7 @@ fun TaskCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(containerColor = White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         shape = RoundedCornerShape(screenWidth * 0.03f)
     ) {
         Column(
@@ -511,7 +520,7 @@ fun TaskCard(
                     text = task.title,
                     fontSize = (screenWidth.value * 0.04f).sp,
                     fontWeight = FontWeight.Bold,
-                    color = PrimaryBlue,
+                    color = AiLabTheme.headlineColor,
                     modifier = Modifier.weight(1f)
                 )
 
@@ -531,13 +540,13 @@ fun TaskCard(
                         ) {
                             Text(
                                 text = getStatusText(task.status),
-                                color = White,
+                                color = getStatusOnColor(task.status),
                                 fontSize = (screenWidth.value * 0.03f).sp
                             )
                             Icon(
                                 Icons.Default.ArrowDropDown,
                                 contentDescription = null,
-                                tint = White,
+                                tint = getStatusOnColor(task.status),
                                 modifier = Modifier.size(screenWidth * 0.04f)
                             )
                         }
@@ -577,7 +586,7 @@ fun TaskCard(
                 Text(
                     text = task.description,
                     fontSize = (screenWidth.value * 0.03f).sp,
-                    color = PrimaryBlue.copy(alpha = 0.7f),
+                    color = AiLabTheme.headlineColor.copy(alpha = 0.7f),
                     maxLines = 2,
                     overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                 )
@@ -589,14 +598,14 @@ fun TaskCard(
                     Icon(
                         Icons.Default.Person,
                         contentDescription = null,
-                        tint = PrimaryBlue.copy(alpha = 0.5f),
+                        tint = AiLabTheme.headlineColor.copy(alpha = 0.5f),
                         modifier = Modifier.size(screenWidth * 0.04f)
                     )
                     Spacer(modifier = Modifier.width(screenWidth * 0.01f))
                     Text(
                         text = task.assignedTo.fullName,
                         fontSize = (screenWidth.value * 0.03f).sp,
-                        color = PrimaryBlue.copy(alpha = 0.7f)
+                        color = AiLabTheme.headlineColor.copy(alpha = 0.7f)
                     )
                 }
             }
@@ -617,7 +626,7 @@ fun ProjectInfoCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         shape = RoundedCornerShape(screenWidth * 0.03f)
     ) {
         Row(
@@ -631,7 +640,7 @@ fun ProjectInfoCard(
                     text = project.name,
                     fontSize = (screenWidth.value * 0.05f).sp,
                     fontWeight = FontWeight.Bold,
-                    color = PrimaryBlue
+                    color = AiLabTheme.headlineColor
                 )
 
                 if (!project.description.isNullOrEmpty()) {
@@ -639,7 +648,7 @@ fun ProjectInfoCard(
                     Text(
                         text = project.description,
                         fontSize = (screenWidth.value * 0.035f).sp,
-                        color = PrimaryBlue.copy(alpha = 0.7f)
+                        color = AiLabTheme.headlineColor.copy(alpha = 0.7f)
                     )
                 }
 
@@ -649,14 +658,14 @@ fun ProjectInfoCard(
                     Icon(
                         Icons.Default.DateRange,
                         contentDescription = null,
-                        tint = PrimaryBlue.copy(alpha = 0.5f),
+                        tint = AiLabTheme.headlineColor.copy(alpha = 0.5f),
                         modifier = Modifier.size(screenWidth * 0.04f)
                     )
                     Spacer(modifier = Modifier.width(screenWidth * 0.01f))
                     Text(
                         text = "Oluşturulma: ${formatDate(project.createdAt)}",
                         fontSize = (screenWidth.value * 0.03f).sp,
-                        color = PrimaryBlue.copy(alpha = 0.5f)
+                        color = AiLabTheme.headlineColor.copy(alpha = 0.5f)
                     )
                 }
             }
@@ -665,7 +674,7 @@ fun ProjectInfoCard(
                 Button(
                     onClick = onSendAnnouncementClick,
                     shape = RoundedCornerShape(50),
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                     contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
                     modifier = Modifier.defaultMinSize(minHeight = 1.dp, minWidth = 1.dp)
                 ) {
@@ -673,7 +682,7 @@ fun ProjectInfoCard(
                         text = "Mesaj Gönder",
                         fontSize = (screenWidth.value * 0.028f).sp,
                         fontWeight = FontWeight.Medium,
-                        color = White
+                        color = MaterialTheme.colorScheme.onPrimary
                     )
                 }
             }
@@ -689,7 +698,7 @@ fun TaskStatisticsCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         shape = RoundedCornerShape(screenWidth * 0.03f)
     ) {
         Column(
@@ -701,7 +710,7 @@ fun TaskStatisticsCard(
                 text = "Görev İstatistikleri",
                 fontSize = (screenWidth.value * 0.04f).sp,
                 fontWeight = FontWeight.Bold,
-                color = PrimaryBlue
+                color = AiLabTheme.headlineColor
             )
 
             Spacer(modifier = Modifier.height(screenHeight * 0.02f))
@@ -710,10 +719,10 @@ fun TaskStatisticsCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                StatItem("Toplam", statistics.total.toString(), TextGray, screenWidth)
-                StatItem("Yapılacak", statistics.todo.toString(), WarningOrange, screenWidth)
-                StatItem("Devam Eden", statistics.inProgress.toString(), InfoBlue, screenWidth)
-                StatItem("Tamamlanan", statistics.done.toString(), SuccessGreen, screenWidth)
+                StatItem("Toplam", statistics.total.toString(), MaterialTheme.colorScheme.onSurfaceVariant, screenWidth)
+                StatItem("Yapılacak", statistics.todo.toString(), AiLabTheme.extendedColors.warning, screenWidth)
+                StatItem("Devam Eden", statistics.inProgress.toString(), AiLabTheme.extendedColors.info, screenWidth)
+                StatItem("Tamamlanan", statistics.done.toString(), AiLabTheme.extendedColors.success, screenWidth)
             }
         }
     }
@@ -731,7 +740,7 @@ fun StatItem(label: String, value: String, color: Color, screenWidth: androidx.c
         Text(
             text = label,
             fontSize = (screenWidth.value * 0.025f).sp,
-            color = PrimaryBlue.copy(alpha = 0.7f)
+            color = AiLabTheme.headlineColor.copy(alpha = 0.7f)
         )
     }
 }
@@ -744,7 +753,7 @@ fun MemberCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         shape = RoundedCornerShape(screenWidth * 0.03f)
     ) {
         Row(
@@ -767,13 +776,13 @@ fun MemberCard(
                     modifier = Modifier
                         .size(screenWidth * 0.12f)
                         .clip(CircleShape)
-                        .background(PrimaryBlue.copy(alpha = 0.2f)),
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         Icons.Default.Person,
                         contentDescription = null,
-                        tint = PrimaryBlue,
+                        tint = AiLabTheme.headlineColor,
                         modifier = Modifier.size(screenWidth * 0.06f)
                     )
                 }
@@ -786,22 +795,22 @@ fun MemberCard(
                     text = member.fullName,
                     fontSize = (screenWidth.value * 0.04f).sp,
                     fontWeight = FontWeight.Medium,
-                    color = PrimaryBlue
+                    color = AiLabTheme.headlineColor
                 )
                 Text(
                     text = member.email,
                     fontSize = (screenWidth.value * 0.03f).sp,
-                    color = PrimaryBlue.copy(alpha = 0.6f)
+                    color = AiLabTheme.headlineColor.copy(alpha = 0.6f)
                 )
             }
 
             Surface(
-                color = if (member.role == "Captain") PrimaryBlue else PrimaryBlue.copy(alpha = 0.3f),
+                color = if (member.role == "Captain") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primaryContainer,
                 shape = RoundedCornerShape(screenWidth * 0.02f)
             ) {
                 Text(
                     text = if (member.role == "Captain") "Kaptan" else "Üye",
-                    color = if (member.role == "Captain") White else PrimaryBlue,
+                    color = if (member.role == "Captain") MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onPrimaryContainer,
                     fontSize = (screenWidth.value * 0.03f).sp,
                     modifier = Modifier.padding(
                         horizontal = screenWidth * 0.02f,
@@ -832,25 +841,18 @@ fun AdminActionsSection(
             text = "🔧 Proje Yönetimi (Admin)",
             fontSize = (screenWidth.value * 0.045f).sp,
             fontWeight = FontWeight.Bold,
-            color = PrimaryBlue
+            color = AiLabTheme.headlineColor
         )
 
         Spacer(Modifier.height(screenHeight * 0.015f))
 
         // Üye Ekle
-        Button(
+        AiLabButton(
+            text = "Üye Ekle",
             onClick = onAddMember,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(screenHeight * 0.06f),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = PrimaryBlue
-            )
-        ) {
-            Icon(Icons.Default.PersonAdd, contentDescription = null)
-            Spacer(Modifier.width(screenWidth * 0.02f))
-            Text("Üye Ekle", fontSize = (screenWidth.value * 0.04f).sp)
-        }
+            modifier = Modifier.height(screenHeight * 0.06f),
+            leadingIcon = { Icon(Icons.Default.PersonAdd, contentDescription = null) }
+        )
 
         Spacer(Modifier.height(screenHeight * 0.01f))
 
@@ -861,7 +863,8 @@ fun AdminActionsSection(
                 .fillMaxWidth()
                 .height(screenHeight * 0.06f),
             colors = ButtonDefaults.buttonColors(
-                containerColor = WarningOrange
+                containerColor = AiLabTheme.extendedColors.warning,
+                contentColor = AiLabTheme.extendedColors.onWarning
             )
         ) {
             Icon(Icons.Default.PersonRemove, contentDescription = null)
@@ -872,19 +875,13 @@ fun AdminActionsSection(
         Spacer(Modifier.height(screenHeight * 0.01f))
 
         // Projeyi Sil
-        Button(
+        AiLabButton(
+            text = "Projeyi Sil",
             onClick = onDeleteProject,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(screenHeight * 0.06f),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = ErrorRed
-            )
-        ) {
-            Icon(Icons.Default.Delete, contentDescription = null)
-            Spacer(Modifier.width(screenWidth * 0.02f))
-            Text("Projeyi Sil", fontSize = (screenWidth.value * 0.04f).sp)
-        }
+            modifier = Modifier.height(screenHeight * 0.06f),
+            variant = AiLabButtonVariant.Danger,
+            leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) }
+        )
     }
 }
 
@@ -979,27 +976,32 @@ fun AddMemberDialog(
                     Text(
                         "⚠️ Projede zaten Kaptan varsa eklenemez",
                         style = MaterialTheme.typography.bodySmall,
-                        color = ErrorRed
+                        color = MaterialTheme.colorScheme.error
                     )
                 }
             }
         },
         confirmButton = {
-            Button(
+            AiLabButton(
+                text = "Ekle",
                 onClick = {
                     selectedUser?.let { user ->
                         onConfirm(user.id, selectedRole)
                     }
                 },
-                enabled = selectedUser != null
-            ) {
-                Text("Ekle")
-            }
+                enabled = selectedUser != null,
+                size = AiLabButtonSize.Medium,
+                fillWidth = false
+            )
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("İptal")
-            }
+            AiLabButton(
+                text = "İptal",
+                onClick = onDismiss,
+                variant = AiLabButtonVariant.Ghost,
+                size = AiLabButtonSize.Medium,
+                fillWidth = false
+            )
         }
     )
 }
@@ -1022,7 +1024,7 @@ fun RemoveMemberDialog(
                 Text(
                     "⚠️ Captain çıkarılamaz",
                     style = MaterialTheme.typography.bodySmall,
-                    color = ErrorRed
+                    color = MaterialTheme.colorScheme.error
                 )
 
                 Spacer(Modifier.height(16.dp))
@@ -1070,24 +1072,27 @@ fun RemoveMemberDialog(
             }
         },
         confirmButton = {
-            Button(
+            AiLabButton(
+                text = "Çıkar",
                 onClick = {
                     selectedMember?.let { member ->
                         onConfirm(member.userId)
                     }
                 },
                 enabled = selectedMember != null,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = ErrorRed
-                )
-            ) {
-                Text("Çıkar")
-            }
+                variant = AiLabButtonVariant.Danger,
+                size = AiLabButtonSize.Medium,
+                fillWidth = false
+            )
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("İptal")
-            }
+            AiLabButton(
+                text = "İptal",
+                onClick = onDismiss,
+                variant = AiLabButtonVariant.Ghost,
+                size = AiLabButtonSize.Medium,
+                fillWidth = false
+            )
         }
     )
 }
@@ -1103,7 +1108,7 @@ fun DeleteProjectDialog(
         title = { Text("Projeyi Sil") },
         text = {
             Column {
-                Text("⚠️ Bu işlem geri alınamaz!", color = ErrorRed, fontWeight = FontWeight.Bold)
+                Text("⚠️ Bu işlem geri alınamaz!", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(8.dp))
                 Text("\"$projectName\" projesini silmek istediğinizden emin misiniz?")
                 Spacer(Modifier.height(8.dp))
@@ -1115,19 +1120,22 @@ fun DeleteProjectDialog(
             }
         },
         confirmButton = {
-            Button(
+            AiLabButton(
+                text = "Sil",
                 onClick = onConfirm,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = ErrorRed
-                )
-            ) {
-                Text("Sil")
-            }
+                variant = AiLabButtonVariant.Danger,
+                size = AiLabButtonSize.Medium,
+                fillWidth = false
+            )
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("İptal")
-            }
+            AiLabButton(
+                text = "İptal",
+                onClick = onDismiss,
+                variant = AiLabButtonVariant.Ghost,
+                size = AiLabButtonSize.Medium,
+                fillWidth = false
+            )
         }
     )
 }
@@ -1154,7 +1162,7 @@ fun SendAnnouncementDialog(
             Text(
                 if (step == 1) "Bildirim Gönder" else if (isTeamMode) "Takıma Bildirim" else "Kişiye Özel Bildirim",
                 fontWeight = FontWeight.Bold,
-                color = PrimaryBlue
+                color = AiLabTheme.headlineColor
             )
         },
         text = {
@@ -1166,32 +1174,26 @@ fun SendAnnouncementDialog(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    Button(
+                    AiLabButton(
+                        text = "Tüm Takıma Gönder",
                         onClick = {
                             isTeamMode = true
                             step = 2
                         },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue)
-                    ) {
-                        Icon(Icons.Default.Groups, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Tüm Takıma Gönder")
-                    }
+                        leadingIcon = { Icon(Icons.Default.Groups, contentDescription = null) }
+                    )
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    OutlinedButton(
+                    AiLabButton(
+                        text = "Kişiye Özel Gönder",
                         onClick = {
                             isTeamMode = false
                             step = 2
                         },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Icon(Icons.Default.Person, contentDescription = null, tint = PrimaryBlue)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Kişiye Özel Gönder", color = PrimaryBlue)
-                    }
+                        variant = AiLabButtonVariant.Secondary,
+                        leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) }
+                    )
                 } else {
                     if (!isTeamMode) {
                         ExposedDropdownMenuBox(
@@ -1220,7 +1222,7 @@ fun SendAnnouncementDialog(
                                         text = {
                                             Column {
                                                 Text(member.fullName, fontWeight = FontWeight.Medium)
-                                                Text(member.email, fontSize = 12.sp, color = TextGray)
+                                                Text(member.email, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                             }
                                         },
                                         onClick = {
@@ -1258,7 +1260,8 @@ fun SendAnnouncementDialog(
         },
         confirmButton = {
             if (step == 2) {
-                Button(
+                AiLabButton(
+                    text = "Gönder",
                     onClick = {
                         if (isTeamMode) {
                             onSendToTeam(title, content)
@@ -1268,22 +1271,14 @@ fun SendAnnouncementDialog(
                             }
                         }
                     },
+                    fillWidth = false,
+                    size = AiLabButtonSize.Medium,
+                    isLoading = isSending,
                     enabled = !isSending
                             && title.isNotBlank()
                             && content.isNotBlank()
-                            && (isTeamMode || selectedMember != null),
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue)
-                ) {
-                    if (isSending) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(16.dp),
-                            color = White,
-                            strokeWidth = 2.dp
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                    }
-                    Text("Gönder")
-                }
+                            && (isTeamMode || selectedMember != null)
+                )
             }
         },
         dismissButton = {
@@ -1303,12 +1298,24 @@ fun SendAnnouncementDialog(
     )
 }
 
+@Composable
 fun getStatusColor(status: String): Color {
     return when (status) {
-        "Todo" -> WarningOrange
-        "InProgress" -> InfoBlue
-        "Done" -> SuccessGreen
-        else -> TextGray
+        "Todo" -> AiLabTheme.extendedColors.warning
+        "InProgress" -> AiLabTheme.extendedColors.info
+        "Done" -> AiLabTheme.extendedColors.success
+        else -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
+}
+
+/** [getStatusColor] rozet zeminiyle her zaman yeterli kontrast veren metin/ikon rengi. */
+@Composable
+fun getStatusOnColor(status: String): Color {
+    return when (status) {
+        "Todo" -> AiLabTheme.extendedColors.onWarning
+        "InProgress" -> AiLabTheme.extendedColors.onInfo
+        "Done" -> AiLabTheme.extendedColors.onSuccess
+        else -> MaterialTheme.colorScheme.surface
     }
 }
 

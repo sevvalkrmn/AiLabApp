@@ -5,6 +5,8 @@
         <item name="android:windowBackground">@color/primary_blue</item>
         <item name="android:statusBarColor">@color/primary_blue</item>
         <item name="android:navigationBarColor">@color/primary_blue</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
     </style>
 
     <!-- ✅ SplashScreen API için başlangıç teması -->

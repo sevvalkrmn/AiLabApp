@@ -4,7 +4,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
-import com.ktun.ailabapp.ui.theme.PrimaryBlue
 
 @Composable
 fun LogoutDialog(
@@ -32,7 +31,7 @@ fun LogoutDialog(
             ) {
                 Text(
                     text = "Evet",
-                    color = PrimaryBlue,
+                    color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold
                 )
             }

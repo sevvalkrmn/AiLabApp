@@ -11,16 +11,16 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.ktun.ailabapp.presentation.ui.components.buttons.AiLabButton
+import com.ktun.ailabapp.presentation.ui.components.buttons.AiLabButtonSize
+import com.ktun.ailabapp.presentation.ui.components.buttons.AiLabButtonVariant
 import com.ktun.ailabapp.presentation.ui.screens.bugreport.BugReportViewModel
-import com.ktun.ailabapp.ui.theme.BorderGray
-import com.ktun.ailabapp.ui.theme.ErrorRed
-import com.ktun.ailabapp.ui.theme.PrimaryBlue // ✅ Import added
+import com.ktun.ailabapp.ui.theme.AiLabTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 
@@ -61,7 +61,7 @@ fun FeedbackDialog(
                 .fillMaxWidth()
                 .padding(16.dp),
             shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
         ) {
             Column(
                 modifier = Modifier
@@ -81,19 +81,19 @@ fun FeedbackDialog(
                         Icon(
                             imageVector = Icons.Default.BugReport,
                             contentDescription = null,
-                            tint = ErrorRed,
+                            tint = MaterialTheme.colorScheme.error,
                             modifier = Modifier.size(28.dp)
                         )
                         Text(
                             text = "Hata Bildir",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
-                            color = PrimaryBlue
+                            color = AiLabTheme.headlineColor
                         )
                     }
 
                     IconButton(onClick = onDismiss) {
-                        Icon(Icons.Default.Close, contentDescription = "Kapat", tint = PrimaryBlue)
+                        Icon(Icons.Default.Close, contentDescription = "Kapat", tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
 
@@ -111,10 +111,6 @@ fun FeedbackDialog(
                         readOnly = true,
                         label = { Text("Hata Türü") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = PrimaryBlue,
-                            unfocusedBorderColor = BorderGray
-                        ),
                         modifier = Modifier.fillMaxWidth().menuAnchor()
                     )
 
@@ -145,10 +141,6 @@ fun FeedbackDialog(
                         .height(150.dp),
                     label = { Text("Açıklama") },
                     placeholder = { Text("Lütfen hatayı detaylıca açıklayın...") },
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = PrimaryBlue,
-                        unfocusedBorderColor = BorderGray
-                    ),
                     shape = RoundedCornerShape(12.dp),
                     maxLines = 6
                 )
@@ -169,15 +161,16 @@ fun FeedbackDialog(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    OutlinedButton(
+                    AiLabButton(
+                        text = "İptal",
                         onClick = onDismiss,
-                        modifier = Modifier.weight(1f).height(48.dp),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Text("İptal", color = PrimaryBlue)
-                    }
+                        modifier = Modifier.weight(1f),
+                        variant = AiLabButtonVariant.Secondary,
+                        size = AiLabButtonSize.Medium
+                    )
 
-                    Button(
+                    AiLabButton(
+                        text = "Gönder",
                         onClick = {
                             viewModel.sendBugReport(
                                 bugType = selectedBugType,
@@ -188,17 +181,11 @@ fun FeedbackDialog(
                                 }
                             )
                         },
-                        modifier = Modifier.weight(1f).height(48.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
-                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.weight(1f),
+                        size = AiLabButtonSize.Medium,
+                        isLoading = uiState.isLoading,
                         enabled = description.isNotBlank() && !uiState.isLoading
-                    ) {
-                        if (uiState.isLoading) {
-                            CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White)
-                        } else {
-                            Text("Gönder")
-                        }
-                    }
+                    )
                 }
             }
         }

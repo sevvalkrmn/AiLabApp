@@ -1,29 +1,7 @@
 package com.ktun.ailabapp.util
 
-import androidx.compose.ui.graphics.Color
-import com.ktun.ailabapp.ui.theme.InfoBlue
-import com.ktun.ailabapp.ui.theme.SuccessGreen
-import com.ktun.ailabapp.ui.theme.WarningOrange
 import java.text.SimpleDateFormat
 import java.util.*
-
-fun getStatusColor(status: String): Color {
-    return when (status) {
-        "Todo" -> WarningOrange
-        "InProgress" -> InfoBlue
-        "Done" -> SuccessGreen
-        else -> Color.Gray
-    }
-}
-
-fun getStatusText(status: String): String {
-    return when (status) {
-        "Todo" -> "Yapılacak"
-        "InProgress" -> "Devam Ediyor"
-        "Done" -> "Tamamlandı"
-        else -> status
-    }
-}
 
 fun formatDate(dateString: String): String {
     if (dateString.isEmpty()) return "Tarih yok"

@@ -7,12 +7,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,14 +22,14 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.ktun.ailabapp.R
-import com.ktun.ailabapp.presentation.ui.components.buttons.GradientButton
+import com.ktun.ailabapp.presentation.ui.components.buttons.AiLabButton
+import com.ktun.ailabapp.presentation.ui.components.inputs.AiLabTextField
 import com.ktun.ailabapp.presentation.ui.screens.register.RegisterViewModel
-import com.ktun.ailabapp.ui.theme.*
+import com.ktun.ailabapp.ui.theme.AiLabTheme
+import com.ktun.ailabapp.ui.theme.AppSpacing
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -67,12 +63,12 @@ fun RegisterScreen(
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        BackgroundLight,
-                        BackgroundLight,
-                        BackgroundLight,
-                        GradientStart,
-                        GradientMid,
-                        GradientEnd,
+                        MaterialTheme.colorScheme.background,
+                        MaterialTheme.colorScheme.background,
+                        MaterialTheme.colorScheme.background,
+                        MaterialTheme.colorScheme.surfaceContainerLow,
+                        MaterialTheme.colorScheme.surfaceContainer,
+                        MaterialTheme.colorScheme.surfaceContainerHigh,
                     ),
                     startY = 0f,
                     endY = Float.POSITIVE_INFINITY
@@ -113,14 +109,14 @@ fun RegisterScreen(
                 text = "Hesap Oluştur",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
-                color = PrimaryBlue,
+                color = if (AiLabTheme.isDark) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(bottom = AppSpacing.xxs)
             )
 
             Text(
                 text = if (uiState.step == 1) "Adım 1/2: Giriş Bilgileri" else "Adım 2/2: Kişisel Bilgiler",
                 style = MaterialTheme.typography.bodyMedium,
-                color = TextGray,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = AppSpacing.xxl)
             )
 
@@ -135,110 +131,103 @@ fun RegisterScreen(
                     val isValidPassword = passwordRegex.matches(uiState.password)
                     val passwordsMatch = uiState.password == uiState.confirmPassword && uiState.password.isNotBlank()
 
-                    RegisterInput(
+                    AiLabTextField(
                         value = uiState.email,
                         onValueChange = viewModel::updateEmail,
+                        label = "E-posta",
                         placeholder = "E-posta adresinizi girin",
-                        keyboardType = KeyboardType.Email,
-                        imeAction = ImeAction.Next
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Email,
+                            imeAction = ImeAction.Next
+                        )
                     )
 
-                    RegisterInput(
+                    AiLabTextField(
                         value = uiState.password,
                         onValueChange = viewModel::updatePassword,
+                        label = "Şifre",
                         placeholder = "Şifre belirleyin",
-                        keyboardType = KeyboardType.Password,
-                        imeAction = ImeAction.Next,
                         isPassword = true,
-                        isPasswordVisible = uiState.isPasswordVisible,
-                        onTogglePasswordVisibility = viewModel::togglePasswordVisibility,
-                        isError = uiState.password.isNotBlank() && !isValidPassword
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Password,
+                            imeAction = ImeAction.Next
+                        ),
+                        isError = uiState.password.isNotBlank() && !isValidPassword,
+                        errorMessage = "En az 8 karakter, 1 büyük harf ve 1 rakam gereklidir."
                     )
 
-                    if (uiState.password.isNotBlank() && !isValidPassword) {
-                        Text(
-                            text = "En az 8 karakter, 1 büyük harf ve 1 rakam gereklidir.",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = ErrorRed,
-                            modifier = Modifier.padding(start = AppSpacing.xxs)
-                        )
-                    }
-
-                    RegisterInput(
+                    AiLabTextField(
                         value = uiState.confirmPassword,
                         onValueChange = viewModel::updateConfirmPassword,
+                        label = "Şifre (Tekrar)",
                         placeholder = "Şifrenizi tekrar girin",
-                        keyboardType = KeyboardType.Password,
-                        imeAction = ImeAction.Done,
                         isPassword = true,
-                        isPasswordVisible = uiState.isConfirmPasswordVisible,
-                        onTogglePasswordVisibility = viewModel::toggleConfirmPasswordVisibility,
-                        isError = uiState.confirmPassword.isNotBlank() && !passwordsMatch
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Password,
+                            imeAction = ImeAction.Done
+                        ),
+                        isError = uiState.confirmPassword.isNotBlank() && !passwordsMatch,
+                        errorMessage = "Şifreler uyuşmuyor."
                     )
-
-                    if (uiState.confirmPassword.isNotBlank() && !passwordsMatch) {
-                        Text(
-                            text = "Şifreler uyuşmuyor.",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = ErrorRed,
-                            modifier = Modifier.padding(start = AppSpacing.xxs)
-                        )
-                    }
 
                 } else {
-                    RegisterInput(
+                    AiLabTextField(
                         value = uiState.fullName,
                         onValueChange = viewModel::updateFullName,
-                        placeholder = "Ad",
-                        keyboardType = KeyboardType.Text,
-                        imeAction = ImeAction.Next
+                        label = "Ad",
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Text,
+                            imeAction = ImeAction.Next
+                        )
                     )
 
-                    RegisterInput(
+                    AiLabTextField(
                         value = uiState.surname,
                         onValueChange = viewModel::updateSurname,
-                        placeholder = "Soyad",
-                        keyboardType = KeyboardType.Text,
-                        imeAction = ImeAction.Next
+                        label = "Soyad",
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Text,
+                            imeAction = ImeAction.Next
+                        )
                     )
 
-                    RegisterInput(
+                    AiLabTextField(
                         value = uiState.username,
                         onValueChange = viewModel::updateUsername,
-                        placeholder = "Kullanıcı Adı (min: 3 karakter)",
-                        keyboardType = KeyboardType.Text,
-                        imeAction = ImeAction.Next
+                        label = "Kullanıcı Adı",
+                        placeholder = "min. 3 karakter",
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Text,
+                            imeAction = ImeAction.Next
+                        )
                     )
 
-                    RegisterInput(
+                    AiLabTextField(
                         value = uiState.schoolNumber,
                         onValueChange = viewModel::updateSchoolNumber,
-                        placeholder = "Okul Numarası",
-                        keyboardType = KeyboardType.Number,
-                        imeAction = ImeAction.Next
+                        label = "Okul Numarası",
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Number,
+                            imeAction = ImeAction.Next
+                        )
                     )
 
                     val phoneRegex = "^5[0-9]{9}$".toRegex()
                     val isValidPhone = phoneRegex.matches(uiState.phone)
 
-                    RegisterInput(
+                    AiLabTextField(
                         value = uiState.phone,
                         onValueChange = viewModel::updatePhone,
-                        placeholder = "Telefon (5xx xxx xx xx)",
-                        keyboardType = KeyboardType.Phone,
-                        imeAction = ImeAction.Done,
+                        label = "Telefon",
+                        placeholder = "5xx xxx xx xx",
                         prefix = "+90 ",
-                        isError = uiState.phone.isNotBlank() && !isValidPhone
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Phone,
+                            imeAction = ImeAction.Done
+                        ),
+                        isError = uiState.phone.isNotBlank() && !isValidPhone,
+                        errorMessage = "Telefon numarası 5 ile başlamalı ve 10 haneli olmalıdır."
                     )
-
-                    if (uiState.phone.isNotBlank() && !isValidPhone) {
-                        Text(
-                            text = "Telefon numarası 5 ile başlamalı ve 10 haneli olmalıdır.",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = ErrorRed,
-                            modifier = Modifier.padding(start = AppSpacing.xxs)
-                        )
-                    }
                 }
             }
 
@@ -255,7 +244,7 @@ fun RegisterScreen(
                     uiState.phone.matches("^5[0-9]{9}$".toRegex())
             val isButtonEnabled = if (uiState.step == 1) isStep1Valid else isStep2Valid
 
-            GradientButton(
+            AiLabButton(
                 text = if (uiState.step == 1) "Devam Et" else "Kayıt Ol",
                 onClick = {
                     if (uiState.step == 1) viewModel.createFirebaseUser()
@@ -276,13 +265,13 @@ fun RegisterScreen(
                 Text(
                     text = "Zaten hesabınız var mı? ",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = TextGray
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
                     text = "Giriş Yap",
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
-                    color = SecondaryBlue,
+                    color = if (AiLabTheme.isDark) AiLabTheme.extendedColors.focusAccent else MaterialTheme.colorScheme.primary,
                     modifier = Modifier.clickable {
                         navController.navigate("login") {
                             popUpTo("register") { inclusive = true }
@@ -296,73 +285,10 @@ fun RegisterScreen(
             Text(
                 text = "Yapay Zeka ve Veri Bilimi Laboratuvarı, D114",
                 style = MaterialTheme.typography.labelSmall,
-                color = PrimaryBlue,
+                color = if (AiLabTheme.isDark) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.padding(bottom = AppSpacing.xxxl, top = AppSpacing.lg)
             )
         }
     }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun RegisterInput(
-    value: String,
-    onValueChange: (String) -> Unit,
-    placeholder: String,
-    keyboardType: KeyboardType,
-    imeAction: ImeAction,
-    isPassword: Boolean = false,
-    isPasswordVisible: Boolean = false,
-    onTogglePasswordVisibility: () -> Unit = {},
-    prefix: String? = null,
-    isError: Boolean = false,
-) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        isError = isError,
-        placeholder = {
-            Text(
-                placeholder,
-                color = LabelGray,
-                style = MaterialTheme.typography.bodySmall,
-            )
-        },
-        prefix = if (prefix != null) {
-            { Text(prefix, color = Black, style = MaterialTheme.typography.bodySmall) }
-        } else null,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(AppDimensions.buttonHeightLarge),
-        shape = MaterialTheme.shapes.medium,
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = if (isError) ErrorRed else BorderGray,
-            unfocusedBorderColor = if (isError) ErrorRed else BorderGray,
-            focusedContainerColor = White,
-            unfocusedContainerColor = White,
-            focusedTextColor = Black,
-            unfocusedTextColor = Black,
-            cursorColor = SecondaryBlue,
-        ),
-        visualTransformation = if (isPassword && !isPasswordVisible)
-            PasswordVisualTransformation() else VisualTransformation.None,
-        keyboardOptions = KeyboardOptions(
-            keyboardType = keyboardType,
-            imeAction = imeAction,
-        ),
-        trailingIcon = if (isPassword) {
-            {
-                IconButton(onClick = onTogglePasswordVisibility) {
-                    Icon(
-                        imageVector = if (isPasswordVisible)
-                            Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                        contentDescription = null,
-                        tint = LabelGray,
-                    )
-                }
-            }
-        } else null,
-        singleLine = true,
-    )
 }

@@ -23,8 +23,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ktun.ailabapp.presentation.ui.components.navigation.AiLabTopBar
+import com.ktun.ailabapp.ui.theme.AiLabTheme
 import com.ktun.ailabapp.ui.theme.AppDimensions
-import com.ktun.ailabapp.ui.theme.ErrorRed
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -34,10 +34,8 @@ import com.ktun.ailabapp.presentation.ui.components.DebugButton
 import com.ktun.ailabapp.presentation.ui.components.FeedbackDialog
 import com.ktun.ailabapp.presentation.ui.components.ShimmerBox
 import com.ktun.ailabapp.presentation.ui.components.StaggeredAnimatedItem
+import com.ktun.ailabapp.presentation.ui.components.buttons.AiLabButton
 import com.ktun.ailabapp.presentation.ui.screens.announcement.AnnouncementViewModel
-import com.ktun.ailabapp.ui.theme.BackgroundLight
-import com.ktun.ailabapp.ui.theme.PrimaryBlue
-import com.ktun.ailabapp.ui.theme.White
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -88,7 +86,7 @@ fun ProjectsScreen(
                 unreadAnnouncementCount = unreadCount
             )
         },
-        containerColor = BackgroundLight, // ✅ Açık zemin
+        containerColor = MaterialTheme.colorScheme.background,
         contentWindowInsets = WindowInsets.systemBars
     ) { paddingValues ->
         Column(
@@ -124,19 +122,21 @@ fun ProjectsScreen(
                                     Icon(
                                         Icons.Default.Warning,
                                         contentDescription = null,
-                                        tint = ErrorRed,
+                                        tint = MaterialTheme.colorScheme.error,
                                         modifier = Modifier.size(screenWidth * 0.15f)
                                     )
                                     Spacer(modifier = Modifier.height(screenHeight * 0.02f))
                                     Text(
                                         text = uiState.errorMessage ?: "Hata oluştu",
-                                        color = ErrorRed,
+                                        color = MaterialTheme.colorScheme.error,
                                         fontSize = (screenWidth.value * 0.04f).sp
                                     )
                                     Spacer(modifier = Modifier.height(screenHeight * 0.02f))
-                                    Button(onClick = { viewModel.refreshProjects() }) {
-                                        Text("Tekrar Dene")
-                                    }
+                                    AiLabButton(
+                                        text = "Tekrar Dene",
+                                        onClick = { viewModel.refreshProjects() },
+                                        fillWidth = false
+                                    )
                                 }
                             }
                         }
@@ -152,13 +152,13 @@ fun ProjectsScreen(
                                     Icon(
                                         Icons.Default.FolderOpen,
                                         contentDescription = null,
-                                        tint = PrimaryBlue.copy(alpha = 0.5f),
+                                        tint = AiLabTheme.headlineColor.copy(alpha = 0.5f),
                                         modifier = Modifier.size(screenWidth * 0.2f)
                                     )
                                     Spacer(modifier = Modifier.height(screenHeight * 0.02f))
                                     Text(
                                         text = "Henüz proje yok",
-                                        color = PrimaryBlue,
+                                        color = AiLabTheme.headlineColor,
                                         fontSize = (screenWidth.value * 0.045f).sp,
                                         fontWeight = FontWeight.Medium
                                     )
@@ -227,7 +227,7 @@ fun ProjectCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() },
-        colors = CardDefaults.cardColors(containerColor = White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         shape = RoundedCornerShape(screenWidth * 0.03f),
         elevation = CardDefaults.cardElevation(AppDimensions.cardElevation)
     ) {
@@ -241,7 +241,7 @@ fun ProjectCard(
                 modifier = Modifier
                     .size(screenWidth * 0.12f)
                     .clip(CircleShape)
-                    .background(PrimaryBlue),
+                    .background(MaterialTheme.colorScheme.primary),
                 contentAlignment = Alignment.Center
             ) {
                 androidx.compose.foundation.Image(
@@ -258,7 +258,7 @@ fun ProjectCard(
                     text = project.name.ifEmpty { "İsimsiz Proje" },
                     fontSize = (screenWidth.value * 0.04f).sp,
                     fontWeight = FontWeight.Bold,
-                    color = PrimaryBlue,
+                    color = AiLabTheme.headlineColor,
                     maxLines = 1
                 )
 
@@ -267,7 +267,7 @@ fun ProjectCard(
                     Text(
                         text = project.description,
                         fontSize = (screenWidth.value * 0.032f).sp,
-                        color = PrimaryBlue.copy(alpha = 0.6f),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1
                     )
                 }
@@ -278,14 +278,14 @@ fun ProjectCard(
                     Icon(
                         Icons.Default.CalendarToday,
                         contentDescription = null,
-                        tint = PrimaryBlue.copy(alpha = 0.4f),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(screenWidth * 0.035f)
                     )
                     Spacer(modifier = Modifier.width(screenWidth * 0.01f))
                     Text(
                         text = formatDate(project.createdAt),
                         fontSize = (screenWidth.value * 0.028f).sp,
-                        color = PrimaryBlue.copy(alpha = 0.5f)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -299,12 +299,12 @@ fun ProjectCard(
                     })
 
             Surface(
-                color = if (isCaptain) PrimaryBlue else PrimaryBlue.copy(alpha = 0.2f),
+                color = if (isCaptain) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primaryContainer,
                 shape = RoundedCornerShape(screenWidth * 0.02f)
             ) {
                 Text(
                     text = if (isCaptain) "Kaptan" else "Üye",
-                    color = if (isCaptain) White else PrimaryBlue,
+                    color = if (isCaptain) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onPrimaryContainer,
                     fontSize = (screenWidth.value * 0.03f).sp,
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier.padding(

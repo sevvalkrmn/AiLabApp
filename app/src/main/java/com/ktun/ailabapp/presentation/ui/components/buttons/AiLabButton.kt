@@ -1,11 +1,10 @@
 package com.ktun.ailabapp.presentation.ui.components.buttons
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
@@ -16,23 +15,17 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.ktun.ailabapp.ui.theme.AiLabTheme
 import com.ktun.ailabapp.ui.theme.AppDimensions
 import com.ktun.ailabapp.ui.theme.AppSpacing
-import com.ktun.ailabapp.ui.theme.BorderGray
-import com.ktun.ailabapp.ui.theme.ErrorRed
-import com.ktun.ailabapp.ui.theme.PrimaryBlue
-import com.ktun.ailabapp.ui.theme.SecondaryBlue
-import com.ktun.ailabapp.ui.theme.White
 
 enum class AiLabButtonVariant { Primary, Secondary, Danger, Ghost }
 enum class AiLabButtonSize { Large, Medium, Small }
@@ -57,53 +50,93 @@ fun AiLabButton(
     val widthModifier = if (fillWidth) modifier.fillMaxWidth().height(height)
                         else modifier.height(height)
     val shape = MaterialTheme.shapes.medium
+    val isEnabled = enabled && !isLoading
+    val isDark = AiLabTheme.isDark
 
     when (variant) {
-        AiLabButtonVariant.Secondary -> OutlinedButton(
-            onClick = onClick,
-            modifier = widthModifier,
-            enabled = enabled && !isLoading,
-            shape = shape,
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = PrimaryBlue),
-            border = ButtonDefaults.outlinedButtonBorder.copy(width = AppDimensions.borderWidth),
-        ) { ButtonContent(text, isLoading, leadingIcon) }
+        AiLabButtonVariant.Secondary -> {
+            // Açık temada davranış birebir korunur (gri outline + primary metin).
+            // Koyu temada kenarlık/metin "focusAccent" (#7180FF), basılıyken
+            // zemin "surfaceVariant" (#171E45) ile dolar.
+            val interactionSource = remember { MutableInteractionSource() }
+            val isPressed by interactionSource.collectIsPressedAsState()
+            val contentColor = if (isDark) AiLabTheme.extendedColors.focusAccent else MaterialTheme.colorScheme.primary
+            val borderColor = when {
+                !isEnabled -> MaterialTheme.colorScheme.outline
+                isDark -> AiLabTheme.extendedColors.focusAccent
+                else -> MaterialTheme.colorScheme.outline
+            }
+            OutlinedButton(
+                onClick = onClick,
+                modifier = widthModifier,
+                enabled = isEnabled,
+                shape = shape,
+                interactionSource = interactionSource,
+                colors = ButtonDefaults.outlinedButtonColors(
+                    containerColor = if (isDark && isPressed) MaterialTheme.colorScheme.surfaceVariant else Color.Transparent,
+                    contentColor = contentColor,
+                    disabledContentColor = if (isDark) MaterialTheme.colorScheme.outline else contentColor.copy(alpha = 0.38f),
+                ),
+                border = BorderStroke(AppDimensions.borderWidth, borderColor),
+            ) { ButtonContent(text, isLoading, leadingIcon) }
+        }
 
         AiLabButtonVariant.Ghost -> TextButton(
             onClick = onClick,
             modifier = widthModifier,
-            enabled = enabled && !isLoading,
+            enabled = isEnabled,
             shape = shape,
-            colors = ButtonDefaults.textButtonColors(contentColor = PrimaryBlue),
+            colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary),
         ) { ButtonContent(text, isLoading, leadingIcon) }
 
         AiLabButtonVariant.Danger -> Button(
             onClick = onClick,
             modifier = widthModifier,
-            enabled = enabled && !isLoading,
+            enabled = isEnabled,
             shape = shape,
             colors = ButtonDefaults.buttonColors(
-                containerColor = ErrorRed,
-                contentColor = White,
-                disabledContainerColor = ErrorRed.copy(alpha = 0.4f),
-                disabledContentColor = White.copy(alpha = 0.6f),
+                containerColor = MaterialTheme.colorScheme.error,
+                contentColor = MaterialTheme.colorScheme.onError,
+                disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
             ),
         ) { ButtonContent(text, isLoading, leadingIcon) }
 
-        AiLabButtonVariant.Primary -> Button(
-            onClick = onClick,
-            modifier = widthModifier,
-            enabled = enabled && !isLoading,
-            shape = shape,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = PrimaryBlue,
-                contentColor = White,
-                disabledContainerColor = PrimaryBlue.copy(alpha = 0.4f),
-                disabledContentColor = White.copy(alpha = 0.6f),
-            ),
-        ) { ButtonContent(text, isLoading, leadingIcon) }
+        AiLabButtonVariant.Primary -> {
+            // Açık temada davranış birebir korunur. Koyu temada basılıyken
+            // zemin "primaryPressed" (#19269F) olur; devre dışı durumda
+            // zemin/metin sabit "outline"/"onSurfaceVariant" tonlarını kullanır.
+            val interactionSource = remember { MutableInteractionSource() }
+            val isPressed by interactionSource.collectIsPressedAsState()
+            val containerColor = if (isDark && isPressed) AiLabTheme.extendedColors.primaryPressed else MaterialTheme.colorScheme.primary
+            Button(
+                onClick = onClick,
+                modifier = widthModifier,
+                enabled = isEnabled,
+                shape = shape,
+                interactionSource = interactionSource,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = containerColor,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    disabledContainerColor = if (isDark) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                    disabledContentColor = if (isDark) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                ),
+            ) { ButtonContent(text, isLoading, leadingIcon) }
+        }
     }
 }
 
+/**
+ * MD3'te karşılığı olmayan gradyan/gölge efektli özel bir buton stiliydi.
+ * Artık standart dolu (filled) MD3 butonuna eşleniyor; tutarlılık için
+ * doğrudan [AiLabButton] kullanın.
+ */
+@Deprecated(
+    message = "MD3 geçişi: standart dolu buton için AiLabButton kullanın",
+    replaceWith = ReplaceWith(
+        "AiLabButton(text = text, onClick = onClick, modifier = modifier, isLoading = isLoading, enabled = enabled)"
+    ),
+)
 @Composable
 fun GradientButton(
     text: String,
@@ -112,51 +145,14 @@ fun GradientButton(
     isLoading: Boolean = false,
     enabled: Boolean = true,
 ) {
-    Button(
+    AiLabButton(
+        text = text,
         onClick = onClick,
-        modifier = modifier
-            .fillMaxWidth()
-            .height(AppDimensions.buttonHeightLarge)
-            .shadow(
-                elevation = AppSpacing.sm,
-                shape = MaterialTheme.shapes.medium,
-                ambientColor = SecondaryBlue.copy(alpha = 0.3f),
-                spotColor = SecondaryBlue.copy(alpha = 0.3f),
-            ),
-        shape = MaterialTheme.shapes.medium,
-        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-        contentPadding = PaddingValues(),
+        modifier = modifier,
+        variant = AiLabButtonVariant.Primary,
+        isLoading = isLoading,
         enabled = enabled,
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    brush = Brush.radialGradient(
-                        colors = listOf(SecondaryBlue, PrimaryBlue),
-                        center = Offset(0.5f, 0.5f),
-                        radius = 800f,
-                    ),
-                    shape = MaterialTheme.shapes.medium,
-                ),
-            contentAlignment = Alignment.Center,
-        ) {
-            if (isLoading) {
-                CircularProgressIndicator(
-                    color = White,
-                    modifier = Modifier.size(AppDimensions.progressSizeLg),
-                    strokeWidth = 2.dp,
-                )
-            } else {
-                Text(
-                    text = text,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.SemiBold,
-                    color = White,
-                )
-            }
-        }
-    }
+    )
 }
 
 @Composable
@@ -168,7 +164,7 @@ private fun RowScope.ButtonContent(
     if (isLoading) {
         CircularProgressIndicator(
             modifier = Modifier.size(AppDimensions.progressSizeMd),
-            color = White,
+            color = LocalContentColor.current,
             strokeWidth = 2.dp,
         )
     } else {

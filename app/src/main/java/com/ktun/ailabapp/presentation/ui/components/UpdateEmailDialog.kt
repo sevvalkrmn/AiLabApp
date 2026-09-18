@@ -13,6 +13,9 @@ import androidx.compose.material.icons.Icons // ✅ Import added
 import androidx.compose.material.icons.filled.Visibility // ✅ Import added
 import androidx.compose.material.icons.filled.VisibilityOff // ✅ Import added
 import androidx.compose.ui.text.input.VisualTransformation // ✅ Import added
+import com.ktun.ailabapp.presentation.ui.components.buttons.AiLabButton
+import com.ktun.ailabapp.presentation.ui.components.buttons.AiLabButtonSize
+import com.ktun.ailabapp.presentation.ui.components.buttons.AiLabButtonVariant
 
 @Composable
 fun UpdateEmailDialog(
@@ -55,18 +58,22 @@ fun UpdateEmailDialog(
             }
         },
         confirmButton = {
-// ...
-            Button(
+            AiLabButton(
+                text = "Güncelle",
                 onClick = { onConfirm(password, newEmail) },
-                enabled = password.isNotBlank() && newEmail.isNotBlank()
-            ) {
-                Text("Güncelle")
-            }
+                enabled = password.isNotBlank() && newEmail.isNotBlank(),
+                size = AiLabButtonSize.Medium,
+                fillWidth = false
+            )
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("İptal")
-            }
+            AiLabButton(
+                text = "İptal",
+                onClick = onDismiss,
+                variant = AiLabButtonVariant.Ghost,
+                size = AiLabButtonSize.Medium,
+                fillWidth = false
+            )
         }
     )
 }

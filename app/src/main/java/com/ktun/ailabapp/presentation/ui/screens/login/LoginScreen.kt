@@ -4,14 +4,13 @@ import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,13 +23,14 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ktun.ailabapp.R
-import com.ktun.ailabapp.presentation.ui.components.buttons.GradientButton
-import com.ktun.ailabapp.ui.theme.*
+import com.ktun.ailabapp.presentation.ui.components.buttons.AiLabButton
+import com.ktun.ailabapp.presentation.ui.components.buttons.AiLabButtonVariant
+import com.ktun.ailabapp.presentation.ui.components.inputs.AiLabTextField
+import com.ktun.ailabapp.ui.theme.AiLabTheme
+import com.ktun.ailabapp.ui.theme.AppSpacing
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,12 +57,12 @@ fun LoginScreen(
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        BackgroundLight,
-                        BackgroundLight,
-                        BackgroundLight,
-                        GradientStart,
-                        GradientMid,
-                        GradientEnd,
+                        MaterialTheme.colorScheme.background,
+                        MaterialTheme.colorScheme.background,
+                        MaterialTheme.colorScheme.background,
+                        MaterialTheme.colorScheme.surfaceContainerLow,
+                        MaterialTheme.colorScheme.surfaceContainer,
+                        MaterialTheme.colorScheme.surfaceContainerHigh,
                     ),
                     startY = 0f,
                     endY = Float.POSITIVE_INFINITY
@@ -103,14 +103,14 @@ fun LoginScreen(
                 text = "Ai Lab'e Hoşgeldin",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
-                color = PrimaryBlue,
+                color = if (AiLabTheme.isDark) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(bottom = AppSpacing.xxs)
             )
 
             Text(
                 text = "Hesabına giriş yap",
                 style = MaterialTheme.typography.bodyMedium,
-                color = TextGray,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = AppSpacing.xxl)
             )
 
@@ -120,24 +120,30 @@ fun LoginScreen(
                     .padding(horizontal = AppSpacing.xxxl),
                 verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
             ) {
-                RoundedInput(
+                AiLabTextField(
                     value = uiState.email,
                     onValueChange = viewModel::updateEmail,
+                    label = "E-posta",
                     placeholder = "E-posta adresinizi girin",
-                    keyboardType = KeyboardType.Email,
-                    imeAction = ImeAction.Next
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Email,
+                        imeAction = ImeAction.Next
+                    )
                 )
 
-                RoundedInput(
+                AiLabTextField(
                     value = uiState.password,
                     onValueChange = viewModel::updatePassword,
+                    label = "Şifre",
                     placeholder = "Şifrenizi girin",
-                    keyboardType = KeyboardType.Password,
-                    imeAction = ImeAction.Done,
                     isPassword = true,
-                    isPasswordVisible = uiState.isPasswordVisible,
-                    onTogglePasswordVisibility = viewModel::togglePasswordVisibility,
-                    onDone = { viewModel.login(onSuccess = onLoginSuccess) }
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Password,
+                        imeAction = ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onDone = { viewModel.login(onSuccess = onLoginSuccess) }
+                    )
                 )
             }
 
@@ -157,34 +163,51 @@ fun LoginScreen(
                     Checkbox(
                         checked = uiState.rememberMe,
                         onCheckedChange = { viewModel.toggleRememberMe() },
-                        colors = CheckboxDefaults.colors(
-                            checkedColor = SecondaryBlue,
-                            uncheckedColor = LabelGray
-                        )
+                        colors = if (AiLabTheme.isDark) {
+                            CheckboxDefaults.colors(
+                                checkedColor = MaterialTheme.colorScheme.primary,
+                                uncheckedColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                checkmarkColor = Color.White,
+                            )
+                        } else {
+                            CheckboxDefaults.colors()
+                        }
                     )
                     Text(
                         "Beni Hatırla",
                         style = MaterialTheme.typography.bodySmall,
-                        color = TextGray
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
-                TextButton(onClick = {
-                    viewModel.sendPasswordResetEmail { success, message ->
-                        Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                val linkInteractionSource = remember { MutableInteractionSource() }
+                val isLinkPressed by linkInteractionSource.collectIsPressedAsState()
+                TextButton(
+                    onClick = {
+                        viewModel.sendPasswordResetEmail { success, message ->
+                            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                        }
+                    },
+                    interactionSource = linkInteractionSource,
+                    colors = if (AiLabTheme.isDark) {
+                        ButtonDefaults.textButtonColors(
+                            contentColor = if (isLinkPressed) MaterialTheme.colorScheme.onSurfaceVariant
+                                           else AiLabTheme.extendedColors.focusAccent
+                        )
+                    } else {
+                        ButtonDefaults.textButtonColors()
                     }
-                }) {
+                ) {
                     Text(
                         "Şifremi Unuttum",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = SecondaryBlue
+                        style = MaterialTheme.typography.bodySmall
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(AppSpacing.xl))
 
-            GradientButton(
+            AiLabButton(
                 text = "Giriş Yap",
                 onClick = { viewModel.login(onSuccess = onLoginSuccess) },
                 isLoading = uiState.isLoading,
@@ -194,9 +217,10 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(AppSpacing.md))
 
-            GradientButton(
+            AiLabButton(
                 text = "Hesabın Yok Mu? Kaydol",
                 onClick = onNavigateToRegister,
+                variant = AiLabButtonVariant.Secondary,
                 modifier = Modifier.padding(horizontal = AppSpacing.xxxl)
             )
 
@@ -205,69 +229,10 @@ fun LoginScreen(
             Text(
                 text = "Yapay Zeka ve Veri Bilimi Laboratuvarı, D114",
                 style = MaterialTheme.typography.labelSmall,
-                color = PrimaryBlue,
+                color = if (AiLabTheme.isDark) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.padding(bottom = AppSpacing.xxxl, top = AppSpacing.lg)
             )
         }
     }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun RoundedInput(
-    value: String,
-    onValueChange: (String) -> Unit,
-    placeholder: String,
-    keyboardType: KeyboardType,
-    imeAction: ImeAction,
-    isPassword: Boolean = false,
-    isPasswordVisible: Boolean = false,
-    onTogglePasswordVisibility: () -> Unit = {},
-    onDone: () -> Unit = {}
-) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        placeholder = {
-            Text(
-                placeholder,
-                color = LabelGray,
-                style = MaterialTheme.typography.bodySmall
-            )
-        },
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(AppDimensions.buttonHeightLarge),
-        shape = MaterialTheme.shapes.medium,
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = BorderGray,
-            unfocusedBorderColor = BorderGray,
-            focusedContainerColor = White,
-            unfocusedContainerColor = White,
-            focusedTextColor = Black,
-            unfocusedTextColor = Black,
-            cursorColor = SecondaryBlue
-        ),
-        visualTransformation = if (isPassword && !isPasswordVisible)
-            PasswordVisualTransformation() else VisualTransformation.None,
-        keyboardOptions = KeyboardOptions(
-            keyboardType = keyboardType,
-            imeAction = imeAction
-        ),
-        keyboardActions = KeyboardActions(onDone = { onDone() }),
-        trailingIcon = if (isPassword) {
-            {
-                IconButton(onClick = onTogglePasswordVisibility) {
-                    Icon(
-                        imageVector = if (isPasswordVisible)
-                            Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                        contentDescription = null,
-                        tint = LabelGray
-                    )
-                }
-            }
-        } else null,
-        singleLine = true
-    )
 }

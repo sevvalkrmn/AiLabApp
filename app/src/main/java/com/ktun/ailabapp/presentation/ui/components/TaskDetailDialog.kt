@@ -12,11 +12,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ktun.ailabapp.data.remote.dto.response.TaskResponse
-import com.ktun.ailabapp.ui.theme.InfoBlue
-import com.ktun.ailabapp.ui.theme.PrimaryBlue
-import com.ktun.ailabapp.ui.theme.SuccessGreen
-import com.ktun.ailabapp.ui.theme.WarningOrange
-import com.ktun.ailabapp.ui.theme.White
+import com.ktun.ailabapp.ui.theme.AiLabTheme
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
@@ -32,7 +28,7 @@ fun TaskDetailDialog(
                 .fillMaxWidth(0.9f)
                 .wrapContentHeight(),
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = White)
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
         ) {
             Column(
                 modifier = Modifier.padding(24.dp),
@@ -43,7 +39,7 @@ fun TaskDetailDialog(
                     text = task.title,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    color = PrimaryBlue
+                    color = AiLabTheme.headlineColor
                 )
 
                 // Aciklama
@@ -53,13 +49,13 @@ fun TaskDetailDialog(
                             text = "Aciklama",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = PrimaryBlue
+                            color = AiLabTheme.headlineColor
                         )
                         Spacer(Modifier.height(4.dp))
                         Text(
                             text = task.description,
                             fontSize = 14.sp,
-                            color = Color.DarkGray
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 } else {
@@ -67,7 +63,7 @@ fun TaskDetailDialog(
                         text = "Aciklama yok",
                         fontSize = 14.sp,
                         fontStyle = FontStyle.Italic,
-                        color = Color.Gray
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
@@ -83,7 +79,7 @@ fun TaskDetailDialog(
                         text = "Durum",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = PrimaryBlue
+                        color = AiLabTheme.headlineColor
                     )
                     Surface(
                         color = getStatusColor(task.status),
@@ -91,7 +87,7 @@ fun TaskDetailDialog(
                     ) {
                         Text(
                             text = getStatusText(task.status),
-                            color = White,
+                            color = getStatusOnColor(task.status),
                             fontSize = 12.sp,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                         )
@@ -107,12 +103,12 @@ fun TaskDetailDialog(
                         text = "Son Tarih",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = PrimaryBlue
+                        color = AiLabTheme.headlineColor
                     )
                     Text(
                         text = formatDate(task.dueDate),
                         fontSize = 14.sp,
-                        color = Color.DarkGray
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
@@ -126,13 +122,13 @@ fun TaskDetailDialog(
                             text = "Puan",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = PrimaryBlue
+                            color = AiLabTheme.headlineColor
                         )
                         Text(
                             text = "${task.score} Puan",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
-                            color = SuccessGreen
+                            color = AiLabTheme.extendedColors.success
                         )
                     }
                 }
@@ -150,12 +146,24 @@ fun TaskDetailDialog(
     }
 }
 
+@Composable
 fun getStatusColor(status: String): Color {
     return when (status) {
-        "Todo" -> WarningOrange
-        "InProgress" -> InfoBlue
-        "Done" -> SuccessGreen
-        else -> Color.Gray
+        "Todo" -> AiLabTheme.extendedColors.warning
+        "InProgress" -> AiLabTheme.extendedColors.info
+        "Done" -> AiLabTheme.extendedColors.success
+        else -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
+}
+
+/** [getStatusColor] rozet zeminiyle her zaman yeterli kontrast veren metin rengi. */
+@Composable
+fun getStatusOnColor(status: String): Color {
+    return when (status) {
+        "Todo" -> AiLabTheme.extendedColors.onWarning
+        "InProgress" -> AiLabTheme.extendedColors.onInfo
+        "Done" -> AiLabTheme.extendedColors.onSuccess
+        else -> MaterialTheme.colorScheme.surface
     }
 }
 

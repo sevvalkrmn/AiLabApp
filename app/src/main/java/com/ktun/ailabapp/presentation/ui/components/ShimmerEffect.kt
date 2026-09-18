@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -22,8 +23,6 @@ import androidx.compose.ui.draw.clip // ✅ Correct location
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.onGloballyPositioned
-import com.ktun.ailabapp.ui.theme.ShimmerBase
-import com.ktun.ailabapp.ui.theme.ShimmerHighlight
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 
@@ -35,16 +34,18 @@ fun Modifier.shimmerEffect(): Modifier = composed {
         targetValue = 2 * size.width.toFloat(),
         animationSpec = infiniteRepeatable(
             animation = tween(1000)
-        ), 
+        ),
         label = "ShimmerOffset"
     )
+    val shimmerBase = MaterialTheme.colorScheme.surfaceVariant
+    val shimmerHighlight = MaterialTheme.colorScheme.surfaceContainerHighest
 
     background(
         brush = Brush.linearGradient(
             colors = listOf(
-                ShimmerBase,
-                ShimmerHighlight,
-                ShimmerBase,
+                shimmerBase,
+                shimmerHighlight,
+                shimmerBase,
             ),
             start = Offset(startOffsetX, 0f),
             end = Offset(startOffsetX + size.width.toFloat(), size.height.toFloat())

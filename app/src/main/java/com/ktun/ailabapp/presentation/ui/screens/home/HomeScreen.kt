@@ -79,10 +79,10 @@ fun HomeScreen(
     // Görev Detay Dialog
     if (uiState.isTaskDetailLoading) {
         Box(
-            modifier = Modifier.fillMaxSize().background(Black.copy(alpha = 0.3f)),
+            modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.32f)),
             contentAlignment = Alignment.Center
         ) {
-            CircularProgressIndicator(color = White)
+            CircularProgressIndicator(color = Color.White)
         }
     } else if (uiState.selectedTask != null) {
         TaskDetailDialog(
@@ -110,7 +110,7 @@ fun HomeScreen(
                 unreadAnnouncementCount = unreadCount
             )
         },
-        containerColor = BackgroundLight // ✅ BackgroundLight yapıldı
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -240,12 +240,12 @@ fun HomeScreenSkeleton(screenWidth: Dp, screenHeight: Dp) {
 fun LabOccupancyCard(currentOccupancy: Int, totalCapacity: Int, screenWidth: Dp, screenHeight: Dp) {
     val progress = if (totalCapacity > 0) (currentOccupancy.toFloat() / totalCapacity.toFloat()).coerceIn(0f, 1f) else 0f
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = screenWidth * 0.02f)) {
-        Text(text = "Laboratuvar doluluğu oranı", fontSize = (screenWidth.value * 0.04f).sp, color = PrimaryBlue, fontWeight = FontWeight.Medium, modifier = Modifier.padding(bottom = screenHeight * 0.015f).padding(start = screenWidth * 0.02f))
-        Box(modifier = Modifier.fillMaxWidth().height(screenHeight * 0.031f).background(color = LabBarBackground, shape = RoundedCornerShape(screenWidth * 0.08f))) {
-            Box(modifier = Modifier.fillMaxWidth(progress).fillMaxHeight().background(color = PrimaryBlue, shape = RoundedCornerShape(screenWidth * 0.08f)))
+        Text(text = "Laboratuvar doluluğu oranı", fontSize = (screenWidth.value * 0.04f).sp, color = AiLabTheme.headlineColor, fontWeight = FontWeight.Medium, modifier = Modifier.padding(bottom = screenHeight * 0.015f).padding(start = screenWidth * 0.02f))
+        Box(modifier = Modifier.fillMaxWidth().height(screenHeight * 0.031f).background(color = MaterialTheme.colorScheme.surfaceVariant, shape = RoundedCornerShape(screenWidth * 0.08f))) {
+            Box(modifier = Modifier.fillMaxWidth(progress).fillMaxHeight().background(color = MaterialTheme.colorScheme.primary, shape = RoundedCornerShape(screenWidth * 0.08f)))
             Row(modifier = Modifier.fillMaxSize().padding(horizontal = screenWidth * 0.035f), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Text(text = "$currentOccupancy", color = White, fontSize = (screenWidth.value * 0.035f).sp, fontWeight = FontWeight.Bold)
-                Text(text = "$totalCapacity", color = White, fontSize = (screenWidth.value * 0.035f).sp, fontWeight = FontWeight.Bold)
+                Text(text = "$currentOccupancy", color = MaterialTheme.colorScheme.onPrimary, fontSize = (screenWidth.value * 0.035f).sp, fontWeight = FontWeight.Bold)
+                Text(text = "$totalCapacity", color = MaterialTheme.colorScheme.onPrimary, fontSize = (screenWidth.value * 0.035f).sp, fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -253,43 +253,50 @@ fun LabOccupancyCard(currentOccupancy: Int, totalCapacity: Int, screenWidth: Dp,
 
 @Composable
 fun ProfileCard(totalScore: Double, avatarUrl: String?, lastEntryDate: String?, teammatesInside: Int, totalTeammates: Int, screenWidth: Dp, screenHeight: Dp) {
-    Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = PrimaryBlue), shape = RoundedCornerShape(screenWidth * 0.04f)) {
+    // Koyu temada "Profilim" ekranındaki gibi koyu (surface) zemin kullanılır;
+    // yazılar/ikonlar beyaza yakın (onSurface). Açık temada eski dolu-primary
+    // kart görünümü aynen korunur.
+    val isDark = AiLabTheme.isDark
+    val cardBg = if (isDark) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.primary
+    val onCard = if (isDark) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onPrimary
+    val avatarBg = if (isDark) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else MaterialTheme.colorScheme.onPrimary
+    Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = cardBg), shape = RoundedCornerShape(screenWidth * 0.04f)) {
         Row(modifier = Modifier.fillMaxWidth().padding(screenWidth * 0.04f), verticalAlignment = Alignment.CenterVertically) {
             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(end = screenWidth * 0.04f)) {
                 if (!avatarUrl.isNullOrEmpty()) {
-                    AsyncImage(model = avatarUrl, contentDescription = "Profil Fotoğrafı", modifier = Modifier.size(screenWidth * 0.18f).clip(CircleShape).background(White), contentScale = ContentScale.Crop)
+                    AsyncImage(model = avatarUrl, contentDescription = "Profil Fotoğrafı", modifier = Modifier.size(screenWidth * 0.18f).clip(CircleShape).background(avatarBg), contentScale = ContentScale.Crop)
                 } else {
-                    Box(modifier = Modifier.size(screenWidth * 0.18f).clip(CircleShape).background(White), contentAlignment = Alignment.Center) {
-                        Icon(Icons.Default.Person, contentDescription = null, tint = PrimaryBlue, modifier = Modifier.size(screenWidth * 0.1f))
+                    Box(modifier = Modifier.size(screenWidth * 0.18f).clip(CircleShape).background(avatarBg), contentAlignment = Alignment.Center) {
+                        Icon(Icons.Default.Person, contentDescription = null, tint = AiLabTheme.headlineColor, modifier = Modifier.size(screenWidth * 0.1f))
                     }
                 }
                 Spacer(modifier = Modifier.height(screenHeight * 0.01f))
-                Text(text = "${totalScore.toInt()}", fontSize = (screenWidth.value * 0.08f).sp, fontWeight = FontWeight.Bold, color = White)
-                Text(text = "Puan", fontSize = (screenWidth.value * 0.03f).sp, color = White.copy(alpha = 0.9f))
+                Text(text = "${totalScore.toInt()}", fontSize = (screenWidth.value * 0.08f).sp, fontWeight = FontWeight.Bold, color = onCard)
+                Text(text = "Puan", fontSize = (screenWidth.value * 0.03f).sp, color = onCard.copy(alpha = 0.9f))
             }
-            Box(modifier = Modifier.width(2.dp).height(screenHeight * 0.12f).background(White.copy(alpha = 0.3f)))
+            Box(modifier = Modifier.width(2.dp).height(screenHeight * 0.12f).background(onCard.copy(alpha = 0.3f)))
             Spacer(modifier = Modifier.width(screenWidth * 0.04f))
             Column(modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.CalendarToday, contentDescription = null, tint = White, modifier = Modifier.size(screenWidth * 0.05f))
+                    Icon(Icons.Default.CalendarToday, contentDescription = null, tint = onCard, modifier = Modifier.size(screenWidth * 0.05f))
                     Spacer(modifier = Modifier.width(screenWidth * 0.02f))
                     Column {
-                        Text(text = "Son Giriş Tarihim", fontSize = (screenWidth.value * 0.03f).sp, color = White.copy(alpha = 0.8f))
+                        Text(text = "Son Giriş Tarihim", fontSize = (screenWidth.value * 0.03f).sp, color = onCard.copy(alpha = 0.8f))
                         val formattedDate = formatDate(lastEntryDate)
                         if (formattedDate.isNotEmpty()) {
-                            Text(text = formattedDate, fontSize = (screenWidth.value * 0.04f).sp, fontWeight = FontWeight.Bold, color = White)
+                            Text(text = formattedDate, fontSize = (screenWidth.value * 0.04f).sp, fontWeight = FontWeight.Bold, color = onCard)
                         }
                     }
                 }
                 Spacer(modifier = Modifier.height(screenHeight * 0.015f))
-                HorizontalDivider(color = White.copy(alpha = 0.3f), thickness = AppDimensions.borderWidth)
+                HorizontalDivider(color = onCard.copy(alpha = 0.3f), thickness = AppDimensions.borderWidth)
                 Spacer(modifier = Modifier.height(screenHeight * 0.015f))
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Group, contentDescription = null, tint = White, modifier = Modifier.size(screenWidth * 0.05f))
+                    Icon(Icons.Default.Group, contentDescription = null, tint = onCard, modifier = Modifier.size(screenWidth * 0.05f))
                     Spacer(modifier = Modifier.width(screenWidth * 0.02f))
                     Column {
-                        Text(text = "Lab'daki Takım Arkadaşları", fontSize = (screenWidth.value * 0.03f).sp, color = White.copy(alpha = 0.8f))
-                        Text(text = "$teammatesInside / $totalTeammates", fontSize = (screenWidth.value * 0.04f).sp, fontWeight = FontWeight.Bold, color = White)
+                        Text(text = "Lab'daki Takım Arkadaşları", fontSize = (screenWidth.value * 0.03f).sp, color = onCard.copy(alpha = 0.8f))
+                        Text(text = "$teammatesInside / $totalTeammates", fontSize = (screenWidth.value * 0.04f).sp, fontWeight = FontWeight.Bold, color = onCard)
                     }
                 }
             }
@@ -304,9 +311,12 @@ fun CurrentTasksCard(
     screenWidth: Dp,
     screenHeight: Dp
 ) {
+    val isDark = AiLabTheme.isDark
+    val cardBg = if (isDark) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.primary
+    val onCard = if (isDark) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onPrimary
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = PrimaryBlue),
+        colors = CardDefaults.cardColors(containerColor = cardBg),
         shape = RoundedCornerShape(screenWidth * 0.04f)
     ) {
         Column(
@@ -318,7 +328,7 @@ fun CurrentTasksCard(
                 text = "Güncel Görevler",
                 fontSize = (screenWidth.value * 0.04f).sp,
                 fontWeight = FontWeight.Bold,
-                color = White,
+                color = onCard,
                 modifier = Modifier.padding(bottom = screenHeight * 0.015f)
             )
 
@@ -327,7 +337,7 @@ fun CurrentTasksCard(
                     modifier = Modifier.fillMaxWidth().height(screenHeight * 0.15f),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(text = "Aktif görev yok", fontSize = (screenWidth.value * 0.035f).sp, color = White.copy(alpha = 0.7f))
+                    Text(text = "Aktif görev yok", fontSize = (screenWidth.value * 0.035f).sp, color = onCard.copy(alpha = 0.7f))
                 }
             } else {
                 Column(
@@ -349,10 +359,10 @@ fun CurrentTasksCard(
                                 else -> task.status
                             },
                             statusColor = when (task.status) {
-                                "InProgress" -> InfoBlue
-                                "Done" -> SuccessGreen
-                                "Todo" -> WarningOrange
-                                else -> TextGray
+                                "InProgress" -> AiLabTheme.extendedColors.info
+                                "Done" -> AiLabTheme.extendedColors.success
+                                "Todo" -> AiLabTheme.extendedColors.warning
+                                else -> MaterialTheme.colorScheme.onSurfaceVariant
                             },
                             onClick = { onTaskClick(task) },
                             screenWidth = screenWidth,
@@ -376,21 +386,25 @@ fun TaskItem(
     screenWidth: Dp,
     screenHeight: Dp
 ) {
+    // Kart artık koyu temada da "surface" zeminli olduğu için, kart içindeki
+    // bu satırın kendi zemini bir ton daha açık (surfaceVariant) olmalı ki
+    // kartın içinde ayrı bir öğe olarak fark edilsin.
+    val itemBg = if (AiLabTheme.isDark) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.surface
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .bounceClick(onClick = onClick)
-            .background(White, RoundedCornerShape(screenWidth * 0.025f))
+            .background(itemBg, RoundedCornerShape(screenWidth * 0.025f))
             .padding(horizontal = screenWidth * 0.025f, vertical = screenWidth * 0.018f),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(modifier = Modifier.size(screenWidth * 0.09f).background(PrimaryBlue, CircleShape), contentAlignment = Alignment.Center) {
-            Icon(icon, contentDescription = null, tint = White, modifier = Modifier.size(screenWidth * 0.045f))
+        Box(modifier = Modifier.size(screenWidth * 0.09f).background(MaterialTheme.colorScheme.primary, CircleShape), contentAlignment = Alignment.Center) {
+            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(screenWidth * 0.045f))
         }
         Spacer(modifier = Modifier.width(screenWidth * 0.025f))
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = title, fontSize = (screenWidth.value * 0.035f).sp, fontWeight = FontWeight.Bold, color = PrimaryBlue, maxLines = 1)
-            Text(text = frequency, fontSize = (screenWidth.value * 0.025f).sp, color = TextGray, maxLines = 1)
+            Text(text = title, fontSize = (screenWidth.value * 0.035f).sp, fontWeight = FontWeight.Bold, color = AiLabTheme.headlineColor, maxLines = 1)
+            Text(text = frequency, fontSize = (screenWidth.value * 0.025f).sp, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
         }
         Text(text = status, fontSize = (screenWidth.value * 0.025f).sp, fontWeight = FontWeight.Bold, color = statusColor)
     }
@@ -398,27 +412,33 @@ fun TaskItem(
 
 @Composable
 fun BottomCard(topUsers: List<TopUserItem>, screenWidth: Dp, screenHeight: Dp) {
-    Card(modifier = Modifier.fillMaxWidth().height(screenHeight * 0.25f), colors = CardDefaults.cardColors(containerColor = PrimaryBlue), shape = RoundedCornerShape(screenWidth * 0.04f)) {
+    val isDark = AiLabTheme.isDark
+    val cardBg = if (isDark) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.primary
+    val onCard = if (isDark) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onPrimary
+    Card(modifier = Modifier.fillMaxWidth().height(screenHeight * 0.25f), colors = CardDefaults.cardColors(containerColor = cardBg), shape = RoundedCornerShape(screenWidth * 0.04f)) {
         Column(modifier = Modifier.fillMaxSize().padding(screenWidth * 0.04f), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center, modifier = Modifier.padding(bottom = screenHeight * 0.015f)) {
-                Icon(imageVector = Icons.Default.Star, contentDescription = null, tint = Gold, modifier = Modifier.size(screenWidth * 0.05f))
+                Icon(imageVector = Icons.Default.Star, contentDescription = null, tint = AiLabTheme.extendedColors.gold, modifier = Modifier.size(screenWidth * 0.05f))
                 Spacer(modifier = Modifier.width(screenWidth * 0.02f))
-                Text(text = "LİDERLİK TABLOSU", fontSize = (screenWidth.value * 0.04f).sp, fontWeight = FontWeight.Light, color = White, letterSpacing = 1.5.sp)
+                Text(text = "LİDERLİK TABLOSU", fontSize = (screenWidth.value * 0.04f).sp, fontWeight = FontWeight.Light, color = onCard, letterSpacing = 1.5.sp)
                 Spacer(modifier = Modifier.width(screenWidth * 0.02f))
-                Icon(imageVector = Icons.Default.Star, contentDescription = null, tint = Gold, modifier = Modifier.size(screenWidth * 0.05f))
+                Icon(imageVector = Icons.Default.Star, contentDescription = null, tint = AiLabTheme.extendedColors.gold, modifier = Modifier.size(screenWidth * 0.05f))
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.Bottom) {
-                LeaderboardUser(user = topUsers.getOrNull(1), borderColor = Silver, rank = 2, screenWidth = screenWidth, screenHeight = screenHeight)
-                LeaderboardUser(user = topUsers.getOrNull(0), borderColor = Gold, rank = 1, screenWidth = screenWidth, screenHeight = screenHeight, isFirst = true)
-                LeaderboardUser(user = topUsers.getOrNull(2), borderColor = WarningOrange, rank = 3, screenWidth = screenWidth, screenHeight = screenHeight)
+                LeaderboardUser(user = topUsers.getOrNull(1), borderColor = AiLabTheme.extendedColors.silver, onCard = onCard, rank = 2, screenWidth = screenWidth, screenHeight = screenHeight)
+                LeaderboardUser(user = topUsers.getOrNull(0), borderColor = AiLabTheme.extendedColors.gold, onCard = onCard, rank = 1, screenWidth = screenWidth, screenHeight = screenHeight, isFirst = true)
+                LeaderboardUser(user = topUsers.getOrNull(2), borderColor = AiLabTheme.extendedColors.bronze, onCard = onCard, rank = 3, screenWidth = screenWidth, screenHeight = screenHeight)
             }
         }
     }
 }
 
 @Composable
-fun LeaderboardUser(user: TopUserItem?, borderColor: Color, rank: Int, screenWidth: Dp, screenHeight: Dp, isFirst: Boolean = false) {
+fun LeaderboardUser(user: TopUserItem?, borderColor: Color, onCard: Color, rank: Int, screenWidth: Dp, screenHeight: Dp, isFirst: Boolean = false) {
     val avatarSize = if (isFirst) screenWidth * 0.2f else screenWidth * 0.16f
+    // Kartın kendisi koyu temada "surface" olduğu için avatarın iç dairesi
+    // fark edilsin diye bir ton daha açık (surfaceVariant) kullanılır.
+    val avatarInnerBg = if (AiLabTheme.isDark) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.surface
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(screenWidth * 0.28f)) {
         if (user != null) {
             val animatedScore by androidx.compose.animation.core.animateIntAsState(
@@ -434,23 +454,23 @@ fun LeaderboardUser(user: TopUserItem?, borderColor: Color, rank: Int, screenWid
                 if (!user.avatarUrl.isNullOrEmpty()) {
                     AsyncImage(model = user.avatarUrl, contentDescription = "Avatar", modifier = Modifier.size(avatarSize).clip(CircleShape).background(borderColor).padding(3.dp).clip(CircleShape), contentScale = ContentScale.Crop)
                 } else {
-                    Box(modifier = Modifier.size(avatarSize).background(borderColor, CircleShape).padding(3.dp).background(White, CircleShape), contentAlignment = Alignment.Center) {
-                        Icon(Icons.Default.Person, contentDescription = null, tint = PrimaryBlue, modifier = Modifier.size(avatarSize * 0.5f))
+                    Box(modifier = Modifier.size(avatarSize).background(borderColor, CircleShape).padding(3.dp).background(avatarInnerBg, CircleShape), contentAlignment = Alignment.Center) {
+                        Icon(Icons.Default.Person, contentDescription = null, tint = AiLabTheme.headlineColor, modifier = Modifier.size(avatarSize * 0.5f))
                     }
                 }
             }
             Spacer(modifier = Modifier.height(screenHeight * 0.008f))
-            Text(text = user.name.split(" ").firstOrNull() ?: user.name, fontSize = (screenWidth.value * 0.032f).sp, fontWeight = FontWeight.Bold, color = White, maxLines = 1)
+            Text(text = user.name.split(" ").firstOrNull() ?: user.name, fontSize = (screenWidth.value * 0.032f).sp, fontWeight = FontWeight.Bold, color = onCard, maxLines = 1)
             Spacer(modifier = Modifier.height(screenHeight * 0.005f))
             Box(modifier = Modifier.background(borderColor, RoundedCornerShape(50)).padding(horizontal = screenWidth * 0.025f, vertical = screenHeight * 0.004f)) {
-                Text(text = "$animatedScore puan", fontSize = (screenWidth.value * 0.028f).sp, fontWeight = FontWeight.Bold, color = PrimaryBlue)
+                Text(text = "$animatedScore puan", fontSize = (screenWidth.value * 0.028f).sp, fontWeight = FontWeight.Bold, color = Color.Black)
             }
         } else {
-            Box(modifier = Modifier.size(avatarSize).background(White.copy(alpha = 0.2f), CircleShape))
+            Box(modifier = Modifier.size(avatarSize).background(onCard.copy(alpha = 0.2f), CircleShape))
             Spacer(modifier = Modifier.height(screenHeight * 0.008f))
-            Box(modifier = Modifier.width(screenWidth * 0.15f).height(screenHeight * 0.015f).background(White.copy(alpha = 0.2f), RoundedCornerShape(50)))
+            Box(modifier = Modifier.width(screenWidth * 0.15f).height(screenHeight * 0.015f).background(onCard.copy(alpha = 0.2f), RoundedCornerShape(50)))
             Spacer(modifier = Modifier.height(screenHeight * 0.005f))
-            Box(modifier = Modifier.width(screenWidth * 0.12f).height(screenHeight * 0.012f).background(White.copy(alpha = 0.2f), RoundedCornerShape(50)))
+            Box(modifier = Modifier.width(screenWidth * 0.12f).height(screenHeight * 0.012f).background(onCard.copy(alpha = 0.2f), RoundedCornerShape(50)))
         }
     }
 }

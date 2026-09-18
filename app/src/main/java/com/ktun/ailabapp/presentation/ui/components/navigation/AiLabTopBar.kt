@@ -23,8 +23,6 @@ import androidx.compose.ui.Modifier
 import com.ktun.ailabapp.ui.theme.AppCustomShapes
 import com.ktun.ailabapp.ui.theme.AppDimensions
 import com.ktun.ailabapp.ui.theme.AppSpacing
-import com.ktun.ailabapp.ui.theme.PrimaryBlue
-import com.ktun.ailabapp.ui.theme.White
 
 @Composable
 fun AiLabTopBar(
@@ -36,7 +34,7 @@ fun AiLabTopBar(
 ) {
     Surface(
         modifier = modifier.fillMaxWidth(),
-        color = PrimaryBlue,
+        color = MaterialTheme.colorScheme.primary,
         shape = AppCustomShapes.topBar,
         shadowElevation = AppDimensions.cardElevationHigh,
     ) {
@@ -53,7 +51,7 @@ fun AiLabTopBar(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Geri",
-                        tint = White,
+                        tint = MaterialTheme.colorScheme.onPrimary,
                         modifier = Modifier.size(AppDimensions.iconSizeLg),
                     )
                 }
@@ -64,13 +62,13 @@ fun AiLabTopBar(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleLarge,
-                    color = White,
+                    color = MaterialTheme.colorScheme.onPrimary,
                 )
                 if (subtitle != null) {
                     Text(
                         text = subtitle,
                         style = MaterialTheme.typography.bodySmall,
-                        color = White.copy(alpha = 0.75f),
+                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.75f),
                     )
                 }
             }

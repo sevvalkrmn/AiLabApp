@@ -8,12 +8,14 @@ import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ktun.ailabapp.presentation.ui.components.buttons.AiLabButton
+import com.ktun.ailabapp.presentation.ui.components.buttons.AiLabButtonSize
+import com.ktun.ailabapp.presentation.ui.components.buttons.AiLabButtonVariant
 
 @Composable
 fun ChangePasswordDialog(
@@ -75,7 +77,7 @@ fun ChangePasswordDialog(
                 if (newPassword.isNotBlank() && !isValidPassword) {
                     Text(
                         "Şifre en az 8 karakter, 1 büyük harf ve 1 rakam içermelidir.",
-                        color = Color.Red,
+                        color = MaterialTheme.colorScheme.error,
                         fontSize = 12.sp,
                         lineHeight = 14.sp
                     )
@@ -98,22 +100,27 @@ fun ChangePasswordDialog(
                 )
 
                 if (confirmPassword.isNotBlank() && newPassword != confirmPassword) {
-                    Text("Şifreler uyuşmuyor", color = Color.Red, fontSize = 12.sp)
+                    Text("Şifreler uyuşmuyor", color = MaterialTheme.colorScheme.error, fontSize = 12.sp)
                 }
             }
         },
         confirmButton = {
-            Button(
+            AiLabButton(
+                text = "Güncelle",
                 onClick = { onConfirm(oldPassword, newPassword) },
-                enabled = isFormValid
-            ) {
-                Text("Güncelle")
-            }
+                enabled = isFormValid,
+                size = AiLabButtonSize.Medium,
+                fillWidth = false
+            )
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("İptal")
-            }
+            AiLabButton(
+                text = "İptal",
+                onClick = onDismiss,
+                variant = AiLabButtonVariant.Ghost,
+                size = AiLabButtonSize.Medium,
+                fillWidth = false
+            )
         }
     )
 }

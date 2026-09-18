@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      Koyu tema için "primary" rengi — Theme.kt > Md3DarkPrimary (#2536D8,
+      proje dark mode paletindeki DarkPrimary) ile aynı değer. Compose'dan
+      önce çizilen native splash ekranı ile status bar / navigation bar
+      renklerinin, uygulama içindeki MD3 koyu temayla eşleşmesi için
+      kullanılır.
+    -->
+    <color name="primary_blue">#FF2536D8</color>
+</resources>

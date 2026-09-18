@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!--
+      Koyu temada arka plan rengi (primary_blue = Md3DarkPrimary, #2536D8)
+      koyu renkli olduğu için status/navigation bar ikonları açık
+      (windowLight*=false) olmalı — açık temayla aynı, çünkü bu projenin
+      dark mode paletinde "primary" bilerek koyu/doygun mavi ailesinde
+      tutulmuştur (klasik MD3'ün "koyu temada primary açılır" kuralının
+      aksine).
+    -->
     <style name="Theme.AiLabApp" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:windowBackground">@color/primary_blue</item>
         <item name="android:statusBarColor">@color/primary_blue</item>

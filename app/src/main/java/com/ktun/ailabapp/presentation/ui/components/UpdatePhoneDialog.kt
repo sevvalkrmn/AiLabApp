@@ -7,6 +7,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.ktun.ailabapp.presentation.ui.components.buttons.AiLabButton
+import com.ktun.ailabapp.presentation.ui.components.buttons.AiLabButtonSize
+import com.ktun.ailabapp.presentation.ui.components.buttons.AiLabButtonVariant
 
 @Composable
 fun UpdatePhoneDialog(
@@ -31,17 +34,22 @@ fun UpdatePhoneDialog(
             }
         },
         confirmButton = {
-            Button(
+            AiLabButton(
+                text = "Güncelle",
                 onClick = { onConfirm("+90 $newPhone") },
-                enabled = newPhone.length >= 10
-            ) {
-                Text("Güncelle")
-            }
+                enabled = newPhone.length >= 10,
+                size = AiLabButtonSize.Medium,
+                fillWidth = false
+            )
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("İptal")
-            }
+            AiLabButton(
+                text = "İptal",
+                onClick = onDismiss,
+                variant = AiLabButtonVariant.Ghost,
+                size = AiLabButtonSize.Medium,
+                fillWidth = false
+            )
         }
     )
 }
